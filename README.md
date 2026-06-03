@@ -2,7 +2,7 @@
 
 Convierte una tienda WooCommerce en un sistema de solicitud de cotización (RFQ) para B2B: catálogo sin checkout ni pago, donde el cliente arma su lista de productos y pide que le coticen.
 
-![Versión](https://img.shields.io/badge/versión-2.0.3-0a4d3a) ![Licencia](https://img.shields.io/badge/licencia-GPL--3.0-blue) ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759b) ![WooCommerce](https://img.shields.io/badge/WooCommerce-8.0%2B-96588a) ![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4)
+![Versión](https://img.shields.io/badge/versión-2.1.0-0a4d3a) ![Licencia](https://img.shields.io/badge/licencia-GPL--3.0-blue) ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759b) ![WooCommerce](https://img.shields.io/badge/WooCommerce-8.0%2B-96588a) ![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4)
 
 ## Qué resuelve
 
@@ -20,8 +20,11 @@ Cuando todos los productos de una solicitud ya tienen precio registrado, el plug
 | Auto-cotización | Distingue entre cotización y pedido. Si todos los SKU tienen precio, calcula el total y envía la cotización formal de forma automática. |
 | Importador CSV | Carga masiva en cuatro hojas: clientes, precios públicos, precios B2B y presentaciones. Plantillas descargables, vista previa y reporte de filas insertadas, actualizadas y omitidas. |
 | Presentaciones de producto | Variantes por producto (etiqueta, SKU, peso, precio) con selector en la ficha y soporte en el carrito como líneas separadas. |
+| Carrito flotante | Burbuja persistente visible en todo el sitio con lo añadido a la cotización, panel con edición de cantidades y bottom-sheet en móvil. |
+| Semáforo por peso | Clasificación por peso total de la solicitud: pequeño (verde), grande (amarillo) y toneladas (rojo), con umbrales configurables. |
+| Herencia de Elementor | Tipografía heredada del sitio y opción de heredar el color de marca del kit global de Elementor (toggle en Apariencia). |
 | Emails + SMTP | Doble email configurable (equipo y cliente) con plantillas HTML. SMTP propio opcional y detección de plugins SMTP externos. |
-| Webhook firmado | Envío a integraciones externas (Make, Zapier, n8n) firmado con HMAC-SHA256 y con reintentos por backoff. |
+| Webhook firmado | Envío a integraciones externas (GoHighLevel, Make, Zapier, n8n) firmado con HMAC-SHA256 y con reintentos por backoff. Payload enriquecido (tipo, total, precios por línea, peso, cliente B2B) y re-disparo al convertir una cotización en pedido. |
 | Reportes + export CSV | Pantalla de reportes con filtros, estadísticas y top de clientes y SKU. Exportación a CSV con BOM UTF-8. |
 | Logger auditable | Registro centralizado con niveles y categorías, visor con filtros y aviso en el panel ante errores recientes. |
 | Anti-spam | Tres capas: nonce de WordPress, honeypot oculto y límite de envíos por IP. |
@@ -106,7 +109,8 @@ La configuración vive en **Cotizaciones → Configuración**, organizada en pes
 - **Formulario** — textos del formulario, términos y mensaje de la página de gracias.
 - **SMTP** — envío por servidor propio y detección de plugins SMTP externos.
 - **Integraciones** — URL y secreto del webhook.
-- **Reglas** — umbrales de clasificación por tamaño y auto-respuesta con precios.
+- **Reglas** — umbrales de clasificación por tamaño (unidades y peso del semáforo) y auto-respuesta con precios.
+- **Apariencia** — herencia del color de marca desde Elementor y opciones del carrito flotante (activación y posición).
 - **Avanzado** — límite de envíos por IP y borrado de datos al desinstalar.
 
 ## Extensibilidad para desarrolladores
@@ -144,6 +148,7 @@ Las plantillas se pueden sobrescribir desde el tema colocando el archivo corresp
 - [Manual operativo](docs/MANUAL_OPERATIVO.md)
 - [Estado del plugin](docs/ESTADO_DEL_PLUGIN.md)
 - [Informe ejecutivo](docs/INFORME_EJECUTIVO.md)
+- [Webhook para GoHighLevel](docs/WEBHOOK_GHL.md)
 
 ## Licencia
 
