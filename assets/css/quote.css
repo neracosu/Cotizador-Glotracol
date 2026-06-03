@@ -232,3 +232,40 @@
 .glo-size-large{background:#fdecea;color:#7a1d12;border:1px solid #dc3545}
 .glo-size-alert{display:inline-block;margin-left:4px;font-size:13px;animation:gloq-pulse-glow 1.6s infinite}
 @keyframes gloq-pulse-glow{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:0.85}}
+
+/* ===== Carrito flotante (mini-cotización) ===== */
+.gloq-fab-wrap{position:fixed;z-index:99980;font-family:inherit}
+.gloq-fab-bottom-left{left:20px;bottom:20px}
+.gloq-fab-bottom-right{right:20px;bottom:20px}
+.gloq-fab-top-left{left:20px;top:20px}
+.gloq-fab-top-right{right:20px;top:20px}
+.gloq-fab-hidden{display:none}
+.gloq-fab-btn{position:relative;display:flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:50%;background:var(--gloq-brand);color:#fff;border:none;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,0.25);transition:transform .15s,background .15s}
+.gloq-fab-btn:hover{background:var(--gloq-brand-dark);transform:translateY(-2px)}
+.gloq-fab-count{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#dc3545;color:#fff;font-size:11px;font-weight:700;line-height:20px;text-align:center}
+.gloq-fab-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:99981}
+.gloq-fab-panel{position:fixed;z-index:99982;background:#fff;width:360px;max-width:92vw;max-height:80vh;display:flex;flex-direction:column;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.3);opacity:0;pointer-events:none;transform:translateY(12px);transition:opacity .2s,transform .2s}
+.gloq-fab-bottom-left .gloq-fab-panel{left:20px;bottom:88px}
+.gloq-fab-bottom-right .gloq-fab-panel{right:20px;bottom:88px}
+.gloq-fab-top-left .gloq-fab-panel{left:20px;top:88px}
+.gloq-fab-top-right .gloq-fab-panel{right:20px;top:88px}
+.gloq-fab-open .gloq-fab-panel{opacity:1;pointer-events:auto;transform:translateY(0)}
+.gloq-fab-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #e6e9ec}
+.gloq-fab-head strong{font-size:15px;color:var(--gloq-brand)}
+.gloq-fab-close,.gloq-fab-remove{background:none;border:none;font-size:20px;line-height:1;cursor:pointer;color:#666}
+.gloq-fab-panel-body{overflow-y:auto;padding:8px 12px;flex:1 1 auto}
+.gloq-fab-empty{color:#666;padding:18px 6px;text-align:center}
+.gloq-fab-shoplink{display:block;text-align:center;color:var(--gloq-brand);font-weight:600;text-decoration:none}
+.gloq-fab-items{list-style:none;margin:0;padding:0}
+.gloq-fab-item{display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid #f1f5f9}
+.gloq-fab-item img{width:42px;height:42px;object-fit:cover;border-radius:6px}
+.gloq-fab-info{flex:1 1 auto;min-width:0}
+.gloq-fab-name{display:block;font-size:13px;line-height:1.3;color:#1a202c}
+.gloq-fab-pres{display:block;font-size:11px;color:#666}
+.gloq-fab-qty{width:48px;padding:4px 6px;border:1px solid #cbd2d9;border-radius:4px;font-size:13px;text-align:center}
+.gloq-fab-foot{padding:12px 16px;border-top:1px solid #e6e9ec}
+.gloq-fab-cta{display:block;text-align:center;background:var(--gloq-brand);color:#fff;text-decoration:none;padding:11px;border-radius:6px;font-weight:600}
+.gloq-fab-cta:hover{background:var(--gloq-brand-dark);color:#fff}
+@media(max-width:600px){
+  .gloq-fab-panel{left:0!important;right:0!important;bottom:0!important;top:auto!important;width:100%;max-width:100%;max-height:85vh;border-radius:14px 14px 0 0}
+}
