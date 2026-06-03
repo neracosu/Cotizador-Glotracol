@@ -24,12 +24,53 @@ class Glotracol_Quote_Webhook {
 		$post = get_post( $quote_id );
 		if ( ! $post || $post->post_type !== 'glo_quote' ) return;
 
+		$type           = get_post_meta( $quote_id, '_glo_type', true ) ?: 'quote';
+		$pricing_status = get_post_meta( $quote_id, '_glo_pricing_status', true ) ?: 'none';
+		$converted_at   = get_post_meta( $quote_id, '_glo_converted_at', true );
+		$client_id      = (int) get_post_meta( $quote_id, '_glo_client_id', true );
+		$raw_items      = get_post_meta( $quote_id, '_glo_items', true ) ?: [];
+
+		$items = [];
+		foreach ( (array) $raw_items as $it ) {
+			$items[] = [
+				'product_id'         => (int) ( $it['product_id'] ?? 0 ),
+				'sku'                => (string) ( $it['sku'] ?? '' ),
+				'sku_producto'       => (string) ( $it['sku_producto'] ?? ( $it['sku'] ?? '' ) ),
+				'name'               => (string) ( $it['name'] ?? '' ),
+				'presentacion_label' => (string) ( $it['presentacion_label'] ?? '' ),
+				'quantity'           => (int) ( $it['quantity'] ?? 0 ),
+				'unit_price'         => isset( $it['precio_unitario'] ) ? ( $it['precio_unitario'] === null ? null : (int) $it['precio_unitario'] ) : null,
+				'subtotal'           => isset( $it['precio_subtotal'] ) ? ( $it['precio_subtotal'] === null ? null : (int) $it['precio_subtotal'] ) : null,
+				'price_source'       => (string) ( $it['precio_origen'] ?? 'pendiente' ),
+			];
+		}
+
+		$client = [ 'id' => 0, 'nit' => '', 'name' => '', 'is_b2b' => false ];
+		if ( $client_id > 0 ) {
+			$client = [
+				'id'     => $client_id,
+				'nit'    => get_post_meta( $client_id, '_glo_client_nit', true ),
+				'name'   => get_post_meta( $client_id, '_glo_client_name', true ),
+				'is_b2b' => true,
+			];
+		}
+
 		$payload = [
-			'quote_id'   => (int) $quote_id,
-			'reference'  => get_post_meta( $quote_id, '_glo_qid', true ),
-			'status'     => $post->post_status,
-			'created_at' => mysql2date( 'c', $post->post_date_gmt, false ),
-			'customer'   => [
+			'event'           => $converted_at ? 'converted' : 'created',
+			'quote_id'        => (int) $quote_id,
+			'reference'       => get_post_meta( $quote_id, '_glo_qid', true ),
+			'type'            => $type,
+			'status'          => $post->post_status,
+			'pricing_status'  => $pricing_status,
+			'currency'        => 'COP',
+			'total'           => (int) get_post_meta( $quote_id, '_glo_total', true ),
+			'units_total'     => (int) get_post_meta( $quote_id, '_glo_units_total', true ),
+			'weight_total_kg' => (float) get_post_meta( $quote_id, '_glo_weight_total_kg', true ),
+			'size_tag'        => get_post_meta( $quote_id, '_glo_size_tag', true ) ?: 'small',
+			'created_at'      => mysql2date( 'c', $post->post_date_gmt, false ),
+			'converted_at'    => $converted_at ? mysql2date( 'c', get_gmt_from_date( $converted_at ), false ) : null,
+			'client'          => $client,
+			'customer'        => [
 				'name'    => get_post_meta( $quote_id, '_glo_customer_name', true ),
 				'email'   => get_post_meta( $quote_id, '_glo_customer_email', true ),
 				'phone'   => get_post_meta( $quote_id, '_glo_customer_phone', true ),
@@ -37,9 +78,9 @@ class Glotracol_Quote_Webhook {
 				'nit'     => get_post_meta( $quote_id, '_glo_customer_nit', true ),
 				'city'    => get_post_meta( $quote_id, '_glo_customer_city', true ),
 			],
-			'message'    => get_post_meta( $quote_id, '_glo_customer_message', true ),
-			'items'      => get_post_meta( $quote_id, '_glo_items', true ) ?: [],
-			'admin_url'  => admin_url( 'post.php?post=' . $quote_id . '&action=edit' ),
+			'message'         => get_post_meta( $quote_id, '_glo_customer_message', true ),
+			'items'           => $items,
+			'admin_url'       => admin_url( 'post.php?post=' . $quote_id . '&action=edit' ),
 		];
 
 		$payload = apply_filters( 'glotracol_quote_webhook_payload', $payload, $quote_id );
