@@ -5,7 +5,7 @@ Tags: woocommerce, quote, request-a-quote, b2b
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.1.1
+Stable tag: 2.1.2
 WC requires at least: 8.0
 
 Convierte WooCommerce en un sistema de solicitud de cotizaciones (RFQ) sin checkout ni pago.
@@ -29,6 +29,9 @@ Plugin propio para Glotracol (Global Trading de Colombia). Reemplaza el flujo de
 * Templates sobreescribibles desde el tema en `glotracol-quote/`.
 
 == Changelog ==
+
+= 2.1.2 =
+* Fix definitivo del carrito flotante: al quitar un item (o ponerlo en 0), el panel ahora se actualiza directamente con la respuesta del AJAX (elimina la fila y recalcula el contador) en lugar de depender del ciclo de fragments de WooCommerce, que en este entorno no refrescaba el panel. El backend ya eliminaba bien; el problema era solo visual. Incluye guarda anti doble-binding.
 
 = 2.1.1 =
 * Fix carrito flotante: la "X" no eliminaba el item (el nonce viajaba en el campo equivocado). Se fuerza el bump de versión para invalidar el JS cacheado.

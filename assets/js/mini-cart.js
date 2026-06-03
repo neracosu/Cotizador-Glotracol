@@ -28,14 +28,31 @@
 		if ( n <= 0 ) { close(); }
 	}
 
-	function updateQty( key, qty ) {
+	function updateQty( key, qty, $row ) {
 		return $.post( GloqMiniCart.ajaxUrl, {
 			action: 'gloq_update_qty',
 			_wpnonce: GloqMiniCart.qtyNonce,
 			key: key,
 			qty: qty
-		} ).done( function () {
-			// Refresca fragments WC (contador + cuerpo del panel).
+		} ).done( function ( resp ) {
+			if ( ! resp || ! resp.success ) { return; }
+			var data = resp.data || {};
+			var n = parseInt( data.count, 10 );
+			if ( isNaN( n ) ) { n = 0; }
+
+			// Actualizamos el panel directamente con la respuesta — no dependemos
+			// del ciclo de fragments de WooCommerce (que en este sitio no refresca
+			// nuestro panel).
+			if ( qty <= 0 && $row && $row.length ) { $row.remove(); }
+			$fab().find( '.gloq-fab-count' ).text( n );
+
+			if ( data.empty || n <= 0 ) {
+				$fab().find( '.gloq-fab-panel-body' ).html( '<p class="gloq-fab-empty">Aún no has añadido productos.</p>' );
+				$fab().addClass( 'gloq-fab-hidden' );
+				close();
+			}
+
+			// Sincroniza otros widgets de carrito (menu-cart de Elementor, contadores).
 			$( document.body ).trigger( 'wc_fragment_refresh' );
 		} );
 	}
@@ -43,6 +60,8 @@
 	$( function () {
 		var f = $fab();
 		if ( ! f.length ) { return; }
+		if ( f.data( 'gloqInit' ) ) { return; } // evita doble binding si el script carga dos veces
+		f.data( 'gloqInit', true );
 
 		f.on( 'click', '.gloq-fab-btn', function () {
 			f.hasClass( 'gloq-fab-open' ) ? close() : open();
@@ -53,13 +72,15 @@
 		var t;
 		f.on( 'change input', '.gloq-fab-qty', function () {
 			var $i = $( this ), key = $i.data( 'key' ), qty = Math.max( 0, parseInt( $i.val(), 10 ) || 0 );
+			var $row = $i.closest( '.gloq-fab-item' );
 			clearTimeout( t );
-			t = setTimeout( function () { updateQty( key, qty ); }, 400 );
+			t = setTimeout( function () { updateQty( key, qty, $row ); }, 400 );
 		} );
 
 		// Quitar item.
 		f.on( 'click', '.gloq-fab-remove', function () {
-			updateQty( $( this ).data( 'key' ), 0 );
+			var $b = $( this );
+			updateQty( $b.data( 'key' ), 0, $b.closest( '.gloq-fab-item' ) );
 		} );
 
 		// Escape cierra.
