@@ -51,9 +51,17 @@ class Glotracol_Quote_Admin_Settings {
 		$out['size_threshold_large_units']  = max( $out['size_threshold_medium_units'] + 1, (int) ( $input['size_threshold_large_units'] ?? 80 ) );
 		$out['size_threshold_medium_skus']  = max( 1, (int) ( $input['size_threshold_medium_skus'] ?? 5 ) );
 		$out['size_threshold_large_skus']   = max( $out['size_threshold_medium_skus'] + 1, (int) ( $input['size_threshold_large_skus'] ?? 12 ) );
+		$out['weight_threshold_large_kg'] = max( 1, (int) ( $input['weight_threshold_large_kg'] ?? 200 ) );
+		$out['weight_threshold_tons_kg']  = max( $out['weight_threshold_large_kg'] + 1, (int) ( $input['weight_threshold_tons_kg'] ?? 1000 ) );
 		$out['large_alert_enabled']         = ! empty( $input['large_alert_enabled'] ) ? 'yes' : 'no';
 		$out['large_alert_email']           = is_email( $input['large_alert_email'] ?? '' ) ? sanitize_email( $input['large_alert_email'] ) : '';
 		$out['auto_respond_enabled']        = ! empty( $input['auto_respond_enabled'] ) ? 'yes' : 'no';
+		$out['appearance_inherit_elementor'] = ! empty( $input['appearance_inherit_elementor'] ) ? 'yes' : 'no';
+		$slot = sanitize_key( $input['appearance_elementor_slot'] ?? 'primary' );
+		$out['appearance_elementor_slot'] = in_array( $slot, [ 'primary', 'secondary', 'accent' ], true ) ? $slot : 'primary';
+		$out['mini_cart_enabled'] = ! empty( $input['mini_cart_enabled'] ) ? 'yes' : 'no';
+		$mcp = sanitize_key( $input['mini_cart_position'] ?? 'bottom-left' );
+		$out['mini_cart_position'] = in_array( $mcp, [ 'bottom-left', 'bottom-right', 'top-left', 'top-right' ], true ) ? $mcp : 'bottom-left';
 
 		// SMTP
 		$out['smtp_enabled']     = ! empty( $input['smtp_enabled'] ) ? 'yes' : 'no';
@@ -85,6 +93,7 @@ class Glotracol_Quote_Admin_Settings {
 				<a class="nav-tab <?php echo $tab === 'smtp' ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url( $base_url . '&tab=smtp' ); ?>">SMTP</a>
 				<a class="nav-tab <?php echo $tab === 'integrations' ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url( $base_url . '&tab=integrations' ); ?>">Integraciones</a>
 				<a class="nav-tab <?php echo $tab === 'rules' ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url( $base_url . '&tab=rules' ); ?>">Reglas</a>
+				<a class="nav-tab <?php echo $tab === 'appearance' ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url( $base_url . '&tab=appearance' ); ?>">Apariencia</a>
 				<a class="nav-tab <?php echo $tab === 'advanced' ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url( $base_url . '&tab=advanced' ); ?>">Avanzado</a>
 			</h2>
 			<form method="post" action="options.php">
@@ -255,12 +264,58 @@ class Glotracol_Quote_Admin_Settings {
 
 				<hr>
 
+				<h2>Semáforo por peso</h2>
+				<p class="description">Clasificación por peso total: verde = pequeño, amarillo = grande, rojo = toneladas. Si los productos no tienen peso, se usa la regla por unidades de arriba.</p>
+				<table class="form-table" role="presentation">
+					<tr><th scope="row">Umbral "grande" (amarillo)</th>
+						<td><input type="number" min="1" max="999999" name="<?php echo $opt; ?>[weight_threshold_large_kg]" value="<?php echo esc_attr( $s['weight_threshold_large_kg'] ?? 200 ); ?>" style="width:120px"> kg o más</td></tr>
+					<tr><th scope="row">Umbral "toneladas" (rojo)</th>
+						<td><input type="number" min="1" max="9999999" name="<?php echo $opt; ?>[weight_threshold_tons_kg]" value="<?php echo esc_attr( $s['weight_threshold_tons_kg'] ?? 1000 ); ?>" style="width:120px"> kg o más</td></tr>
+				</table>
+
+				<hr>
+
 				<h2>Auto-respuesta con cotización formal</h2>
 				<p class="description">Cuando el cliente envía una cotización y <strong>todos sus SKUs tienen precio</strong> (B2B si su NIT está identificado, o público si no), el cliente recibe automáticamente un email con la cotización formal y los totales. Si falta precio para algún SKU, la cotización entra como <strong>"Pendiente de precios"</strong> y solo el equipo recibe la alerta para completar manualmente.</p>
 				<table class="form-table">
 					<tr><th><label>Activar auto-respuesta</label></th>
 						<td><label><input type="checkbox" name="<?php echo $opt; ?>[auto_respond_enabled]" value="yes" <?php checked( $s['auto_respond_enabled'] ?? 'yes', 'yes' ); ?>> Enviar cotización con precios automáticamente cuando todos los SKUs tienen precio</label>
 						<p class="description">Si lo desactivas, el cliente siempre recibirá un email simple de confirmación y la respuesta formal será 100% manual.</p></td></tr>
+				</table>
+				<?php
+				break;
+
+			case 'appearance':
+				?>
+				<h2>Apariencia</h2>
+				<p class="description">El plugin puede heredar el color principal de tu kit global de Elementor. Si lo dejas desactivado, usa el verde Glotracol.</p>
+				<table class="form-table" role="presentation">
+					<tr><th scope="row">Heredar color de Elementor</th>
+						<td><label><input type="checkbox" name="<?php echo $opt; ?>[appearance_inherit_elementor]" value="yes" <?php checked( $s['appearance_inherit_elementor'] ?? 'no', 'yes' ); ?>> Usar el color global de Elementor como color de marca del plugin</label></td></tr>
+					<tr><th scope="row">Slot de color de Elementor</th>
+						<td>
+							<select name="<?php echo $opt; ?>[appearance_elementor_slot]">
+								<option value="primary" <?php selected( $s['appearance_elementor_slot'] ?? 'primary', 'primary' ); ?>>Primary</option>
+								<option value="secondary" <?php selected( $s['appearance_elementor_slot'] ?? 'primary', 'secondary' ); ?>>Secondary</option>
+								<option value="accent" <?php selected( $s['appearance_elementor_slot'] ?? 'primary', 'accent' ); ?>>Accent</option>
+							</select>
+							<p class="description">Qué color global de Elementor usar. Si el slot está vacío, cae al verde Glotracol.</p>
+						</td></tr>
+				</table>
+				<h2>Carrito flotante</h2>
+				<table class="form-table" role="presentation">
+					<tr><th scope="row">Mostrar carrito flotante</th>
+						<td><label><input type="checkbox" name="<?php echo $opt; ?>[mini_cart_enabled]" value="yes" <?php checked( $s['mini_cart_enabled'] ?? 'yes', 'yes' ); ?>> Burbuja visible en todo el sitio con lo añadido a la cotización</label></td></tr>
+					<tr><th scope="row">Posición</th>
+						<td>
+							<select name="<?php echo $opt; ?>[mini_cart_position]">
+								<option value="bottom-left" <?php selected( $s['mini_cart_position'] ?? 'bottom-left', 'bottom-left' ); ?>>Abajo izquierda</option>
+								<option value="bottom-right" <?php selected( $s['mini_cart_position'] ?? 'bottom-left', 'bottom-right' ); ?>>Abajo derecha</option>
+								<option value="top-left" <?php selected( $s['mini_cart_position'] ?? 'bottom-left', 'top-left' ); ?>>Arriba izquierda</option>
+								<option value="top-right" <?php selected( $s['mini_cart_position'] ?? 'bottom-left', 'top-right' ); ?>>Arriba derecha</option>
+							</select>
+							<p class="description">Por defecto abajo-izquierda para no chocar con el botón de WhatsApp.</p>
+						</td></tr>
 				</table>
 				<?php
 				break;

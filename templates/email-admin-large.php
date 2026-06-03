@@ -7,9 +7,10 @@
 	<tr><td align="center">
 		<table role="presentation" width="640" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 4px 16px rgba(220,38,38,0.15);border:2px solid #dc3545">
 			<tr><td style="background:linear-gradient(135deg,#dc3545 0%,#a02029 100%);color:#fff;padding:24px 28px">
-				<div style="display:inline-block;background:rgba(255,255,255,0.18);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px">Atención prioritaria</div>
-				<h1 style="margin:0;font-size:22px;line-height:1.3">Pedido grande #<?php echo (int) $quote_id; ?></h1>
-				<p style="margin:8px 0 0;font-size:14px;opacity:0.95"><strong><?php echo (int) $units_total; ?> unidades</strong> · <strong><?php echo (int) $skus_count; ?> productos distintos</strong> · clasificado como <strong>GRANDE</strong></p>
+				<?php $is_tons = isset( $size_tag ) && $size_tag === 'tons'; ?>
+				<div style="display:inline-block;background:rgba(255,255,255,0.18);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px"><?php echo $is_tons ? 'Atención máxima' : 'Atención prioritaria'; ?></div>
+				<h1 style="margin:0;font-size:22px;line-height:1.3"><?php echo $is_tons ? 'TONELADAS — Atención máxima' : 'Pedido grande'; ?> #<?php echo (int) $quote_id; ?></h1>
+				<p style="margin:8px 0 0;font-size:14px;opacity:0.95"><strong><?php echo (int) $units_total; ?> unidades</strong> · <strong><?php echo (int) $skus_count; ?> productos distintos</strong> · clasificado como <strong><?php echo $is_tons ? 'TONELADAS' : 'GRANDE'; ?></strong></p>
 			</td></tr>
 
 			<tr><td style="padding:24px 28px">

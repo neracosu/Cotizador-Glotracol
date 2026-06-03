@@ -276,6 +276,13 @@ class Glotracol_Quote_Admin_Meta_Box {
 			] );
 		}
 
+		// Re-disparar webhook como evento de conversión (dispatch detecta
+		// event=converted vía _glo_converted_at, ya seteado arriba).
+		if ( class_exists( 'Glotracol_Quote_Webhook' ) && trim( (string) glotracol_quote_get_setting( 'webhook_url' ) ) !== '' ) {
+			delete_post_meta( $post_id, '_glo_webhook_attempts' ); // backoff cuenta desde cero por evento
+			wp_schedule_single_event( time() + 5, Glotracol_Quote_Webhook::HOOK, [ (int) $post_id ] );
+		}
+
 		// Si quedó priced, disparar email auto-cotizada al cliente
 		if ( $all_priced ) {
 			$payload = $this->reconstruct_payload( $post_id );

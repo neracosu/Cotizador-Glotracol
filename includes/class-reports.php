@@ -235,10 +235,10 @@ class Glotracol_Quote_Reports {
 					</label>
 					<label>Tamaño
 						<select name="size_tag">
-							<option value="">Todos</option>
+							<option value="">Todos los tamaños</option>
 							<option value="small" <?php selected( $filters['size_tag'], 'small' ); ?>>Pequeña</option>
-							<option value="medium" <?php selected( $filters['size_tag'], 'medium' ); ?>>Mediana</option>
 							<option value="large" <?php selected( $filters['size_tag'], 'large' ); ?>>Grande</option>
+							<option value="tons" <?php selected( $filters['size_tag'], 'tons' ); ?>>Toneladas</option>
 						</select>
 					</label>
 				</div>

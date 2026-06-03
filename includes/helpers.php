@@ -25,8 +25,15 @@ function glotracol_quote_get_settings() {
 		'size_threshold_large_skus'   => 12,   // ≥ 12 SKUs distintos → large
 		'large_alert_email'           => '',   // Email destacado para pedidos large (opcional, vacío = usa destination_emails)
 		'large_alert_enabled'         => 'yes',
+		'weight_threshold_large_kg' => 200,    // ≥ 200 kg → grande (amarillo)
+		'weight_threshold_tons_kg'  => 1000,   // ≥ 1000 kg → toneladas (rojo)
 		// Auto-respuesta con precios (F6)
 		'auto_respond_enabled'        => 'yes',
+		// Apariencia (Feature 3 — herencia de colores de Elementor)
+		'appearance_inherit_elementor' => 'no',          // 'yes'|'no'
+		'appearance_elementor_slot'    => 'primary',     // 'primary'|'secondary'|'accent'
+		'mini_cart_enabled'  => 'yes',           // 'yes'|'no'
+		'mini_cart_position' => 'bottom-left',   // bottom-left|bottom-right|top-left|top-right
 		'smtp_enabled'              => 'no',
 		'smtp_host'                 => '',
 		'smtp_port'                 => '587',
@@ -172,8 +179,9 @@ function glotracol_quote_size_tag( $units_total, $skus_distinct ) {
 function glotracol_quote_size_tag_label( $tag ) {
 	$map = [
 		'small'  => 'Pequeña',
-		'medium' => 'Mediana',
+		'medium' => 'Grande',     // normalización de datos viejos
 		'large'  => 'Grande',
+		'tons'   => 'Toneladas',
 	];
 	return $map[ $tag ] ?? ucfirst( (string) $tag );
 }
@@ -259,4 +267,63 @@ function glotracol_quote_get_presentacion( $product_id, $idx ) {
 		if ( (int) ( $p['idx'] ?? -1 ) === $idx ) return $p;
 	}
 	return null;
+}
+
+/**
+ * Peso total (kg) de una lista de items.
+ *
+ * Peso por item: peso_g/1000 de la presentación si existe; si no, peso WC del
+ * producto (get_weight(), asumido en kg). Sin peso → 0.
+ *
+ * @param array $items Items con product_id, quantity y (opcional) presentacion_idx.
+ * @return float kg totales.
+ */
+function glotracol_quote_weight_total( $items ) {
+	$total = 0.0;
+	foreach ( (array) $items as $item ) {
+		$qty = isset( $item['quantity'] ) ? max( 0, (int) $item['quantity'] ) : 0;
+		if ( $qty <= 0 ) continue;
+		$kg  = 0.0;
+		$pid = isset( $item['product_id'] ) ? (int) $item['product_id'] : 0;
+		$idx = isset( $item['presentacion_idx'] ) && $item['presentacion_idx'] !== null ? (int) $item['presentacion_idx'] : null;
+		if ( $pid && $idx !== null ) {
+			$pres = glotracol_quote_get_presentacion( $pid, $idx );
+			if ( $pres && ! empty( $pres['peso_g'] ) ) {
+				$kg = (float) $pres['peso_g'] / 1000.0;
+			}
+		}
+		if ( $kg <= 0 && $pid && function_exists( 'wc_get_product' ) ) {
+			$product = wc_get_product( $pid );
+			if ( $product ) {
+				$w = (float) $product->get_weight();
+				if ( $w > 0 ) $kg = $w;
+			}
+		}
+		$total += $kg * $qty;
+	}
+	return $total;
+}
+
+/**
+ * Clasificación semáforo por peso real, con fallback por unidades/SKUs.
+ *
+ * @param float $weight_kg     Peso total en kg (de glotracol_quote_weight_total).
+ * @param int   $units_total   Unidades totales (fallback si weight_kg == 0).
+ * @param int   $skus_distinct SKUs distintos (fallback).
+ * @return string 'small'|'large'|'tons'
+ */
+function glotracol_quote_semaforo( $weight_kg, $units_total = 0, $skus_distinct = 0 ) {
+	$weight_kg = (float) $weight_kg;
+	if ( $weight_kg > 0 ) {
+		$large = (int) glotracol_quote_get_setting( 'weight_threshold_large_kg', 200 );
+		$tons  = (int) glotracol_quote_get_setting( 'weight_threshold_tons_kg', 1000 );
+		if ( $weight_kg >= $tons )  return 'tons';
+		if ( $weight_kg >= $large ) return 'large';
+		return 'small';
+	}
+	// Fallback por unidades: reusa la clasificación previa y la traduce.
+	$legacy = glotracol_quote_size_tag( $units_total, $skus_distinct ); // small|medium|large
+	if ( $legacy === 'large' )  return 'tons';   // muchas unidades sin peso → rojo
+	if ( $legacy === 'medium' ) return 'large';  // medio → amarillo
+	return 'small';
 }

@@ -127,18 +127,19 @@ class Glotracol_Quote_CPT {
 			case 'glo_size':
 				$size = get_post_meta( $post_id, '_glo_size_tag', true );
 				if ( ! $size ) {
-					// Backfill on-the-fly para cotizaciones creadas antes de F3
+					// Backfill on-the-fly para cotizaciones previas.
 					$items = get_post_meta( $post_id, '_glo_items', true );
 					if ( is_array( $items ) ) {
 						$qty = 0;
 						foreach ( $items as $it ) { $qty += (int) ( $it['quantity'] ?? 0 ); }
-						$size = glotracol_quote_size_tag( $qty, count( $items ) );
+						$wk = glotracol_quote_weight_total( $items );
+						$size = glotracol_quote_semaforo( $wk, $qty, count( $items ) );
 					}
 				}
+				// Normaliza datos viejos (medium → large).
+				if ( $size === 'medium' ) { $size = 'large'; }
 				if ( $size ) {
-					$is_large = (int) get_post_meta( $post_id, '_glo_is_large_alert', true ) === 1;
-					$alert = '';
-					echo '<span class="glo-size glo-size-' . esc_attr( $size ) . '">' . esc_html( glotracol_quote_size_tag_label( $size ) ) . '</span>' . $alert;
+					echo '<span class="glo-size glo-size-' . esc_attr( $size ) . '">' . esc_html( glotracol_quote_size_tag_label( $size ) ) . '</span>';
 				} else {
 					echo '—';
 				}

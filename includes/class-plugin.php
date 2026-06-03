@@ -24,6 +24,7 @@ class Glotracol_Quote_Plugin {
 		new Glotracol_Quote_Product_Buttons();
 		new Glotracol_Quote_Product_Tabs();
 		new Glotracol_Quote_Cart_Overrides();
+		new Glotracol_Quote_Mini_Cart();
 		new Glotracol_Quote_Form();
 		new Glotracol_Quote_Emails();
 		new Glotracol_Quote_SMTP();
@@ -34,6 +35,7 @@ class Glotracol_Quote_Plugin {
 
 		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_assets' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
+		add_action( 'wp_head', [ $this, 'print_appearance_css' ], 99 );
 		add_filter( 'plugin_action_links_' . GLOTRACOL_QUOTE_BASENAME, [ $this, 'plugin_action_links' ] );
 	}
 
@@ -84,6 +86,18 @@ class Glotracol_Quote_Plugin {
 		// cubrir mini-cart, breadcrumbs y bloques widgets, no solo /carrito.
 		wp_register_script( 'glotracol-cart-rename', GLOTRACOL_QUOTE_URL . 'assets/js/cart-rename.js', [], GLOTRACOL_QUOTE_VERSION, true );
 
+		// Mini-cart: visible en todo el frontend (CSS reusa quote.css; JS propio liviano).
+		wp_register_script( 'glotracol-mini-cart', GLOTRACOL_QUOTE_URL . 'assets/js/mini-cart.js', [ 'jquery' ], GLOTRACOL_QUOTE_VERSION, true );
+		if ( ! is_admin() && glotracol_quote_get_setting( 'mini_cart_enabled', 'yes' ) === 'yes' ) {
+			wp_enqueue_style( 'glotracol-quote' ); // contiene los estilos del FAB
+			wp_enqueue_script( 'glotracol-mini-cart' );
+			wp_localize_script( 'glotracol-mini-cart', 'GloqMiniCart', [
+				'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
+				'qtyNonce' => wp_create_nonce( 'gloq_update_qty' ),
+				'formUrl'  => glotracol_quote_get_form_page_url(),
+			] );
+		}
+
 		if ( $this->should_load_assets() ) {
 			wp_enqueue_style( 'glotracol-quote' );
 			wp_enqueue_script( 'glotracol-quote' );
@@ -130,5 +144,22 @@ class Glotracol_Quote_Plugin {
 		array_unshift( $links, '<a href="' . esc_url( $settings_url ) . '">Configuración</a>' );
 		array_unshift( $links, '<a href="' . esc_url( $dashboard_url ) . '"><strong>Dashboard</strong></a>' );
 		return $links;
+	}
+
+	/**
+	 * Si la herencia de Elementor está activa, re-define --gloq-brand apuntando al
+	 * slot global elegido, con fallback al verde. Deriva dark/tint con color-mix.
+	 */
+	public function print_appearance_css() {
+		if ( is_admin() ) {
+			return;
+		}
+		if ( glotracol_quote_get_setting( 'appearance_inherit_elementor', 'no' ) !== 'yes' ) {
+			return;
+		}
+		$slot = glotracol_quote_get_setting( 'appearance_elementor_slot', 'primary' );
+		$slot = in_array( $slot, [ 'primary', 'secondary', 'accent' ], true ) ? $slot : 'primary';
+		$var  = '--e-global-color-' . $slot;
+		echo "<style id='gloq-appearance'>:root{--gloq-brand:var($var,#0a4d3a);--gloq-brand-dark:color-mix(in srgb,var($var,#0a4d3a) 85%,#000);--gloq-brand-tint:color-mix(in srgb,var($var,#0a4d3a) 8%,#fff);}</style>\n";
 	}
 }
