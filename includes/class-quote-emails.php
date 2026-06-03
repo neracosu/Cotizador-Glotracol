@@ -71,8 +71,9 @@ class Glotracol_Quote_Emails {
 
 		$admin_subject = glotracol_quote_replace_placeholders( $settings['admin_subject'], $placeholders );
 		// Prefix del subject según contexto
+		$size_tag = get_post_meta( $quote_id, '_glo_size_tag', true );
 		$prefix = '';
-		if ( $is_large ) $prefix .= '[GRANDE] ';
+		if ( $is_large ) $prefix .= ( $size_tag === 'tons' ) ? '[TONELADAS] ' : '[GRANDE] ';
 		if ( $is_pending ) $prefix .= '[PENDIENTE PRECIOS] ';
 		elseif ( $is_auto_priced ) $prefix .= '[AUTO-COTIZADA] ';
 		if ( $type === 'order' ) $prefix .= '[PEDIDO] ';
@@ -105,6 +106,7 @@ class Glotracol_Quote_Emails {
 			'client_name'     => $client_name,
 			'pricing_status'  => $pricing_status,
 			'total'           => $total,
+			'size_tag'        => $size_tag,
 		] );
 		$admin_body = apply_filters( 'glotracol_quote_email_admin_body', $admin_body, $quote_id, $payload );
 		$admin_ok = wp_mail( $admin_recipients, $admin_subject, $admin_body, $admin_headers );
