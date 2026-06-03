@@ -55,7 +55,7 @@ class Glotracol_Quote_Mini_Cart {
 			$out .= '<li class="gloq-fab-item" data-key="' . esc_attr( $key ) . '">'
 				. '<span class="gloq-fab-thumb">' . $img . '</span>'
 				. '<span class="gloq-fab-info"><span class="gloq-fab-name">' . esc_html( $name ) . '</span>' . $pres_html . '</span>'
-				. '<input type="number" class="gloq-fab-qty" min="0" step="1" value="' . $qty . '" data-key="' . esc_attr( $key ) . '" aria-label="Cantidad">'
+				. '<input type="number" class="gloq-fab-qty" min="0" step="1" value="' . esc_attr( (string) $qty ) . '" data-key="' . esc_attr( $key ) . '" aria-label="Cantidad">'
 				. '<button type="button" class="gloq-fab-remove" data-key="' . esc_attr( $key ) . '" aria-label="Quitar">&times;</button>'
 				. '</li>';
 		}
@@ -72,7 +72,7 @@ class Glotracol_Quote_Mini_Cart {
 		$form_url = glotracol_quote_get_form_page_url();
 		$hidden   = $count > 0 ? '' : ' gloq-fab-hidden';
 		?>
-		<div class="gloq-fab-wrap gloq-fab-<?php echo esc_attr( $pos ); ?><?php echo $hidden; ?>" id="gloq-fab">
+		<div class="<?php echo esc_attr( 'gloq-fab-wrap gloq-fab-' . $pos . $hidden ); ?>" id="gloq-fab">
 			<button type="button" class="gloq-fab-btn" aria-label="Ver mi cotización" aria-expanded="false">
 				<span class="gloq-fab-icon" aria-hidden="true">
 					<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
