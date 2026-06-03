@@ -52,7 +52,7 @@ class Glotracol_Quote_SMTP {
 			wp_send_json_error( [ 'message' => 'Email inválido' ] );
 		}
 
-		$body = '<!DOCTYPE html><html><body style="font-family:Arial;padding:20px"><h2 style="color:#0a4d3a">Test de SMTP — Glotracol Cotizador</h2><p>Este es un email de prueba enviado desde el plugin <strong>Glotracol Cotizador</strong> para verificar que tu configuración de envío funciona correctamente.</p><p><strong>Fecha:</strong> ' . esc_html( current_time( 'd/m/Y H:i:s' ) ) . '<br><strong>Servidor:</strong> ' . esc_html( $_SERVER['SERVER_NAME'] ?? '' ) . '</p><p>Si ves este mensaje, la configuración de envío funciona correctamente.</p><hr><p style="font-size:11px;color:#888">Plugin desarrollado por <a href="https://neracosu.com/">Neracosu</a></p></body></html>';
+		$body = '<!DOCTYPE html><html><body style="font-family:Arial;padding:20px"><h2 style="color:#0a4d3a">Test de SMTP — Glotracol Cotizador</h2><p>Este es un email de prueba enviado desde el plugin <strong>Glotracol Cotizador</strong> para verificar que tu configuración de envío funciona correctamente.</p><p><strong>Fecha:</strong> ' . esc_html( current_time( 'd/m/Y H:i:s' ) ) . '<br><strong>Servidor:</strong> ' . esc_html( $_SERVER['SERVER_NAME'] ?? '' ) . '</p><p>Si ves este mensaje, la configuración de envío funciona correctamente.</p><hr><p style="font-size:11px;color:#888">Plugin desarrollado por <a href="https://neracosu.com/">Neracosu</a> para <a href="https://www.eagencia.co/">eagencia</a></p></body></html>';
 
 		$headers = [ 'Content-Type: text/html; charset=UTF-8' ];
 

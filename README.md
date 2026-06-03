@@ -149,5 +149,5 @@ Las plantillas se pueden sobrescribir desde el tema colocando el archivo corresp
 
 Distribuido bajo licencia GPL-3.0 (ver [LICENSE](LICENSE)).
 
-Autor: Neracosu — https://neracosu.com/
-Cliente: Glotracol — Global Trading de Colombia.
+Plugin desarrollado por [Neracosu](https://neracosu.com/) para [eagencia](https://www.eagencia.co/).
+Cliente final: Glotracol — Global Trading de Colombia.

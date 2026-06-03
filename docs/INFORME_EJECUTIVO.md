@@ -51,4 +51,4 @@ Estas son mejoras posibles, no compromisos, que pueden valorarse según las prio
 
 ## Contacto
 
-Desarrollado por Neracosu — [https://neracosu.com/](https://neracosu.com/)
+Plugin desarrollado por [Neracosu](https://neracosu.com/) para [eagencia](https://www.eagencia.co/).

@@ -13,8 +13,8 @@ Este documento es un resumen de estado para arrancar la siguiente iteración de 
 | Campo | Valor |
 |---|---|
 | Versión | 2.0.3 |
-| Autor | Neracosu (https://neracosu.com/) |
-| Cliente | Glotracol — Global Trading de Colombia |
+| Desarrollado por | [Neracosu](https://neracosu.com/) para [eagencia](https://www.eagencia.co/) |
+| Cliente final | Glotracol — Global Trading de Colombia |
 | Licencia | GPL-3.0 |
 | Requiere WordPress | 6.0+ |
 | Requiere PHP | 7.4+ |

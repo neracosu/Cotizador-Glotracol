@@ -1,7 +1,7 @@
 # Glotracol Cotizador — Documentación técnica
 
 **Versión documentada:** 2.0.1 · **Última actualización:** 2026-04-30
-**Autor:** Neracosu (https://neracosu.com/) · **Cliente:** Glotracol — Global Trading de Colombia
+**Desarrollado por:** Neracosu (https://neracosu.com/) para eagencia (https://www.eagencia.co/) · **Cliente final:** Glotracol — Global Trading de Colombia
 
 Este documento describe el estado actual del plugin. La versión inicial 1.0.0 (línea base) fue documentada el mismo día. Las 1.1.0 → 1.2.0 corresponden a las primeras dos fases del roadmap v2.0.
 
@@ -1653,4 +1653,4 @@ Logger smoke test:
 
 ---
 
-*Documento generado para Glotracol — Global Trading de Colombia. Plugin desarrollado por Neracosu (https://neracosu.com/).*
+*Documento generado para Glotracol — Global Trading de Colombia. Plugin desarrollado por Neracosu (https://neracosu.com/) para eagencia (https://www.eagencia.co/).*
