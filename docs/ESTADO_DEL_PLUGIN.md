@@ -1,6 +1,6 @@
 # Estado del plugin — Glotracol Cotizador
 
-**Versión:** 2.0.3 · **Fecha del snapshot:** 2026-06-02
+**Versión:** 2.1.0 · **Fecha del snapshot:** 2026-06-03
 
 Plugin propio que convierte WooCommerce en un sistema de solicitud de cotizaciones (RFQ): reemplaza el checkout por un formulario que arma la lista de productos y la envía al equipo comercial de Glotracol y al cliente, con resolución de precios público/B2B, CRM, reportes e integraciones.
 
@@ -12,7 +12,7 @@ Este documento es un resumen de estado para arrancar la siguiente iteración de 
 
 | Campo | Valor |
 |---|---|
-| Versión | 2.0.3 |
+| Versión | 2.1.0 |
 | Desarrollado por | [Neracosu](https://neracosu.com/) para [eagencia](https://www.eagencia.co/) |
 | Cliente final | Glotracol — Global Trading de Colombia |
 | Licencia | GPL-3.0 |
@@ -30,7 +30,7 @@ Las declaraciones de HPOS y bloques son nominales: el plugin no crea órdenes WC
 
 ## Madurez
 
-El plugin está operativo en producción (glotracol.neracosu.com). Completó el roadmap v2.0 (RFQ + CRM B2B + pricing público/B2B + reportes), entregado por fases hasta la 2.0.0. La 2.0.1 corrigió un bug del importador (token con mayúsculas que rompía la resolución del archivo) y añadió un sistema de logs centralizado. La 2.0.2 aplicó ocho correcciones derivadas de un code-review (autorización a nivel de objeto, neutralización de inyección de fórmulas en CSV, eliminación de patrones N+1, robustez del importador y del webhook). La 2.0.3 unificó la UI del panel admin en `assets/css/admin.css` y `assets/js/admin.js`, añadió estados de carga y empty states, y retiró los emojis de panel, asuntos de email, plantillas y documentación.
+El plugin está operativo en producción (glotracol.neracosu.com). Completó el roadmap v2.0 (RFQ + CRM B2B + pricing público/B2B + reportes), entregado por fases hasta la 2.0.0. La 2.0.1 corrigió un bug del importador (token con mayúsculas que rompía la resolución del archivo) y añadió un sistema de logs centralizado. La 2.0.2 aplicó ocho correcciones derivadas de un code-review (autorización a nivel de objeto, neutralización de inyección de fórmulas en CSV, eliminación de patrones N+1, robustez del importador y del webhook). La 2.0.3 unificó la UI del panel admin en `assets/css/admin.css` y `assets/js/admin.js`, añadió estados de carga y empty states, y retiró los emojis de panel, asuntos de email, plantillas y documentación. La 2.1.0 añade carrito flotante persistente (mini-cotización), herencia de tipografía y color del kit global de Elementor (con toggle en Apariencia), semáforo por peso real (pequeño/grande/toneladas con umbrales configurables) y webhook enriquecido con re-disparo al convertir en pedido, listo para GoHighLevel.
 
 ---
 
@@ -123,6 +123,10 @@ Dos custom post types, ambos privados (`public=false`, `show_ui=true`):
 - **Reportes + export.** Filtros por fecha, tipo, estado, pricing_status y tamaño; tarjetas de stats, top 5 clientes y top 5 SKUs, tabla paginada y export CSV (BOM UTF-8) honrando los filtros.
 - **Logger.** Sistema central por niveles (debug/info/warn/error) y categorías; viewer en el admin con filtros y banner de alerta en el dashboard ante errores recientes.
 - **Anti-spam.** Nonce + honeypot + rate limit por IP en el submit del formulario.
+- **Carrito flotante persistente.** Widget mini-cotización visible en todo el sitio; persiste entre páginas sin recargar.
+- **Herencia de tipografía y color de Elementor.** Toggle en Apariencia para que el plugin adopte la fuente y el color de marca del kit global de Elementor.
+- **Semáforo por peso real.** Clasificación en pequeño/grande/toneladas basada en el peso real de los items, con umbrales configurables en Ajustes > Reglas.
+- **Webhook enriquecido + re-disparo en conversión.** El payload incluye tipo, total, precios por línea, peso y datos del cliente B2B; se re-dispara automáticamente al convertir la cotización en pedido. Listo para GoHighLevel.
 
 ---
 
@@ -222,3 +226,4 @@ Mejoras de UX ya implementadas en 2.0.3: assets de admin unificados en todas las
 | 2.0.1 | Fix del importador (token mixed-case) + sistema de logs centralizado con viewer y banner de alerta. |
 | 2.0.2 | Ocho correcciones de code-review: autorización por objeto, CSV injection, eliminación de N+1, robustez de importador/webhook/logger. |
 | 2.0.3 | UI de admin unificada, estados de carga y empty states, retiro de emojis en panel/emails/plantillas/docs. |
+| 2.1.0 | Carrito flotante persistente, herencia de tipografía/color de Elementor, semáforo por peso (toneladas), webhook enriquecido + re-disparo en conversión (GHL). |
