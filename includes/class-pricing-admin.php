@@ -220,7 +220,7 @@ class Glotracol_Quote_Pricing_Admin {
 			$price  = isset( $row['price'] ) && $row['price'] !== '' ? (int) $row['price'] : 0;
 			$delete = ! empty( $row['delete'] );
 
-			if ( $pid <= 0 ) continue;
+			if ( $pid <= 0 || get_post_type( $pid ) !== 'product' ) continue;
 
 			if ( $delete || $price <= 0 ) {
 				glotracol_quote_set_product_price( $pid, 0 ); // 0 borra el meta
