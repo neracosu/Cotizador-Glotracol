@@ -27,6 +27,9 @@ function glotracol_quote_get_settings() {
 		'large_alert_enabled'         => 'yes',
 		// Auto-respuesta con precios (F6)
 		'auto_respond_enabled'        => 'yes',
+		// Apariencia (Feature 3 — herencia de colores de Elementor)
+		'appearance_inherit_elementor' => 'no',          // 'yes'|'no'
+		'appearance_elementor_slot'    => 'primary',     // 'primary'|'secondary'|'accent'
 		'smtp_enabled'              => 'no',
 		'smtp_host'                 => '',
 		'smtp_port'                 => '587',

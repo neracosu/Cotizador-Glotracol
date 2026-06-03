@@ -54,6 +54,9 @@ class Glotracol_Quote_Admin_Settings {
 		$out['large_alert_enabled']         = ! empty( $input['large_alert_enabled'] ) ? 'yes' : 'no';
 		$out['large_alert_email']           = is_email( $input['large_alert_email'] ?? '' ) ? sanitize_email( $input['large_alert_email'] ) : '';
 		$out['auto_respond_enabled']        = ! empty( $input['auto_respond_enabled'] ) ? 'yes' : 'no';
+		$out['appearance_inherit_elementor'] = ! empty( $input['appearance_inherit_elementor'] ) ? 'yes' : 'no';
+		$slot = sanitize_key( $input['appearance_elementor_slot'] ?? 'primary' );
+		$out['appearance_elementor_slot'] = in_array( $slot, [ 'primary', 'secondary', 'accent' ], true ) ? $slot : 'primary';
 
 		// SMTP
 		$out['smtp_enabled']     = ! empty( $input['smtp_enabled'] ) ? 'yes' : 'no';
@@ -85,6 +88,7 @@ class Glotracol_Quote_Admin_Settings {
 				<a class="nav-tab <?php echo $tab === 'smtp' ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url( $base_url . '&tab=smtp' ); ?>">SMTP</a>
 				<a class="nav-tab <?php echo $tab === 'integrations' ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url( $base_url . '&tab=integrations' ); ?>">Integraciones</a>
 				<a class="nav-tab <?php echo $tab === 'rules' ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url( $base_url . '&tab=rules' ); ?>">Reglas</a>
+				<a class="nav-tab <?php echo $tab === 'appearance' ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url( $base_url . '&tab=appearance' ); ?>">Apariencia</a>
 				<a class="nav-tab <?php echo $tab === 'advanced' ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url( $base_url . '&tab=advanced' ); ?>">Avanzado</a>
 			</h2>
 			<form method="post" action="options.php">
@@ -261,6 +265,26 @@ class Glotracol_Quote_Admin_Settings {
 					<tr><th><label>Activar auto-respuesta</label></th>
 						<td><label><input type="checkbox" name="<?php echo $opt; ?>[auto_respond_enabled]" value="yes" <?php checked( $s['auto_respond_enabled'] ?? 'yes', 'yes' ); ?>> Enviar cotización con precios automáticamente cuando todos los SKUs tienen precio</label>
 						<p class="description">Si lo desactivas, el cliente siempre recibirá un email simple de confirmación y la respuesta formal será 100% manual.</p></td></tr>
+				</table>
+				<?php
+				break;
+
+			case 'appearance':
+				?>
+				<h2>Apariencia</h2>
+				<p class="description">El plugin puede heredar el color principal de tu kit global de Elementor. Si lo dejas desactivado, usa el verde Glotracol.</p>
+				<table class="form-table" role="presentation">
+					<tr><th scope="row">Heredar color de Elementor</th>
+						<td><label><input type="checkbox" name="<?php echo $opt; ?>[appearance_inherit_elementor]" value="yes" <?php checked( $s['appearance_inherit_elementor'] ?? 'no', 'yes' ); ?>> Usar el color global de Elementor como color de marca del plugin</label></td></tr>
+					<tr><th scope="row">Slot de color de Elementor</th>
+						<td>
+							<select name="<?php echo $opt; ?>[appearance_elementor_slot]">
+								<option value="primary" <?php selected( $s['appearance_elementor_slot'] ?? 'primary', 'primary' ); ?>>Primary</option>
+								<option value="secondary" <?php selected( $s['appearance_elementor_slot'] ?? 'primary', 'secondary' ); ?>>Secondary</option>
+								<option value="accent" <?php selected( $s['appearance_elementor_slot'] ?? 'primary', 'accent' ); ?>>Accent</option>
+							</select>
+							<p class="description">Qué color global de Elementor usar. Si el slot está vacío, cae al verde Glotracol.</p>
+						</td></tr>
 				</table>
 				<?php
 				break;
