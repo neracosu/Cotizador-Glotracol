@@ -43,13 +43,25 @@ class Glotracol_Quote_Logger {
 	 * @param string $msg      Mensaje human-readable.
 	 * @param array  $context  Array asociativo con datos adicionales (será serializado a JSON).
 	 */
+	const MAX_CONTEXT_BYTES = 2000;
+
 	public static function log( $level, $cat, $msg, $context = [] ) {
+		$context = is_array( $context ) ? $context : [];
+		// Acotar contextos grandes para que el option no crezca sin límite
+		// (500 entradas × contextos pesados podrían reventar la serialización).
+		$ctx_json = wp_json_encode( $context );
+		if ( $ctx_json !== false && strlen( $ctx_json ) > self::MAX_CONTEXT_BYTES ) {
+			$context = [
+				'_truncated' => true,
+				'_preview'   => substr( $ctx_json, 0, self::MAX_CONTEXT_BYTES - 100 ),
+			];
+		}
 		$entry = [
 			'ts'      => current_time( 'mysql' ),
 			'level'   => in_array( $level, [ self::LEVEL_DEBUG, self::LEVEL_INFO, self::LEVEL_WARN, self::LEVEL_ERROR ], true ) ? $level : self::LEVEL_INFO,
 			'cat'     => sanitize_key( $cat ),
 			'msg'     => (string) $msg,
-			'context' => is_array( $context ) ? $context : [],
+			'context' => $context,
 			'user'    => get_current_user_id(),
 		];
 

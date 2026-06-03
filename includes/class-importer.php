@@ -163,8 +163,8 @@ class Glotracol_Quote_Importer {
 		$report = [ 'inserted' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => [] ];
 		foreach ( (array) $rows as $row ) {
 			$line = $row['__line'] ?? '?';
-			$nit = trim( (string) ( $row['nit'] ?? '' ) );
-			$name = trim( (string) ( $row['razon_social'] ?? '' ) );
+			$nit = sanitize_text_field( (string) ( $row['nit'] ?? '' ) );
+			$name = sanitize_text_field( (string) ( $row['razon_social'] ?? '' ) );
 			if ( $nit === '' || $name === '' ) {
 				$report['skipped']++;
 				$report['errors'][] = "Línea $line: NIT o razón social vacíos.";

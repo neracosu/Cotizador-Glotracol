@@ -97,6 +97,8 @@ class Glotracol_Quote_Reports {
 		// Traer TODOS los IDs (sin paginar) para los stats
 		$args = $this->build_query_args( $filters, [ 'posts_per_page' => -1, 'fields' => 'ids', 'paged' => 1 ] );
 		$ids = get_posts( $args );
+		// Primear post + meta cache en una sola consulta para evitar N+1 en el bucle.
+		if ( ! empty( $ids ) ) _prime_post_caches( $ids, false, true );
 
 		$stats = [
 			'total_count'    => 0,
@@ -409,6 +411,8 @@ class Glotracol_Quote_Reports {
 		$filters['paged'] = 1;
 		$args = $this->build_query_args( $filters, [ 'posts_per_page' => -1, 'fields' => 'ids' ] );
 		$ids = get_posts( $args );
+		// Primear post + meta cache en una sola consulta para evitar N+1 en la exportación.
+		if ( ! empty( $ids ) ) _prime_post_caches( $ids, false, true );
 
 		// Configurar headers del archivo
 		$filename = 'glotracol-cotizaciones-' . current_time( 'Y-m-d-His' ) . '.csv';
@@ -448,7 +452,7 @@ class Glotracol_Quote_Reports {
 			$item_count = is_array( $items ) ? count( $items ) : 0;
 			if ( ! is_array( $items ) || empty( $items ) ) {
 				// fila base sin items
-				fputcsv( $out, [
+				self::fputcsv_safe( $out, [
 					$id, $date, glotracol_quote_type_label( $type ), glotracol_quote_status_label( $status ), $pricing_status,
 					$customer_nit, $customer_name, $client_name,
 					$customer_email, $customer_phone, $customer_company,
@@ -459,7 +463,7 @@ class Glotracol_Quote_Reports {
 			}
 			// Una fila por item (formato "expandido" útil para análisis)
 			foreach ( $items as $it ) {
-				fputcsv( $out, [
+				self::fputcsv_safe( $out, [
 					$id, $date, glotracol_quote_type_label( $type ), glotracol_quote_status_label( $status ), $pricing_status,
 					$customer_nit, $customer_name, $client_name,
 					$customer_email, $customer_phone, $customer_company,
@@ -477,5 +481,24 @@ class Glotracol_Quote_Reports {
 
 		fclose( $out );
 		exit;
+	}
+
+	/**
+	 * Escribe una fila al CSV neutralizando inyección de fórmulas: si una celda
+	 * empieza por = + - @ (o tab/CR), se le antepone un apóstrofo para que Excel
+	 * y Google Sheets la traten como texto y no la ejecuten como fórmula.
+	 *
+	 * @param resource $handle
+	 * @param array    $row
+	 */
+	private static function fputcsv_safe( $handle, $row ) {
+		$safe = array_map( function ( $cell ) {
+			$cell = (string) $cell;
+			if ( $cell !== '' && in_array( $cell[0], [ '=', '+', '-', '@', "\t", "\r" ], true ) ) {
+				return "'" . $cell;
+			}
+			return $cell;
+		}, $row );
+		fputcsv( $handle, $safe );
 	}
 }

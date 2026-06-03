@@ -273,12 +273,16 @@ class Glotracol_Quote_Admin_Meta_Box {
 	 */
 	public function ajax_convert_to_order() {
 		check_ajax_referer( 'gloq_convert_to_order', '_wpnonce' );
-		if ( ! current_user_can( 'edit_posts' ) ) wp_send_json_error( [ 'message' => 'Sin permisos' ] );
 
 		$post_id = isset( $_POST['post_id'] ) ? (int) $_POST['post_id'] : 0;
 		$prices = isset( $_POST['prices'] ) && is_array( $_POST['prices'] ) ? $_POST['prices'] : [];
 		if ( ! $post_id || get_post_type( $post_id ) !== 'glo_quote' ) {
 			wp_send_json_error( [ 'message' => 'Cotización inválida' ] );
+		}
+		// Capacidad a nivel de objeto: con map_meta_cap esto exige edit_others_posts
+		// para cotizaciones ajenas, en lugar del genérico edit_posts (que tienen Autores/Colaboradores).
+		if ( ! current_user_can( 'edit_post', $post_id ) ) {
+			wp_send_json_error( [ 'message' => 'Sin permisos' ] );
 		}
 
 		$items = get_post_meta( $post_id, '_glo_items', true );

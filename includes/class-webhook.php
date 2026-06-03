@@ -71,13 +71,23 @@ class Glotracol_Quote_Webhook {
 			] );
 		}
 
-		// Reintento simple si falló y aún no hemos reintentado
-		if ( ! $ok && ! get_post_meta( $quote_id, '_glo_webhook_retried', true ) ) {
-			update_post_meta( $quote_id, '_glo_webhook_retried', 1 );
-			wp_schedule_single_event( time() + 60, self::HOOK, [ $quote_id ] );
-			if ( class_exists( 'Glotracol_Quote_Logger' ) ) {
-				Glotracol_Quote_Logger::info( 'webhook', 'Reintento programado en 60s', [ 'quote_id' => $quote_id ] );
+		// Reintentos con backoff: 1m, 5m, 15m (hasta 3 reintentos tras el intento inicial).
+		if ( ! $ok ) {
+			$attempts = (int) get_post_meta( $quote_id, '_glo_webhook_attempts', true ) + 1;
+			update_post_meta( $quote_id, '_glo_webhook_attempts', $attempts );
+			$backoffs = [ 60, 300, 900 ];
+			if ( isset( $backoffs[ $attempts - 1 ] ) ) {
+				$delay = $backoffs[ $attempts - 1 ];
+				wp_schedule_single_event( time() + $delay, self::HOOK, [ $quote_id ] );
+				if ( class_exists( 'Glotracol_Quote_Logger' ) ) {
+					Glotracol_Quote_Logger::info( 'webhook', sprintf( 'Reintento #%d programado en %ds', $attempts, $delay ), [ 'quote_id' => $quote_id ] );
+				}
+			} elseif ( class_exists( 'Glotracol_Quote_Logger' ) ) {
+				Glotracol_Quote_Logger::error( 'webhook', 'Webhook agotó reintentos sin éxito', [ 'quote_id' => $quote_id, 'attempts' => $attempts ] );
 			}
+		} else {
+			// Éxito: limpiar el contador para no arrastrar estado de fallos previos.
+			delete_post_meta( $quote_id, '_glo_webhook_attempts' );
 		}
 	}
 

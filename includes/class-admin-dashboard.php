@@ -406,6 +406,7 @@ class Glotracol_Quote_Admin_Dashboard {
 			'fields'      => 'ids',
 			'date_query'  => [ [ 'after' => $month_start, 'inclusive' => true ] ],
 		] );
+		if ( ! empty( $month_quotes ) ) _prime_post_caches( $month_quotes, false, true );
 		$month_total = 0;
 		$month_orders = 0;
 		foreach ( (array) $month_quotes as $id ) {

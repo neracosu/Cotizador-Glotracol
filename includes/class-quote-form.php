@@ -293,7 +293,8 @@ class Glotracol_Quote_Form {
 		$items = $pricing_result['items']; // ahora cada item incluye precio_unitario, precio_origen, precio_subtotal
 		$all_priced = (bool) $pricing_result['all_priced'];
 		$total = (int) $pricing_result['total'];
-		$pricing_status = $all_priced ? 'priced' : ( $client_id || ! empty( Glotracol_Quote_Pricing::get_public_pricing() ) ? 'partial' : 'none' );
+		$has_public_pricing = class_exists( 'Glotracol_Quote_Pricing' ) && ! empty( Glotracol_Quote_Pricing::get_public_pricing() );
+		$pricing_status = $all_priced ? 'priced' : ( ( $client_id || $has_public_pricing ) ? 'partial' : 'none' );
 
 		$payload = [
 			'customer'   => $fields,

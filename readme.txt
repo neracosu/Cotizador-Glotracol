@@ -5,7 +5,7 @@ Tags: woocommerce, quote, request-a-quote, b2b
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.0.1
+Stable tag: 2.0.2
 WC requires at least: 8.0
 
 Convierte WooCommerce en un sistema de solicitud de cotizaciones (RFQ) sin checkout ni pago.
@@ -29,6 +29,13 @@ Plugin propio para Glotracol (Global Trading de Colombia). Reemplaza el flujo de
 * Templates sobreescribibles desde el tema en `glotracol-quote/`.
 
 == Changelog ==
+
+= 2.0.2 =
+* **Seguridad (autorización)**: `ajax_convert_to_order` ahora valida `current_user_can('edit_post', $post_id)` (capacidad a nivel de objeto) en vez del genérico `edit_posts`. Evita que Autores/Colaboradores conviertan cotizaciones ajenas, reescriban precios y disparen el reenvío de email al cliente.
+* **Seguridad (CSV injection)**: la exportación de reportes neutraliza celdas que empiezan por `= + - @` (antepone apóstrofo) para que Excel/Sheets no ejecuten fórmulas inyectadas vía campos del cliente.
+* **Rendimiento**: se elimina el patrón N+1 en Reportes (stats + export) y en el resumen del dashboard, primeando post/meta cache en una sola consulta (`_prime_post_caches`).
+* **Robustez**: el importador de clientes sanitiza razón social y NIT al guardar; el resolver de pricing del formulario guarda la llamada estática tras `class_exists`; webhook con reintentos por backoff (1m/5m/15m) en vez de un único reintento; el logger acota el tamaño del `context` para no inflar el option.
+* **Limpieza**: se elimina un condicional muerto con precedencia rota en `cart_page_title`.
 
 = 2.0.1 =
 * **Fix**: bug en el importador donde tras subir un CSV salía "Archivo no encontrado o expirado" — el token generado tenía mayúsculas pero `sanitize_key()` lo lowercaseaba causando mismatch del path. Token ahora es `bin2hex(random_bytes(8))` (siempre lowercase hex).

@@ -210,9 +210,6 @@ class Glotracol_Quote_Cart_Overrides {
 	}
 
 	public function cart_page_title( $title, $post_id = 0 ) {
-		if ( ! function_exists( 'wc_get_page_id' ) || ! is_admin() === false ) {
-			// fall through
-		}
 		if ( $post_id && function_exists( 'wc_get_page_id' ) ) {
 			$cart_id = wc_get_page_id( 'cart' );
 			if ( $cart_id > 0 && $post_id === $cart_id ) {
