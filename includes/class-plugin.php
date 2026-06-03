@@ -24,6 +24,7 @@ class Glotracol_Quote_Plugin {
 		new Glotracol_Quote_Product_Buttons();
 		new Glotracol_Quote_Product_Tabs();
 		new Glotracol_Quote_Cart_Overrides();
+		new Glotracol_Quote_Mini_Cart();
 		new Glotracol_Quote_Form();
 		new Glotracol_Quote_Emails();
 		new Glotracol_Quote_SMTP();

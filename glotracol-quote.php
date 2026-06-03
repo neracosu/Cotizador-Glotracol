@@ -32,6 +32,7 @@ require_once GLOTRACOL_QUOTE_PATH . 'includes/class-rate-limit.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-product-buttons.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-product-tabs.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-cart-overrides.php';
+require_once GLOTRACOL_QUOTE_PATH . 'includes/class-mini-cart.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-quote-cpt.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-client-cpt.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-client-admin.php';
