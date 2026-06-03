@@ -86,6 +86,18 @@ class Glotracol_Quote_Plugin {
 		// cubrir mini-cart, breadcrumbs y bloques widgets, no solo /carrito.
 		wp_register_script( 'glotracol-cart-rename', GLOTRACOL_QUOTE_URL . 'assets/js/cart-rename.js', [], GLOTRACOL_QUOTE_VERSION, true );
 
+		// Mini-cart: visible en todo el frontend (CSS reusa quote.css; JS propio liviano).
+		wp_register_script( 'glotracol-mini-cart', GLOTRACOL_QUOTE_URL . 'assets/js/mini-cart.js', [ 'jquery' ], GLOTRACOL_QUOTE_VERSION, true );
+		if ( ! is_admin() && glotracol_quote_get_setting( 'mini_cart_enabled', 'yes' ) === 'yes' ) {
+			wp_enqueue_style( 'glotracol-quote' ); // contiene los estilos del FAB
+			wp_enqueue_script( 'glotracol-mini-cart' );
+			wp_localize_script( 'glotracol-mini-cart', 'GloqMiniCart', [
+				'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
+				'qtyNonce' => wp_create_nonce( 'gloq_update_qty' ),
+				'formUrl'  => glotracol_quote_get_form_page_url(),
+			] );
+		}
+
 		if ( $this->should_load_assets() ) {
 			wp_enqueue_style( 'glotracol-quote' );
 			wp_enqueue_script( 'glotracol-quote' );

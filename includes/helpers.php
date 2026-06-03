@@ -30,6 +30,8 @@ function glotracol_quote_get_settings() {
 		// Apariencia (Feature 3 — herencia de colores de Elementor)
 		'appearance_inherit_elementor' => 'no',          // 'yes'|'no'
 		'appearance_elementor_slot'    => 'primary',     // 'primary'|'secondary'|'accent'
+		'mini_cart_enabled'  => 'yes',           // 'yes'|'no'
+		'mini_cart_position' => 'bottom-left',   // bottom-left|bottom-right|top-left|top-right
 		'smtp_enabled'              => 'no',
 		'smtp_host'                 => '',
 		'smtp_port'                 => '587',

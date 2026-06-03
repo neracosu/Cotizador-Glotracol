@@ -57,6 +57,9 @@ class Glotracol_Quote_Admin_Settings {
 		$out['appearance_inherit_elementor'] = ! empty( $input['appearance_inherit_elementor'] ) ? 'yes' : 'no';
 		$slot = sanitize_key( $input['appearance_elementor_slot'] ?? 'primary' );
 		$out['appearance_elementor_slot'] = in_array( $slot, [ 'primary', 'secondary', 'accent' ], true ) ? $slot : 'primary';
+		$out['mini_cart_enabled'] = ! empty( $input['mini_cart_enabled'] ) ? 'yes' : 'no';
+		$mcp = sanitize_key( $input['mini_cart_position'] ?? 'bottom-left' );
+		$out['mini_cart_position'] = in_array( $mcp, [ 'bottom-left', 'bottom-right', 'top-left', 'top-right' ], true ) ? $mcp : 'bottom-left';
 
 		// SMTP
 		$out['smtp_enabled']     = ! empty( $input['smtp_enabled'] ) ? 'yes' : 'no';
@@ -284,6 +287,21 @@ class Glotracol_Quote_Admin_Settings {
 								<option value="accent" <?php selected( $s['appearance_elementor_slot'] ?? 'primary', 'accent' ); ?>>Accent</option>
 							</select>
 							<p class="description">Qué color global de Elementor usar. Si el slot está vacío, cae al verde Glotracol.</p>
+						</td></tr>
+				</table>
+				<h2>Carrito flotante</h2>
+				<table class="form-table" role="presentation">
+					<tr><th scope="row">Mostrar carrito flotante</th>
+						<td><label><input type="checkbox" name="<?php echo $opt; ?>[mini_cart_enabled]" value="yes" <?php checked( $s['mini_cart_enabled'] ?? 'yes', 'yes' ); ?>> Burbuja visible en todo el sitio con lo añadido a la cotización</label></td></tr>
+					<tr><th scope="row">Posición</th>
+						<td>
+							<select name="<?php echo $opt; ?>[mini_cart_position]">
+								<option value="bottom-left" <?php selected( $s['mini_cart_position'] ?? 'bottom-left', 'bottom-left' ); ?>>Abajo izquierda</option>
+								<option value="bottom-right" <?php selected( $s['mini_cart_position'] ?? 'bottom-left', 'bottom-right' ); ?>>Abajo derecha</option>
+								<option value="top-left" <?php selected( $s['mini_cart_position'] ?? 'bottom-left', 'top-left' ); ?>>Arriba izquierda</option>
+								<option value="top-right" <?php selected( $s['mini_cart_position'] ?? 'bottom-left', 'top-right' ); ?>>Arriba derecha</option>
+							</select>
+							<p class="description">Por defecto abajo-izquierda para no chocar con el botón de WhatsApp.</p>
 						</td></tr>
 				</table>
 				<?php
