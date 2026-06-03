@@ -50,6 +50,47 @@ class Glotracol_Quote_Pricing {
 	}
 
 	/**
+	 * Resuelve el precio por ID de producto (camino principal v2.2.0).
+	 * Cascada: B2B (cliente, por product_id; compat por SKU) → público (_glo_price;
+	 * compat lista pública por SKU) → pendiente.
+	 *
+	 * @return array{ price: int|null, source: string }  source: b2b|publico|pendiente
+	 */
+	public static function resolve_by_product_id( $product_id, $client_id = 0 ) {
+		$product_id = (int) $product_id;
+		if ( $product_id <= 0 ) {
+			return [ 'price' => null, 'source' => 'pendiente' ];
+		}
+		// 1) B2B negociado
+		if ( $client_id > 0 ) {
+			$pricing = get_post_meta( (int) $client_id, '_glo_client_pricing', true );
+			if ( is_array( $pricing ) ) {
+				if ( isset( $pricing[ $product_id ] ) && (int) $pricing[ $product_id ] > 0 ) {
+					return [ 'price' => (int) $pricing[ $product_id ], 'source' => 'b2b' ];
+				}
+				$sku = (string) get_post_meta( $product_id, '_sku', true );
+				if ( $sku !== '' && isset( $pricing[ $sku ] ) && (int) $pricing[ $sku ] > 0 ) {
+					return [ 'price' => (int) $pricing[ $sku ], 'source' => 'b2b' ];
+				}
+			}
+		}
+		// 2) Público por producto (_glo_price)
+		$pub = (int) get_post_meta( $product_id, '_glo_price', true );
+		if ( $pub > 0 ) {
+			return [ 'price' => $pub, 'source' => 'publico' ];
+		}
+		// 3) Compat: lista pública por SKU
+		$sku = (string) get_post_meta( $product_id, '_sku', true );
+		if ( $sku !== '' ) {
+			$legacy = self::get_public_pricing();
+			if ( isset( $legacy[ $sku ] ) && (int) $legacy[ $sku ] > 0 ) {
+				return [ 'price' => (int) $legacy[ $sku ], 'source' => 'publico' ];
+			}
+		}
+		return [ 'price' => null, 'source' => 'pendiente' ];
+	}
+
+	/**
 	 * Resuelve precios para todos los items de una cotización.
 	 *
 	 * @param array $items     Lista de items con al menos `sku` y `quantity`.
@@ -62,9 +103,13 @@ class Glotracol_Quote_Pricing {
 		$all_priced = true;
 		$sources = [ 'b2b' => 0, 'publico' => 0, 'pendiente' => 0 ];
 		foreach ( (array) $items as $item ) {
-			$sku = isset( $item['sku'] ) ? (string) $item['sku'] : '';
+			$pid = isset( $item['product_id'] ) ? (int) $item['product_id'] : 0;
 			$qty = isset( $item['quantity'] ) ? max( 0, (int) $item['quantity'] ) : 0;
-			$resolved = self::resolve( $sku, $client_id );
+			if ( $pid > 0 ) {
+				$resolved = self::resolve_by_product_id( $pid, $client_id );
+			} else {
+				$resolved = self::resolve( isset( $item['sku'] ) ? (string) $item['sku'] : '', $client_id );
+			}
 			$item['precio_unitario'] = $resolved['price'];
 			$item['precio_origen']   = $resolved['source'];
 			if ( $resolved['price'] !== null && $qty > 0 ) {
@@ -74,6 +119,7 @@ class Glotracol_Quote_Pricing {
 				$item['precio_subtotal'] = null;
 				$all_priced = false;
 			}
+			if ( ! isset( $sources[ $resolved['source'] ] ) ) $sources[ $resolved['source'] ] = 0;
 			$sources[ $resolved['source'] ]++;
 			$out_items[] = $item;
 		}

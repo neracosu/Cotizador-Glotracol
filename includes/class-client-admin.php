@@ -59,12 +59,13 @@ class Glotracol_Quote_Client_Admin {
 		$pricing = get_post_meta( $post->ID, '_glo_client_pricing', true );
 		if ( ! is_array( $pricing ) ) $pricing = [];
 		?>
-		<p class="description">Define el precio negociado por SKU. Los SKUs que no aparezcan aquí usarán el precio público de la lista general. Las celdas vacías o en cero también se ignoran.</p>
-		<table class="widefat striped" id="glo-pricing-table" style="max-width:720px">
+		<p class="description">Define el precio negociado por ID de producto. Los productos que no aparezcan aquí usarán el precio público de la lista general. Las celdas vacías o en cero también se ignoran.</p>
+		<table class="widefat striped" id="glo-pricing-table" style="max-width:840px">
 			<thead>
 				<tr>
-					<th style="width:50%">SKU del producto</th>
-					<th style="width:35%">Precio (COP)</th>
+					<th style="width:15%">ID de producto</th>
+					<th style="width:45%">Nombre del producto</th>
+					<th style="width:25%">Precio (COP)</th>
 					<th style="width:15%"></th>
 				</tr>
 			</thead>
@@ -72,8 +73,8 @@ class Glotracol_Quote_Client_Admin {
 				<?php
 				$row_idx = 0;
 				if ( ! empty( $pricing ) ) :
-					foreach ( $pricing as $sku => $price ) :
-						$this->render_pricing_row( $row_idx, $sku, $price );
+					foreach ( $pricing as $product_id => $price ) :
+						$this->render_pricing_row( $row_idx, $product_id, $price );
 						$row_idx++;
 					endforeach;
 				endif;
@@ -83,15 +84,36 @@ class Glotracol_Quote_Client_Admin {
 			</tbody>
 		</table>
 		<template id="glo-pricing-tpl"><?php $this->render_pricing_row( '__IDX__', '', '' ); ?></template>
-		<p style="margin-top:10px"><button type="button" class="button" id="glo-pricing-add" data-gloq-add-row data-target="#glo-pricing-rows" data-template="#glo-pricing-tpl" data-next="<?php echo (int) $row_idx + 1; ?>">+ Añadir fila</button> <span class="description" style="margin-left:10px">Para borrar una fila, deja el SKU en blanco al guardar.</span></p>
+		<p style="margin-top:10px"><button type="button" class="button" id="glo-pricing-add" data-gloq-add-row data-target="#glo-pricing-rows" data-template="#glo-pricing-tpl" data-next="<?php echo (int) $row_idx + 1; ?>">+ Añadir fila</button> <span class="description" style="margin-left:10px">Para borrar una fila, deja el ID en blanco al guardar.</span></p>
 		<?php
 	}
 
-	private function render_pricing_row( $idx, $sku, $price ) {
+	private function render_pricing_row( $idx, $product_id, $price ) {
+		// Resolve product name for existing entries; new/template rows show a hint.
+		$product_name = '';
+		if ( $product_id !== '' && $product_id !== '__IDX__' ) {
+			$numeric_id = is_numeric( $product_id ) ? (int) $product_id : 0;
+			if ( $numeric_id > 0 ) {
+				$product = wc_get_product( $numeric_id );
+				$product_name = $product ? esc_html( $product->get_name() ) : '<em>(producto no encontrado)</em>';
+			} else {
+				// Compat: old SKU key — keep it visible so data is not lost on screen.
+				$product_name = '<em>' . esc_html( $product_id ) . '</em>';
+			}
+		}
+		// For the JS template row we use the literal placeholder string as index.
+		$idx_attr = ( $idx === '__IDX__' ) ? '__IDX__' : (int) $idx;
 		?>
 		<tr>
-			<td><input type="text" name="glo_pricing[<?php echo (int) $idx; ?>][sku]" value="<?php echo esc_attr( $sku ); ?>" class="regular-text" placeholder="SKU"></td>
-			<td><input type="number" name="glo_pricing[<?php echo (int) $idx; ?>][price]" value="<?php echo esc_attr( $price ); ?>" min="0" step="1" placeholder="0"></td>
+			<td><input type="number" name="glo_pricing[<?php echo esc_attr( $idx_attr ); ?>][product_id]" value="<?php echo esc_attr( $product_id ); ?>" min="1" step="1" placeholder="ID" style="width:80px"></td>
+			<td class="glo-pricing-name" style="padding-top:8px;color:#555"><?php
+				if ( $product_name !== '' ) {
+					echo $product_name; // Already escaped above.
+				} else {
+					echo '<em style="color:#999">(se resolverá al guardar)</em>';
+				}
+			?></td>
+			<td><input type="number" name="glo_pricing[<?php echo esc_attr( $idx_attr ); ?>][price]" value="<?php echo esc_attr( $price ); ?>" min="0" step="1" placeholder="0"></td>
 			<td><button type="button" class="button-link-delete glo-pricing-remove gloq-remove-row" aria-label="Quitar">×</button></td>
 		</tr>
 		<?php
@@ -160,15 +182,15 @@ class Glotracol_Quote_Client_Admin {
 		$active = ! empty( $_POST['_glo_client_active'] ) && $_POST['_glo_client_active'] === 'yes' ? 'yes' : 'no';
 		update_post_meta( $post_id, '_glo_client_active', $active );
 
-		// Pricing rows
+		// Pricing rows — keyed by product_id (int).
 		$pricing = [];
 		if ( isset( $_POST['glo_pricing'] ) && is_array( $_POST['glo_pricing'] ) ) {
 			foreach ( $_POST['glo_pricing'] as $row ) {
 				if ( ! is_array( $row ) ) continue;
-				$sku = isset( $row['sku'] ) ? sanitize_text_field( wp_unslash( $row['sku'] ) ) : '';
-				$price = isset( $row['price'] ) ? (int) $row['price'] : 0;
-				if ( $sku === '' || $price <= 0 ) continue;
-				$pricing[ $sku ] = $price;
+				$product_id = isset( $row['product_id'] ) ? (int) $row['product_id'] : 0;
+				$price      = isset( $row['price'] ) ? (int) $row['price'] : 0;
+				if ( $product_id <= 0 || $price <= 0 ) continue;
+				$pricing[ $product_id ] = $price;
 			}
 		}
 		update_post_meta( $post_id, '_glo_client_pricing', $pricing );

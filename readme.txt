@@ -5,7 +5,7 @@ Tags: woocommerce, quote, request-a-quote, b2b
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.1.2
+Stable tag: 2.2.0
 WC requires at least: 8.0
 
 Convierte WooCommerce en un sistema de solicitud de cotizaciones (RFQ) sin checkout ni pago.
@@ -29,6 +29,14 @@ Plugin propio para Glotracol (Global Trading de Colombia). Reemplaza el flujo de
 * Templates sobreescribibles desde el tema en `glotracol-quote/`.
 
 == Changelog ==
+
+= 2.2.0 =
+* Precios por ID de producto: nuevo importador "Precios del catálogo (por ID)" que acepta el export de WooCommerce (ID, Nombre, Peso, Precio normal, Disponibilidad).
+* El precio público se guarda en un campo privado del producto (_glo_price), invisible para los feeds de Facebook/Google; el regular_price nativo no se toca.
+* Tarifas B2B por el mismo archivo eligiendo el cliente al subir; precios negociados por ID de producto.
+* Sincronización opcional de disponibilidad/stock desde la columna Disponibilidad.
+* El resolver de precios pasa a resolver por ID de producto (con respaldo por SKU para datos antiguos).
+* Pantalla "Precios" reorientada a editar el precio público por producto (_glo_price).
 
 = 2.1.2 =
 * Fix definitivo del carrito flotante: al quitar un item (o ponerlo en 0), el panel ahora se actualiza directamente con la respuesta del AJAX (elimina la fila y recalcula el contador) en lugar de depender del ciclo de fragments de WooCommerce, que en este entorno no refrescaba el panel. El backend ya eliminaba bien; el problema era solo visual. Incluye guarda anti doble-binding.
