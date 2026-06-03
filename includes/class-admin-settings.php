@@ -51,6 +51,8 @@ class Glotracol_Quote_Admin_Settings {
 		$out['size_threshold_large_units']  = max( $out['size_threshold_medium_units'] + 1, (int) ( $input['size_threshold_large_units'] ?? 80 ) );
 		$out['size_threshold_medium_skus']  = max( 1, (int) ( $input['size_threshold_medium_skus'] ?? 5 ) );
 		$out['size_threshold_large_skus']   = max( $out['size_threshold_medium_skus'] + 1, (int) ( $input['size_threshold_large_skus'] ?? 12 ) );
+		$out['weight_threshold_large_kg'] = max( 1, (int) ( $input['weight_threshold_large_kg'] ?? 200 ) );
+		$out['weight_threshold_tons_kg']  = max( $out['weight_threshold_large_kg'] + 1, (int) ( $input['weight_threshold_tons_kg'] ?? 1000 ) );
 		$out['large_alert_enabled']         = ! empty( $input['large_alert_enabled'] ) ? 'yes' : 'no';
 		$out['large_alert_email']           = is_email( $input['large_alert_email'] ?? '' ) ? sanitize_email( $input['large_alert_email'] ) : '';
 		$out['auto_respond_enabled']        = ! empty( $input['auto_respond_enabled'] ) ? 'yes' : 'no';
@@ -258,6 +260,17 @@ class Glotracol_Quote_Admin_Settings {
 					<tr><th><label>Email destacado (opcional)</label></th>
 						<td><input type="email" class="regular-text" name="<?php echo $opt; ?>[large_alert_email]" value="<?php echo esc_attr( $s['large_alert_email'] ?? '' ); ?>" placeholder="gerencia@glotracol.com">
 						<p class="description">Si lo configuras, este correo recibirá una copia de las cotizaciones grandes (además de los emails configurados en General).</p></td></tr>
+				</table>
+
+				<hr>
+
+				<h2>Semáforo por peso</h2>
+				<p class="description">Clasificación por peso total: verde = pequeño, amarillo = grande, rojo = toneladas. Si los productos no tienen peso, se usa la regla por unidades de arriba.</p>
+				<table class="form-table" role="presentation">
+					<tr><th scope="row">Umbral "grande" (amarillo)</th>
+						<td><input type="number" min="1" max="999999" name="<?php echo $opt; ?>[weight_threshold_large_kg]" value="<?php echo esc_attr( $s['weight_threshold_large_kg'] ?? 200 ); ?>" style="width:120px"> kg o más</td></tr>
+					<tr><th scope="row">Umbral "toneladas" (rojo)</th>
+						<td><input type="number" min="1" max="9999999" name="<?php echo $opt; ?>[weight_threshold_tons_kg]" value="<?php echo esc_attr( $s['weight_threshold_tons_kg'] ?? 1000 ); ?>" style="width:120px"> kg o más</td></tr>
 				</table>
 
 				<hr>

@@ -225,13 +225,18 @@
 .glo-type-order{background:#fff0e6;color:#a64900;border:1px solid #ffb380}
 .glo-type-auto{display:inline-block;margin-left:4px;font-size:13px;color:#0a3a6e}
 
-/* Admin column size tag */
-.glo-size{display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:600;letter-spacing:0.3px}
-.glo-size-small{background:#e2e3e5;color:#495057}
+/* Admin column size tag — semáforo de colores (sin emoji) */
+.glo-size{display:inline-flex;align-items:center;gap:6px;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:600;letter-spacing:0.3px}
+.glo-size::before{content:'';display:inline-block;width:9px;height:9px;border-radius:50%}
+.glo-size-small{background:#e6f4ea;color:#1e7e34}
+.glo-size-small::before{background:#28a745}
+.glo-size-large{background:#fff3cd;color:#856404}
+.glo-size-large::before{background:#f0ad4e}
+.glo-size-tons{background:#fdecea;color:#7a1d12}
+.glo-size-tons::before{background:#dc3545}
+/* compat datos viejos */
 .glo-size-medium{background:#fff3cd;color:#856404}
-.glo-size-large{background:#fdecea;color:#7a1d12;border:1px solid #dc3545}
-.glo-size-alert{display:inline-block;margin-left:4px;font-size:13px;animation:gloq-pulse-glow 1.6s infinite}
-@keyframes gloq-pulse-glow{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:0.85}}
+.glo-size-medium::before{background:#f0ad4e}
 
 /* ===== Carrito flotante (mini-cotización) ===== */
 .gloq-fab-wrap{position:fixed;z-index:99980;font-family:inherit}

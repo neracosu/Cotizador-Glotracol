@@ -358,11 +358,13 @@ class Glotracol_Quote_Form {
 		foreach ( $items as $it ) {
 			$units_total += isset( $it['quantity'] ) ? (int) $it['quantity'] : 0;
 		}
-		$size_tag = glotracol_quote_size_tag( $units_total, count( $items ) );
+		$weight_kg = glotracol_quote_weight_total( $items );
+		$size_tag  = glotracol_quote_semaforo( $weight_kg, $units_total, count( $items ) );
 		update_post_meta( $post_id, '_glo_size_tag', $size_tag );
 		update_post_meta( $post_id, '_glo_units_total', $units_total );
+		update_post_meta( $post_id, '_glo_weight_total_kg', round( $weight_kg, 2 ) );
 		// F4 — flag para pedidos grandes
-		update_post_meta( $post_id, '_glo_is_large_alert', $size_tag === 'large' ? 1 : 0 );
+		update_post_meta( $post_id, '_glo_is_large_alert', in_array( $size_tag, [ 'large', 'tons' ], true ) ? 1 : 0 );
 
 		// F6 (Fase D) — tipo, cliente B2B y pricing
 		update_post_meta( $post_id, '_glo_type', $type );
