@@ -207,33 +207,6 @@ class Glotracol_Quote_Admin_Settings {
 							<span id="gloq-smtp-test-result" style="margin-left:10px"></span>
 						</td></tr>
 				</table>
-				<script>
-				jQuery(function($){
-					$('#gloq-smtp-test-btn').on('click', function(){
-						var $btn = $(this);
-						var $r = $('#gloq-smtp-test-result');
-						var to = $('#gloq-smtp-test-to').val();
-						if (!to) { $r.html('<span style="color:#c0392b">Email requerido</span>'); return; }
-						$btn.prop('disabled', true).text('Enviando…');
-						$r.html('');
-						$.post(ajaxurl, {
-							action: 'gloq_smtp_test',
-							_wpnonce: '<?php echo esc_js( wp_create_nonce( 'gloq_smtp_test' ) ); ?>',
-							to: to
-						}).done(function(resp){
-							if (resp && resp.success) {
-								$r.html('<span style="color:#155724;background:#d4edda;padding:4px 10px;border-radius:4px;font-size:13px">✓ ' + resp.data.message + '</span>');
-							} else {
-								$r.html('<span style="color:#7a1d12;background:#fdecea;padding:4px 10px;border-radius:4px;font-size:13px">✗ ' + ((resp && resp.data && resp.data.message) || 'Error desconocido') + '</span>');
-							}
-						}).fail(function(){
-							$r.html('<span style="color:#7a1d12">Error de conexión</span>');
-						}).always(function(){
-							$btn.prop('disabled', false).text('Enviar email de prueba');
-						});
-					});
-				});
-				</script>
 				<?php
 				break;
 
@@ -274,7 +247,7 @@ class Glotracol_Quote_Admin_Settings {
 				<p class="description">Cuando una cotización quede clasificada como <strong>Grande</strong>, el email al equipo se envía con un template destacado (color rojo, badge "Atención prioritaria") y opcionalmente se copia a un correo adicional para asegurar respuesta rápida.</p>
 				<table class="form-table">
 					<tr><th><label>Activar alerta destacada</label></th>
-						<td><label><input type="checkbox" name="<?php echo $opt; ?>[large_alert_enabled]" value="yes" <?php checked( $s['large_alert_enabled'] ?? 'yes', 'yes' ); ?>> Usar template diferenciado y prefix "🔥 [GRANDE]" en el asunto</label></td></tr>
+						<td><label><input type="checkbox" name="<?php echo $opt; ?>[large_alert_enabled]" value="yes" <?php checked( $s['large_alert_enabled'] ?? 'yes', 'yes' ); ?>> Usar template diferenciado y prefix "[GRANDE]" en el asunto</label></td></tr>
 					<tr><th><label>Email destacado (opcional)</label></th>
 						<td><input type="email" class="regular-text" name="<?php echo $opt; ?>[large_alert_email]" value="<?php echo esc_attr( $s['large_alert_email'] ?? '' ); ?>" placeholder="gerencia@glotracol.com">
 						<p class="description">Si lo configuras, este correo recibirá una copia de las cotizaciones grandes (además de los emails configurados en General).</p></td></tr>

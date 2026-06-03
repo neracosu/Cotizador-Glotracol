@@ -245,7 +245,7 @@ class Glotracol_Quote_Reports {
 				<div class="gloq-reports-filter-actions">
 					<input type="submit" class="button button-primary" value="Aplicar filtros">
 					<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=glo_quote&page=' . self::PAGE_SLUG ) ); ?>" class="button">Limpiar</a>
-					<a href="<?php echo esc_url( $this->build_export_url( $filters ) ); ?>" class="button button-secondary">↓ Exportar CSV</a>
+					<a href="<?php echo esc_url( $this->build_export_url( $filters ) ); ?>" class="button button-secondary">Exportar CSV</a>
 				</div>
 			</form>
 
@@ -275,7 +275,7 @@ class Glotracol_Quote_Reports {
 
 			<div class="gloq-reports-grid">
 				<section class="gloq-rcard">
-					<h2>🏆 Top 5 clientes</h2>
+					<h2>Top 5 clientes</h2>
 					<?php if ( empty( $stats['top_clients'] ) ) : ?>
 						<p style="color:#999">Sin clientes B2B identificados en este rango.</p>
 					<?php else : ?>
@@ -295,7 +295,7 @@ class Glotracol_Quote_Reports {
 				</section>
 
 				<section class="gloq-rcard">
-					<h2>📦 Top 5 SKUs solicitados</h2>
+					<h2>Top 5 SKUs solicitados</h2>
 					<?php if ( empty( $stats['top_skus'] ) ) : ?>
 						<p style="color:#999">Sin items en este rango.</p>
 					<?php else : ?>
@@ -318,7 +318,11 @@ class Glotracol_Quote_Reports {
 
 			<h2 style="margin-top:24px">Detalle</h2>
 			<?php if ( ! $query->have_posts() ) : ?>
-				<div class="notice notice-info inline" style="padding:14px 18px;margin:14px 0"><p>No hay cotizaciones que coincidan con los filtros.</p></div>
+				<div class="gloq-empty">
+					<span class="dashicons dashicons-chart-bar"></span>
+					<h3>Sin cotizaciones en este rango</h3>
+					<p>Ajusta los filtros o espera a que lleguen nuevas solicitudes.</p>
+				</div>
 			<?php else : ?>
 				<table class="wp-list-table widefat striped">
 					<thead>
@@ -364,30 +368,6 @@ class Glotracol_Quote_Reports {
 				<?php endif; ?>
 			<?php endif; ?>
 		</div>
-
-		<style>
-		.gloq-reports-filters{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:18px 22px;margin:14px 0}
-		.gloq-reports-filter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:14px}
-		.gloq-reports-filter-grid label{display:flex;flex-direction:column;font-size:12px;color:#5a6470;font-weight:600;text-transform:uppercase;letter-spacing:0.4px}
-		.gloq-reports-filter-grid input,.gloq-reports-filter-grid select{margin-top:4px;padding:6px 10px;border:1px solid #cbd2d9;border-radius:4px;font-size:13px;font-weight:400;color:#222;text-transform:none;letter-spacing:0}
-		.gloq-reports-filter-actions{display:flex;gap:10px;flex-wrap:wrap}
-		.gloq-reports-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:18px 0}
-		.gloq-rstat{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:18px 20px;border-left:4px solid #0a4d3a}
-		.gloq-rstat-money{border-left-color:#13855e;background:linear-gradient(135deg,#fff 0%,#f0fff4 100%)}
-		.gloq-rstat-conversion{border-left-color:#17a2b8;background:linear-gradient(135deg,#fff 0%,#e1f5f8 100%)}
-		.gloq-rstat-large{border-left-color:#dc3545;background:linear-gradient(135deg,#fff 0%,#fdecea 100%)}
-		.gloq-rstat-label{font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#5a6470;font-weight:600;margin-bottom:4px}
-		.gloq-rstat-value{font-size:28px;font-weight:700;line-height:1.1;color:#0a4d3a;margin-bottom:6px}
-		.gloq-rstat-money .gloq-rstat-value{font-size:20px;color:#13855e}
-		.gloq-rstat-conversion .gloq-rstat-value{color:#117a8b}
-		.gloq-rstat-large .gloq-rstat-value{color:#7a1d12}
-		.gloq-rstat-detail{font-size:12px;color:#5a6470}
-		.gloq-reports-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:14px 0}
-		@media (max-width:1024px){.gloq-reports-grid{grid-template-columns:1fr}}
-		.gloq-rcard{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:18px 22px}
-		.gloq-rcard h2{font-size:15px;margin:0 0 12px;border-bottom:1px solid #edf2f7;padding-bottom:8px}
-		.gloq-rcard table th{background:#f6f7f7;font-size:12px}
-		</style>
 		<?php
 	}
 

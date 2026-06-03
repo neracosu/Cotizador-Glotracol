@@ -70,6 +70,15 @@ class Glotracol_Quote_Pricing_Admin {
 				<?php endif; ?>
 			</div>
 
+			<?php if ( $count === 0 ) : ?>
+				<div class="gloq-empty">
+					<span class="dashicons dashicons-money-alt"></span>
+					<h3>Aún no hay precios públicos</h3>
+					<p>Carga la lista pública para que las cotizaciones sin NIT identificado se calculen automáticamente. También puedes agregar precios manualmente en la tabla de abajo.</p>
+					<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=glo_quote&page=glotracol-quote-import' ) ); ?>" class="button button-primary">Importar lista de precios</a>
+				</div>
+			<?php endif; ?>
+
 			<form method="get" style="margin:14px 0">
 				<input type="hidden" name="post_type" value="glo_quote">
 				<input type="hidden" name="page" value="<?php echo esc_attr( self::PAGE_SLUG ); ?>">
@@ -90,7 +99,7 @@ class Glotracol_Quote_Pricing_Admin {
 					</thead>
 					<tbody>
 					<?php if ( empty( $pricing_page ) ) : ?>
-						<tr><td colspan="3" style="text-align:center;padding:40px"><strong>No hay precios cargados</strong>. Usa el importador o agrega precios manualmente abajo.</td></tr>
+						<tr><td colspan="3" style="text-align:center;padding:40px"><?php echo $search !== '' ? 'No hay SKUs que coincidan con la búsqueda.' : 'Aún no hay precios. Agrega uno en la fila de abajo o usa el importador.'; ?></td></tr>
 					<?php else : ?>
 						<?php $i = 0; foreach ( $pricing_page as $sku => $price ) : $i++; ?>
 							<tr>
@@ -139,12 +148,6 @@ class Glotracol_Quote_Pricing_Admin {
 				</details>
 			</form>
 		</div>
-		<style>
-		.gloq-pricing-stats{display:flex;gap:14px;margin:16px 0;font-size:14px}
-		.gloq-pricing-stat{padding:8px 16px;background:#f0fff4;border-left:3px solid #0a4d3a;border-radius:4px}
-		.gloq-pricing-stat-filtered{background:#fff3cd;border-left-color:#f7b500}
-		#gloq-pricing-table input[type=number]{font-family:monospace}
-		</style>
 		<?php
 	}
 

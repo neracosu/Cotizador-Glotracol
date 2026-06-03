@@ -90,7 +90,11 @@ class Glotracol_Quote_Logger_Admin {
 			</form>
 
 			<?php if ( empty( $entries ) ) : ?>
-				<div class="notice notice-info inline" style="margin:20px 0;padding:14px 18px"><p>No hay entradas en el log con los filtros aplicados.</p></div>
+				<div class="gloq-empty">
+					<span class="dashicons dashicons-list-view"></span>
+					<h3>Sin registros todavía</h3>
+					<p>Los eventos del plugin (importaciones, emails, webhooks) aparecerán aquí.</p>
+				</div>
 			<?php else : ?>
 				<table class="wp-list-table widefat striped gloq-logs-table">
 					<thead>
@@ -124,28 +128,6 @@ class Glotracol_Quote_Logger_Admin {
 				</table>
 			<?php endif; ?>
 		</div>
-
-		<style>
-		.gloq-logs-stats{display:flex;gap:8px;margin:16px 0;flex-wrap:wrap}
-		.gloq-log-stat{padding:6px 14px;background:#f6f7f7;border-radius:4px;font-size:13px;color:#5a6470}
-		.gloq-log-stat-error{background:#fdecea;color:#7a1d12}
-		.gloq-log-stat-warn{background:#fff8e1;color:#665100}
-		.gloq-log-stat-info{background:#e7f3ff;color:#0c5298}
-		.gloq-log-stat-debug{background:#e2e3e5;color:#495057}
-		.gloq-log-stat-total{background:#0a4d3a;color:#fff}
-		.gloq-logs-filters{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:14px 18px;margin:0 0 14px;display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
-		.gloq-logs-filters label{display:flex;flex-direction:column;font-size:12px;color:#5a6470;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;gap:4px}
-		.gloq-logs-filters select{padding:6px 10px;border:1px solid #cbd2d9;border-radius:4px;font-size:13px;font-weight:400;text-transform:none;letter-spacing:0;color:#222}
-		.gloq-logs-table td{vertical-align:top;padding:10px 12px;font-size:13px}
-		.gloq-log-ts{font-family:monospace;font-size:12px;color:#5a6470;white-space:nowrap}
-		.gloq-log-badge{display:inline-block;padding:2px 9px;border-radius:11px;font-size:10px;font-weight:700;letter-spacing:0.5px}
-		.gloq-log-badge-error{background:#dc3545;color:#fff}
-		.gloq-log-badge-warn{background:#f7b500;color:#fff}
-		.gloq-log-badge-info{background:#17a2b8;color:#fff}
-		.gloq-log-badge-debug{background:#6c757d;color:#fff}
-		.gloq-logs-table tr.gloq-log-error{background:rgba(253,236,234,0.5)}
-		.gloq-logs-table tr.gloq-log-warn{background:rgba(255,248,225,0.5)}
-		</style>
 		<?php
 	}
 

@@ -115,14 +115,12 @@
 		<p class="gloq-modal-intro">Antes de enviar, confírmanos si esta solicitud es una <strong>cotización exploratoria</strong> (necesitas saber precios y disponibilidad antes de decidir) o un <strong>pedido en firme</strong> (ya estás listo para comprar y solo esperas la factura).</p>
 		<div class="gloq-modal-options">
 			<button type="button" class="gloq-modal-option" data-gloq-type="quote">
-				<div class="gloq-modal-option-icon">🔍</div>
 				<div class="gloq-modal-option-body">
 					<strong>Es una cotización</strong>
 					<span>Quiero saber precios y disponibilidad antes de decidir.</span>
 				</div>
 			</button>
 			<button type="button" class="gloq-modal-option" data-gloq-type="order">
-				<div class="gloq-modal-option-icon">🛒</div>
 				<div class="gloq-modal-option-body">
 					<strong>Es un pedido</strong>
 					<span>Ya decidí, quiero comprar estos productos. Esperamos la factura.</span>

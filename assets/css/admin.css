@@ -156,3 +156,154 @@
 .gloq-compat-list .gloq-check-warn .gloq-check-icon{background:#fff3cd;color:#856404;border:1px solid #f7b500}
 .gloq-compat-list .gloq-check-fail .gloq-check-icon{background:#fdecea;color:#7a1d12;border:1px solid #dc3545}
 .gloq-compat-list .gloq-check-ok .gloq-check-icon{background:#d4edda;color:#155724}
+
+/* ============================================================
+   ICONOS (Dashicons en vez de emojis)
+   ============================================================ */
+.gloq-hero-icon .dashicons{font-size:64px;width:64px;height:64px}
+.gloq-quick-icon .dashicons{font-size:24px;width:24px;height:24px;color:#0a4d3a}
+.gloq-quick-card:hover .gloq-quick-icon .dashicons{color:#0a4d3a}
+.gloq-quick-alert .gloq-quick-icon .dashicons{color:#7a1d12}
+.gloq-empty-icon .dashicons{font-size:48px;width:48px;height:48px;color:#b6c2cd}
+.gloq-card h2 .dashicons{color:#13855e;font-size:20px;width:20px;height:20px}
+
+/* ============================================================
+   FEEDBACK AJAX: spinner + mensajes inline
+   ============================================================ */
+.gloq-spinner{display:inline-block;width:14px;height:14px;border:2px solid #cbd2d9;border-top-color:#0a4d3a;border-radius:50%;animation:gloq-spin 0.7s linear infinite;vertical-align:middle}
+@keyframes gloq-spin{to{transform:rotate(360deg)}}
+.gloq-msg{display:inline-block;padding:4px 10px;border-radius:4px;font-size:13px;font-weight:600}
+.gloq-msg-ok{background:#d4edda;color:#155724}
+.gloq-msg-err{background:#fdecea;color:#7a1d12}
+button[disabled] .gloq-spinner{margin-right:6px}
+
+/* Fila atenuada al marcarla para borrado */
+.gloq-row-removed{opacity:0.4}
+.gloq-row-removed input{text-decoration:line-through}
+
+/* ============================================================
+   EMPTY STATES (reutilizable en Precios, Logs, Reportes)
+   ============================================================ */
+.gloq-empty{background:#f8fafb;border:2px dashed #d1d9e0;border-radius:10px;padding:36px 24px;text-align:center;margin:16px 0;max-width:720px}
+.gloq-empty .dashicons{font-size:42px;width:42px;height:42px;color:#b6c2cd;margin-bottom:8px}
+.gloq-empty h3{margin:0 0 6px;color:#3d4856;font-size:15px}
+.gloq-empty p{margin:0 0 14px;color:#5a6470;font-size:13px;line-height:1.55}
+
+/* ============================================================
+   BADGES DE TAMAÑO (lista de cotizaciones / historial)
+   ============================================================ */
+.glo-size{display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px}
+.glo-size-small{background:#e2e3e5;color:#495057}
+.glo-size-medium{background:#fff3cd;color:#856404}
+.glo-size-large{background:#fdecea;color:#7a1d12}
+.glo-type{display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:600}
+.glo-type-quote{background:#e7f3ff;color:#0c5298}
+.glo-type-order{background:#d4edda;color:#155724}
+.glo-status-glo-pending-prices{background:#fff8e1;color:#665100}
+.glo-status-glo-auto-priced{background:#cfe2ff;color:#0a3a6e}
+
+/* ============================================================
+   REPORTES (antes inline en class-reports.php)
+   ============================================================ */
+.gloq-reports-filters{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:18px 22px;margin:14px 0}
+.gloq-reports-filter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:14px}
+.gloq-reports-filter-grid label{display:flex;flex-direction:column;font-size:12px;color:#5a6470;font-weight:600;text-transform:uppercase;letter-spacing:0.4px}
+.gloq-reports-filter-grid input,.gloq-reports-filter-grid select{margin-top:4px;padding:6px 10px;border:1px solid #cbd2d9;border-radius:4px;font-size:13px;font-weight:400;color:#222;text-transform:none;letter-spacing:0}
+.gloq-reports-filter-actions{display:flex;gap:10px;flex-wrap:wrap}
+.gloq-reports-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:18px 0}
+.gloq-rstat{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:18px 20px;border-left:4px solid #0a4d3a}
+.gloq-rstat-money{border-left-color:#13855e;background:linear-gradient(135deg,#fff 0%,#f0fff4 100%)}
+.gloq-rstat-conversion{border-left-color:#17a2b8;background:linear-gradient(135deg,#fff 0%,#e1f5f8 100%)}
+.gloq-rstat-large{border-left-color:#dc3545;background:linear-gradient(135deg,#fff 0%,#fdecea 100%)}
+.gloq-rstat-label{font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#5a6470;font-weight:600;margin-bottom:4px}
+.gloq-rstat-value{font-size:28px;font-weight:700;line-height:1.1;color:#0a4d3a;margin-bottom:6px}
+.gloq-rstat-money .gloq-rstat-value{font-size:20px;color:#13855e}
+.gloq-rstat-conversion .gloq-rstat-value{color:#117a8b}
+.gloq-rstat-large .gloq-rstat-value{color:#7a1d12}
+.gloq-rstat-detail{font-size:12px;color:#5a6470}
+.gloq-reports-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:14px 0}
+@media (max-width:1024px){.gloq-reports-grid{grid-template-columns:1fr}}
+.gloq-rcard{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:18px 22px}
+.gloq-rcard h2{font-size:15px;margin:0 0 12px;border-bottom:1px solid #edf2f7;padding-bottom:8px}
+.gloq-rcard table th{background:#f6f7f7;font-size:12px}
+
+/* ============================================================
+   PRECIOS (antes inline en class-pricing-admin.php)
+   ============================================================ */
+.gloq-pricing-stats{display:flex;gap:14px;margin:16px 0;font-size:14px;flex-wrap:wrap}
+.gloq-pricing-stat{padding:8px 16px;background:#f0fff4;border-left:3px solid #0a4d3a;border-radius:4px}
+.gloq-pricing-stat-filtered{background:#fff3cd;border-left-color:#f7b500}
+#gloq-pricing-table input[type=number]{font-family:monospace}
+
+/* ============================================================
+   IMPORTADOR (antes inline en class-importer-admin.php)
+   ============================================================ */
+.gloq-importer-card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:24px 28px;margin-top:18px;max-width:920px}
+.gloq-importer-card h2{font-size:16px;margin:0 0 14px;border-bottom:1px solid #edf2f7;padding-bottom:10px;color:#1a202c}
+.gloq-importer-types{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.gloq-importer-type{display:flex;gap:12px;padding:14px 16px;border:2px solid #e2e8f0;border-radius:8px;cursor:pointer;transition:all 0.15s;background:#fff}
+.gloq-importer-type:hover{border-color:#0a4d3a;background:#fafffe}
+.gloq-importer-type-selected{border-color:#0a4d3a;background:#f0fff4;box-shadow:0 0 0 3px rgba(10,77,58,0.08)}
+.gloq-importer-type input{margin-top:4px;flex-shrink:0}
+.gloq-importer-type-body strong{display:block;color:#0a4d3a;font-size:14px;margin-bottom:4px}
+.gloq-importer-type-body p{margin:0;font-size:12px;color:#5a6470;line-height:1.5}
+.gloq-import-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0}
+.gloq-import-stat{background:#f7f8fa;border-radius:8px;padding:18px 20px;text-align:center;border-left:4px solid #ccc}
+.gloq-import-stat-inserted{border-left-color:#28a745;background:#f0fff4}
+.gloq-import-stat-inserted .gloq-import-num{color:#155724}
+.gloq-import-stat-updated{border-left-color:#17a2b8;background:#e1f5f8}
+.gloq-import-stat-updated .gloq-import-num{color:#0c5460}
+.gloq-import-stat-skipped{border-left-color:#f7b500;background:#fff8e1}
+.gloq-import-stat-skipped .gloq-import-num{color:#856404}
+.gloq-import-stat-errors{border-left-color:#dc3545;background:#fdecea}
+.gloq-import-stat-errors .gloq-import-num{color:#7a1d12}
+.gloq-import-num{font-size:32px;font-weight:700;line-height:1}
+.gloq-import-label{font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:#5a6470;margin-top:6px;font-weight:600}
+.gloq-import-errors{max-height:300px;overflow:auto;background:#fff;border:1px solid #fdecea;border-radius:6px;padding:12px}
+.gloq-import-error{padding:6px 0;border-bottom:1px solid #fdecea;font-size:13px;color:#7a1d12;font-family:monospace}
+.gloq-import-error:last-child{border-bottom:0}
+
+/* ============================================================
+   LOGS (antes inline en class-logger-admin.php)
+   ============================================================ */
+.gloq-logs-stats{display:flex;gap:8px;margin:16px 0;flex-wrap:wrap}
+.gloq-log-stat{padding:6px 14px;background:#f6f7f7;border-radius:4px;font-size:13px;color:#5a6470}
+.gloq-log-stat-error{background:#fdecea;color:#7a1d12}
+.gloq-log-stat-warn{background:#fff8e1;color:#665100}
+.gloq-log-stat-info{background:#e7f3ff;color:#0c5298}
+.gloq-log-stat-debug{background:#e2e3e5;color:#495057}
+.gloq-log-stat-total{background:#0a4d3a;color:#fff}
+.gloq-logs-filters{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:14px 18px;margin:0 0 14px;display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
+.gloq-logs-filters label{display:flex;flex-direction:column;font-size:12px;color:#5a6470;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;gap:4px}
+.gloq-logs-filters select{padding:6px 10px;border:1px solid #cbd2d9;border-radius:4px;font-size:13px;font-weight:400;text-transform:none;letter-spacing:0;color:#222}
+.gloq-logs-table td{vertical-align:top;padding:10px 12px;font-size:13px}
+.gloq-log-ts{font-family:monospace;font-size:12px;color:#5a6470;white-space:nowrap}
+.gloq-log-badge{display:inline-block;padding:2px 9px;border-radius:11px;font-size:10px;font-weight:700;letter-spacing:0.5px}
+.gloq-log-badge-error{background:#dc3545;color:#fff}
+.gloq-log-badge-warn{background:#f7b500;color:#fff}
+.gloq-log-badge-info{background:#17a2b8;color:#fff}
+.gloq-log-badge-debug{background:#6c757d;color:#fff}
+.gloq-logs-table tr.gloq-log-error{background:rgba(253,236,234,0.5)}
+.gloq-logs-table tr.gloq-log-warn{background:rgba(255,248,225,0.5)}
+
+/* ============================================================
+   PRESENTACIONES + PRECIOS B2B (metaboxes producto/cliente)
+   ============================================================ */
+#glo-presentaciones-table th{background:#f6f7f7;text-align:left;padding:8px 12px;font-size:12px}
+#glo-presentaciones-table td{padding:8px}
+#glo-presentaciones-table input[type=text],
+#glo-presentaciones-table input[type=number]{width:100%;box-sizing:border-box}
+#glo-pricing-table th{background:#f6f7f7}
+#glo-pricing-table td{padding:8px 12px}
+#glo-pricing-table input[type=number]{width:140px}
+.glo-pres-remove,.glo-pricing-remove{color:#c0392b!important;background:none;border:0;cursor:pointer;font-size:18px;font-weight:bold;padding:4px 10px;border-radius:3px;text-decoration:none}
+.glo-pres-remove:hover,.glo-pricing-remove:hover{background:#fdecea}
+
+/* ============================================================
+   MODAL CONVERTIR EN PEDIDO (antes inline en meta-box)
+   ============================================================ */
+.gloq-convert-modal{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px}
+.gloq-convert-modal-inner{background:#fff;border-radius:10px;max-width:880px;width:100%;padding:28px 30px;max-height:90vh;overflow:auto;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.32)}
+.gloq-convert-modal-inner h2{margin:0 0 8px;color:#0a4d3a}
+.gloq-convert-close{position:absolute;top:10px;right:14px;background:transparent;border:0;font-size:26px;cursor:pointer;color:#94a3b8;width:36px;height:36px;border-radius:6px}
+.gloq-convert-close:hover{background:#f1f5f9;color:#1a202c}

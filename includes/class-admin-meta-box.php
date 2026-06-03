@@ -110,7 +110,10 @@ class Glotracol_Quote_Admin_Meta_Box {
 			$to   = isset( $entry['to'] ) ? $entry['to'] : '';
 			$ok   = ! empty( $entry['success'] );
 			$at   = isset( $entry['sent_at'] ) ? $entry['sent_at'] : '';
-			echo '<li style="margin-bottom:4px">' . ( $ok ? '✓' : '✗' ) . ' <strong>' . esc_html( $type ) . '</strong> → <code>' . esc_html( $to ) . '</code><br><small>' . esc_html( $at ) . '</small></li>';
+			$icon = $ok
+				? '<span class="dashicons dashicons-yes-alt" style="color:#46b450;vertical-align:text-bottom"></span>'
+				: '<span class="dashicons dashicons-dismiss" style="color:#dc3232;vertical-align:text-bottom"></span>';
+			echo '<li style="margin-bottom:4px">' . $icon . ' <strong>' . esc_html( $type ) . '</strong> · <code>' . esc_html( $to ) . '</code><br><small>' . esc_html( $at ) . '</small></li>';
 		}
 		echo '</ul>';
 	}
@@ -140,9 +143,9 @@ class Glotracol_Quote_Admin_Meta_Box {
 			</p>
 			<p style="margin:0 0 10px"><strong>Pricing:</strong> <?php
 				$badge_map = [
-					'priced'  => [ 'background' => '#cfe2ff', 'color' => '#0a3a6e', 'label' => '✓ Todos con precio' ],
-					'partial' => [ 'background' => '#fff8e1', 'color' => '#665100', 'label' => '⚠ Faltan precios' ],
-					'none'    => [ 'background' => '#fdecea', 'color' => '#7a1d12', 'label' => '✗ Sin precios' ],
+					'priced'  => [ 'background' => '#cfe2ff', 'color' => '#0a3a6e', 'label' => 'Todos con precio' ],
+					'partial' => [ 'background' => '#fff8e1', 'color' => '#665100', 'label' => 'Faltan precios' ],
+					'none'    => [ 'background' => '#fdecea', 'color' => '#7a1d12', 'label' => 'Sin precios' ],
 				];
 				$b = $badge_map[ $pricing_status ] ?? null;
 				if ( $b ) {
@@ -160,7 +163,7 @@ class Glotracol_Quote_Admin_Meta_Box {
 			<?php if ( $type === 'quote' ) : ?>
 				<p style="margin:14px 0 8px"><strong>Convertir en pedido</strong></p>
 				<p style="font-size:12px;color:#666;margin:0 0 10px">Cambia el tipo a "Pedido" (intención de compra firme), opcionalmente completa precios faltantes y reenvía el email formal al cliente.</p>
-				<button type="button" class="button button-primary" id="gloq-convert-btn" data-post-id="<?php echo (int) $post->ID; ?>">→ Convertir en pedido</button>
+				<button type="button" class="button button-primary" id="gloq-convert-btn" data-post-id="<?php echo (int) $post->ID; ?>">Convertir en pedido</button>
 				<span id="gloq-convert-status" style="display:block;margin-top:8px;font-size:12px"></span>
 			<?php else : ?>
 				<p style="margin:14px 0 0;font-size:12px;color:#666"><em>Esta solicitud ya está marcada como pedido en firme.</em></p>
@@ -168,7 +171,7 @@ class Glotracol_Quote_Admin_Meta_Box {
 		</div>
 
 		<!-- Modal -->
-		<div class="gloq-convert-modal" id="gloq-convert-modal" style="display:none">
+		<div class="gloq-convert-modal" id="gloq-convert-modal" data-post-id="<?php echo (int) $post->ID; ?>" style="display:none">
 			<div class="gloq-convert-modal-inner">
 				<button type="button" class="gloq-convert-close" aria-label="Cerrar">×</button>
 				<h2>Convertir en pedido</h2>
@@ -195,71 +198,11 @@ class Glotracol_Quote_Admin_Meta_Box {
 				</table>
 				<div style="display:flex;gap:10px;justify-content:flex-end">
 					<button type="button" class="button" id="gloq-convert-cancel">Cancelar</button>
-					<button type="button" class="button button-primary" id="gloq-convert-confirm">✓ Confirmar conversión</button>
+					<button type="button" class="button button-primary" id="gloq-convert-confirm">Confirmar conversión</button>
 				</div>
 			</div>
 		</div>
 
-		<script>
-		jQuery(function($){
-			var $modal = $('#gloq-convert-modal');
-			var $btn = $('#gloq-convert-btn');
-			var $status = $('#gloq-convert-status');
-			$btn.on('click', function(){ $modal.show(); recomputeTotal(); });
-			$('#gloq-convert-cancel, .gloq-convert-close').on('click', function(){ $modal.hide(); });
-			$modal.on('click', function(e){ if (e.target === this) $modal.hide(); });
-
-			function fmt(amount){
-				return '$ ' + (parseInt(amount,10)||0).toLocaleString('es-CO') + ' COP';
-			}
-			function recomputeTotal(){
-				var total = 0;
-				$('.gloq-convert-price').each(function(){
-					var price = parseInt($(this).val(), 10) || 0;
-					var qty = parseInt($(this).data('qty'), 10) || 0;
-					var sub = price * qty;
-					$('.gloq-convert-subtotal[data-idx="' + $(this).data('idx') + '"]').text(fmt(sub));
-					total += sub;
-				});
-				$('#gloq-convert-total').text(fmt(total));
-			}
-			$(document).on('input change', '.gloq-convert-price', recomputeTotal);
-
-			$('#gloq-convert-confirm').on('click', function(){
-				var $cbtn = $(this);
-				var prices = {};
-				$('.gloq-convert-price').each(function(){
-					prices[$(this).data('idx')] = parseInt($(this).val(), 10) || 0;
-				});
-				$cbtn.prop('disabled', true).text('Procesando…');
-				$.post(ajaxurl, {
-					action: 'gloq_convert_to_order',
-					_wpnonce: '<?php echo esc_js( wp_create_nonce( 'gloq_convert_to_order' ) ); ?>',
-					post_id: <?php echo (int) $post->ID; ?>,
-					prices: prices
-				}).done(function(resp){
-					if (resp && resp.success) {
-						$status.html('<span style="color:#155724;background:#d4edda;padding:6px 12px;border-radius:4px">✓ ' + resp.data.message + '</span>');
-						setTimeout(function(){ location.reload(); }, 1200);
-					} else {
-						alert((resp && resp.data && resp.data.message) || 'Error desconocido');
-						$cbtn.prop('disabled', false).text('✓ Confirmar conversión');
-					}
-				}).fail(function(){
-					alert('Error de conexión');
-					$cbtn.prop('disabled', false).text('✓ Confirmar conversión');
-				});
-			});
-		});
-		</script>
-
-		<style>
-		.gloq-convert-modal{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px}
-		.gloq-convert-modal-inner{background:#fff;border-radius:10px;max-width:880px;width:100%;padding:28px 30px;max-height:90vh;overflow:auto;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.32)}
-		.gloq-convert-modal-inner h2{margin:0 0 8px;color:#0a4d3a}
-		.gloq-convert-close{position:absolute;top:10px;right:14px;background:transparent;border:0;font-size:26px;cursor:pointer;color:#94a3b8;width:36px;height:36px;border-radius:6px}
-		.gloq-convert-close:hover{background:#f1f5f9;color:#1a202c}
-		</style>
 		<?php
 	}
 

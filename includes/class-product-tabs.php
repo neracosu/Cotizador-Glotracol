@@ -77,7 +77,7 @@ class Glotracol_Quote_Product_Tabs {
 				<div class="gloq-desc-cta-text">
 					<strong><?php echo esc_html( $product->get_name() ); ?></strong>
 					<?php if ( $is_in_cart ) : ?>
-						<span class="gloq-desc-cta-sub">✓ Ya tienes <?php echo (int) $qty_in_cart; ?> en tu cotización. Puedes añadir más o ir al formulario.</span>
+						<span class="gloq-desc-cta-sub">Ya tienes <?php echo (int) $qty_in_cart; ?> en tu cotización. Puedes añadir más o ir al formulario.</span>
 					<?php else : ?>
 						<span class="gloq-desc-cta-sub">Añade este producto a tu cotización para que el equipo de Glotracol te envíe disponibilidad y precio.</span>
 					<?php endif; ?>
@@ -97,7 +97,7 @@ class Glotracol_Quote_Product_Tabs {
 								esc_attr( $product->get_sku() ),
 								esc_attr( $product->get_name() ),
 								esc_attr( $product->get_name() ),
-								$is_in_cart ? '✓ Añadir más a la cotización' : 'Añadir a mi cotización'
+								$is_in_cart ? 'Añadir más a la cotización' : 'Añadir a mi cotización'
 							),
 							$product,
 							[]

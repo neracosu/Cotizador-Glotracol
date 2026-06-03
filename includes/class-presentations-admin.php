@@ -80,47 +80,14 @@ class Glotracol_Quote_Presentations_Admin {
 						?>
 						</tbody>
 					</table>
+					<template id="glo-pres-tpl"><?php $this->render_row( '__IDX__', [] ); ?></template>
 					<p style="margin-top:10px">
-						<button type="button" class="button" id="glo-pres-add">+ Añadir presentación</button>
+						<button type="button" class="button" id="glo-pres-add" data-gloq-add-row data-target="#glo-pres-rows" data-template="#glo-pres-tpl" data-next="<?php echo (int) $row_idx; ?>">+ Añadir presentación</button>
 						<span class="description" style="margin-left:10px">El precio público se usa cuando no hay match de NIT B2B. La lista global de precios (Cotizaciones → Precios) tiene prioridad si lo que se cargó allí coincide con el SKU de la variante.</span>
 					</p>
 				</div>
 			</div>
 
-			<script>
-			(function(){
-				var nextIdx = <?php echo (int) $row_idx; ?>;
-				document.getElementById('glo-pres-add').addEventListener('click', function(){
-					var tbody = document.getElementById('glo-pres-rows');
-					var tr = document.createElement('tr');
-					tr.innerHTML = <?php echo wp_json_encode( $this->row_template_html() ); ?>.replace(/__IDX__/g, nextIdx);
-					tbody.appendChild(tr);
-					nextIdx++;
-					attachRemoveHandlers();
-				});
-				function attachRemoveHandlers(){
-					document.querySelectorAll('.glo-pres-remove').forEach(function(b){
-						b.onclick = function(){
-							var tr = b.closest('tr');
-							var labelInput = tr.querySelector('input[name$="[label]"]');
-							if (labelInput) labelInput.value = '';
-							tr.style.opacity = 0.4;
-							tr.querySelectorAll('input').forEach(function(i){ i.disabled = true; });
-						};
-					});
-				}
-				attachRemoveHandlers();
-			})();
-			</script>
-
-			<style>
-			#glo-presentaciones-table th{background:#f6f7f7;text-align:left;padding:8px 12px;font-size:12px}
-			#glo-presentaciones-table td{padding:8px}
-			#glo-presentaciones-table input[type=text],
-			#glo-presentaciones-table input[type=number]{width:100%;box-sizing:border-box}
-			.glo-pres-remove{color:#c0392b!important;background:none;border:0;cursor:pointer;font-size:18px;font-weight:bold;padding:4px 10px;border-radius:3px}
-			.glo-pres-remove:hover{background:#fdecea}
-			</style>
 		</div>
 		<?php
 	}
@@ -136,17 +103,9 @@ class Glotracol_Quote_Presentations_Admin {
 			<td><input type="text" name="glo_pres[<?php echo (int) $idx; ?>][sku]" value="<?php echo esc_attr( $sku ); ?>" placeholder="SKU-250"></td>
 			<td><input type="number" name="glo_pres[<?php echo (int) $idx; ?>][peso_g]" min="0" step="1" value="<?php echo esc_attr( $peso ); ?>" placeholder="0"></td>
 			<td><input type="number" name="glo_pres[<?php echo (int) $idx; ?>][precio_publico]" min="0" step="1" value="<?php echo esc_attr( $price ); ?>" placeholder="0"></td>
-			<td><button type="button" class="glo-pres-remove" aria-label="Quitar">×</button></td>
+			<td><button type="button" class="glo-pres-remove gloq-remove-row" aria-label="Quitar">×</button></td>
 		</tr>
 		<?php
-	}
-
-	private function row_template_html() {
-		ob_start();
-		$this->render_row( '__IDX__', [] );
-		$html = ob_get_clean();
-		// Limpiar saltos de línea para una sola línea en JS
-		return str_replace( [ "\r", "\n" ], '', $html );
 	}
 
 	public function save_panel( $product ) {

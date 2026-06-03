@@ -25,17 +25,17 @@ class Glotracol_Quote_Product_Buttons {
 		$pid = get_the_ID();
 		if ( $pid && $this->is_in_cart( $pid ) ) {
 			$qty = $this->get_cart_qty( $pid );
-			return sprintf( '✓ Añadir más (ya tienes %d en tu cotización)', $qty );
+			return sprintf( 'Añadir más (ya tienes %d en tu cotización)', $qty );
 		}
 		return 'Añadir a mi cotización';
 	}
 
 	public function loop_text( $text, $product = null ) {
 		if ( $product && glotracol_quote_get_presentaciones( $product ) ) {
-			return 'Ver presentaciones →';
+			return 'Ver presentaciones';
 		}
 		if ( $product && $this->is_in_cart( $product->get_id() ) ) {
-			return '✓ Añadir más a la cotización';
+			return 'Añadir más a la cotización';
 		}
 		return 'Añadir a la cotización';
 	}
@@ -58,7 +58,7 @@ class Glotracol_Quote_Product_Buttons {
 			$url = $product->get_permalink();
 			$qty_in_cart = $this->get_cart_qty( $product->get_id() );
 			$class = 'button gloq-add-button gloq-has-presentations' . ( $qty_in_cart > 0 ? ' gloq-in-cart' : '' );
-			$label = $qty_in_cart > 0 ? '✓ Ver presentaciones →' : 'Ver presentaciones →';
+			$label = 'Ver presentaciones';
 			$html = sprintf(
 				'<a href="%s" class="%s" data-product_id="%d" data-gloq-product-name="%s">%s</a>',
 				esc_url( $url ),
@@ -68,14 +68,14 @@ class Glotracol_Quote_Product_Buttons {
 				esc_html( $label )
 			);
 			if ( $qty_in_cart > 0 ) {
-				$html .= sprintf( '<span class="gloq-cart-badge">✓ %d en tu cotización</span>', (int) $qty_in_cart );
+				$html .= sprintf( '<span class="gloq-cart-badge">%d en tu cotización</span>', (int) $qty_in_cart );
 			}
 			return $html;
 		}
 		// Caso simple: el html ya viene generado por WC; añadimos badge si está en cart.
 		if ( $this->is_in_cart( $product->get_id() ) ) {
 			$qty = $this->get_cart_qty( $product->get_id() );
-			$badge = sprintf( '<span class="gloq-cart-badge">✓ %d en tu cotización</span>', (int) $qty );
+			$badge = sprintf( '<span class="gloq-cart-badge">%d en tu cotización</span>', (int) $qty );
 			return $html . $badge;
 		}
 		return $html;

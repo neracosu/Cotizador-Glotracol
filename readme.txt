@@ -5,7 +5,7 @@ Tags: woocommerce, quote, request-a-quote, b2b
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.0.2
+Stable tag: 2.0.3
 WC requires at least: 8.0
 
 Convierte WooCommerce en un sistema de solicitud de cotizaciones (RFQ) sin checkout ni pago.
@@ -29,6 +29,13 @@ Plugin propio para Glotracol (Global Trading de Colombia). Reemplaza el flujo de
 * Templates sobreescribibles desde el tema en `glotracol-quote/`.
 
 == Changelog ==
+
+= 2.0.3 =
+* **UI admin unificada**: el CSS y el JS del panel ahora se encolan en todas las pantallas del plugin (antes solo en el dashboard). Se eliminaron 7 bloques `<style>` y 4 bloques `<script>` inline, consolidados en `assets/css/admin.css` y el nuevo `assets/js/admin.js`.
+* **Feedback de carga**: el test de SMTP y la conversión a pedido muestran spinner y estado mientras procesan.
+* **Empty states**: pantallas de Precios, Logs y Reportes muestran un estado vacío claro con llamada a la acción cuando no hay datos.
+* **Sin emojis**: se reemplazaron los iconos emoji del panel por Dashicons de WordPress y se retiraron los emojis decorativos del panel, los asuntos de email, las plantillas y la documentación, para un tono más sobrio.
+* Documentación: nuevo `README.md` para GitHub, `docs/ESTADO_DEL_PLUGIN.md` (estado técnico) e `docs/INFORME_EJECUTIVO.md` (resumen para el cliente).
 
 = 2.0.2 =
 * **Seguridad (autorización)**: `ajax_convert_to_order` ahora valida `current_user_can('edit_post', $post_id)` (capacidad a nivel de objeto) en vez del genérico `edit_posts`. Evita que Autores/Colaboradores conviertan cotizaciones ajenas, reescriban precios y disparen el reenvío de email al cliente.
@@ -55,15 +62,15 @@ Plugin propio para Glotracol (Global Trading de Colombia). Reemplaza el flujo de
 * Conexión completa: el submit del formulario ahora usa `Glotracol_Quote_Pricing::resolve_items()` para resolver precios de cada SKU contra B2B (si NIT match) o lista pública. Calcula total, marca pricing_status (priced/partial/none) y guarda metas.
 * Statuses nuevos: `glo-pending-prices` (falta precio para ≥1 SKU) y `glo-auto-priced` (todos con precio, cliente recibió cotización formal automática).
 * Email "Cotización formal" / "Confirmación de pedido" al cliente (template email-customer-priced.php) cuando todos los SKUs tienen precio. Tabla con precio unitario, badge B2B en cada item, total prominente, validez 7 días.
-* Email "Pendiente de precios" al admin (template email-admin-pending-prices.php) cuando faltan precios. Resalta los SKUs sin precio en amarillo. Subject prefix "⚠️ [PENDIENTE PRECIOS]".
-* Subject prefixes según contexto: "🔥 [GRANDE]", "⚠️ [PENDIENTE PRECIOS]", "✅ [AUTO-COTIZADA]", "🛒 [PEDIDO]".
+* Email "Pendiente de precios" al admin (template email-admin-pending-prices.php) cuando faltan precios. Resalta los SKUs sin precio en amarillo. Subject prefix "[PENDIENTE PRECIOS]".
+* Subject prefixes según contexto: "[GRANDE]", "[PENDIENTE PRECIOS]", "[AUTO-COTIZADA]", "[PEDIDO]".
 * F7: Botón "Convertir en pedido" en metabox lateral de la cotización. Modal admin permite editar precios faltantes inline con cálculo de subtotales en vivo. Al confirmar, cambia tipo a "order", recalcula pricing_status, dispara email auto-cotizado al cliente y actualiza el título a "Pedido #...".
 * Columnas admin: nueva columna "Tipo" (badge Cotización/Pedido) + "Total" (formateado en COP). Columna "Estado" reordenada al final.
 * Setting nuevo "Auto-respuesta" en tab Reglas: toggle para activar/desactivar el envío automático con precios.
 
 = 1.4.0 =
 * C.1: Pestaña "Presentaciones" en la pantalla de edición de producto WC. Tabla repetidora con label / SKU variante / peso / precio público. Save vía woocommerce_admin_process_product_object.
-* C.2: Selector de presentación en single-product (debajo del título, antes del botón). En catálogo, productos con presentaciones muestran "Ver presentaciones →" que linkea al producto en lugar de añadir directo.
+* C.2: Selector de presentación en single-product (debajo del título, antes del botón). En catálogo, productos con presentaciones muestran "Ver presentaciones" que linkea al producto en lugar de añadir directo.
 * C.3: Cart soporta múltiples presentaciones del mismo producto como items separados (filtro woocommerce_cart_id). Display de la presentación en cada línea. Dropdown inline para cambiar presentación sin recargar (AJAX gloq_swap_presentation).
 * SKU efectivo: cuando el item tiene presentación, su SKU efectivo es el de la variante (no el del producto padre). Esto permite que el resolver de precios encuentre los precios públicos/B2B importados con el SKU correcto.
 * Helpers nuevos: glotracol_quote_get_presentaciones() y glotracol_quote_get_presentacion(). Fachada lista para migrar a productos variables WC en el futuro sin tocar callers.
@@ -75,10 +82,10 @@ Plugin propio para Glotracol (Global Trading de Colombia). Reemplaza el flujo de
 * Helpers nuevos: `glotracol_quote_find_client_by_nit()`, `glotracol_quote_get_client_data()`, `glotracol_quote_format_price()`.
 
 = 1.2.0 =
-* F1: Refinamiento visual del mensaje post-add-to-cart con wrapper flex (`.gloq-msg-wrap`), badge ✓ y dos botones bien diferenciados (Ver mi cotización + Solicitar ahora). Responsive en móvil.
+* F1: Refinamiento visual del mensaje post-add-to-cart con wrapper flex (`.gloq-msg-wrap`), badge de confirmación y dos botones bien diferenciados (Ver mi cotización + Solicitar ahora). Responsive en móvil.
 * F2: Pestaña "Información adicional" renombrada a "Presentación" en single-product. CTA destacado al final de la pestaña Descripción con botón "Añadir a mi cotización" y, si ya está en cart, botón secundario "Ir al formulario".
 * F3: Etiqueta automática de tamaño (Pequeña/Mediana/Grande) calculada en el submit basada en unidades totales y SKUs distintos. Nueva columna "Tamaño" en la list table con badge coloreado. Backfill on-the-fly para cotizaciones antiguas.
-* F4: Pedidos grandes disparan email destacado con template diferenciado (`email-admin-large.php`, color rojo, badge "Atención prioritaria") y prefix "🔥 [GRANDE]" en el asunto. Email destacado opcional (CC adicional para gerencia).
+* F4: Pedidos grandes disparan email destacado con template diferenciado (`email-admin-large.php`, color rojo, badge "Atención prioritaria") y prefix "[GRANDE]" en el asunto. Email destacado opcional (CC adicional para gerencia).
 * Nueva tab "Reglas" en settings con thresholds configurables y toggle de alerta.
 
 = 1.1.0 =

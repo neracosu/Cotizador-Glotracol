@@ -72,10 +72,10 @@ class Glotracol_Quote_Emails {
 		$admin_subject = glotracol_quote_replace_placeholders( $settings['admin_subject'], $placeholders );
 		// Prefix del subject según contexto
 		$prefix = '';
-		if ( $is_large ) $prefix .= '🔥 [GRANDE] ';
-		if ( $is_pending ) $prefix .= '⚠️ [PENDIENTE PRECIOS] ';
-		elseif ( $is_auto_priced ) $prefix .= '✅ [AUTO-COTIZADA] ';
-		if ( $type === 'order' ) $prefix .= '🛒 [PEDIDO] ';
+		if ( $is_large ) $prefix .= '[GRANDE] ';
+		if ( $is_pending ) $prefix .= '[PENDIENTE PRECIOS] ';
+		elseif ( $is_auto_priced ) $prefix .= '[AUTO-COTIZADA] ';
+		if ( $type === 'order' ) $prefix .= '[PEDIDO] ';
 		$admin_subject = $prefix . $admin_subject;
 
 		// Elegir template admin

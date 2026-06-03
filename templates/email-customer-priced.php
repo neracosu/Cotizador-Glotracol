@@ -15,7 +15,7 @@ $cta_intro = $is_order
 		<table role="presentation" width="640" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
 			<tr><td style="background:<?php echo $header_bg; ?>;color:#fff;padding:24px 28px;text-align:center">
 				<div style="display:inline-block;background:rgba(255,255,255,0.18);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px"><?php echo esc_html( $header_label ); ?></div>
-				<h1 style="margin:0;font-size:24px;line-height:1.3"><?php echo $is_order ? '✓ Tu pedido' : '✓ Tu cotización'; ?> #<?php echo (int) $quote_id; ?></h1>
+				<h1 style="margin:0;font-size:24px;line-height:1.3"><?php echo $is_order ? 'Tu pedido' : 'Tu cotización'; ?> #<?php echo (int) $quote_id; ?></h1>
 				<p style="margin:8px 0 0;font-size:14px;opacity:0.92">Hola, <?php echo esc_html( $customer['name'] ?? '' ); ?></p>
 			</td></tr>
 

@@ -1,14 +1,14 @@
 <?php if ( ! defined( 'ABSPATH' ) ) exit; ?>
 <!DOCTYPE html>
 <html lang="es">
-<head><meta charset="UTF-8"><title>🔥 Pedido grande recibido — #<?php echo (int) $quote_id; ?></title></head>
+<head><meta charset="UTF-8"><title>Pedido grande recibido — #<?php echo (int) $quote_id; ?></title></head>
 <body style="margin:0;padding:0;background:#fef2f2;font-family:Arial,Helvetica,sans-serif;color:#222;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fef2f2;padding:24px 0">
 	<tr><td align="center">
 		<table role="presentation" width="640" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 4px 16px rgba(220,38,38,0.15);border:2px solid #dc3545">
 			<tr><td style="background:linear-gradient(135deg,#dc3545 0%,#a02029 100%);color:#fff;padding:24px 28px">
-				<div style="display:inline-block;background:rgba(255,255,255,0.18);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px">⚡ Atención prioritaria</div>
-				<h1 style="margin:0;font-size:22px;line-height:1.3">🔥 Pedido grande #<?php echo (int) $quote_id; ?></h1>
+				<div style="display:inline-block;background:rgba(255,255,255,0.18);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px">Atención prioritaria</div>
+				<h1 style="margin:0;font-size:22px;line-height:1.3">Pedido grande #<?php echo (int) $quote_id; ?></h1>
 				<p style="margin:8px 0 0;font-size:14px;opacity:0.95"><strong><?php echo (int) $units_total; ?> unidades</strong> · <strong><?php echo (int) $skus_count; ?> productos distintos</strong> · clasificado como <strong>GRANDE</strong></p>
 			</td></tr>
 
@@ -23,7 +23,7 @@
 						$phone = $customer['phone'] ?? '';
 						$wa = $phone ? preg_replace( '/[^0-9]/', '', $phone ) : '';
 						if ( $wa ) {
-							echo '<a href="https://wa.me/' . esc_attr( $wa ) . '" style="color:#25D366;font-weight:600">📱 ' . esc_html( $phone ) . ' (WhatsApp)</a>';
+							echo '<a href="https://wa.me/' . esc_attr( $wa ) . '" style="color:#25D366;font-weight:600">' . esc_html( $phone ) . ' (WhatsApp)</a>';
 						} else {
 							echo esc_html( $phone );
 						}
@@ -60,11 +60,11 @@
 				</table>
 
 				<div style="margin:22px 0 8px;padding:14px 18px;background:#fff8e1;border-left:4px solid #f7b500;border-radius:4px">
-					<strong style="color:#665100;font-size:13px">⚠ Sugerencia:</strong> <span style="font-size:13px;color:#665100">esta cotización supera tu umbral de "pedido grande". Considera contactar al cliente directamente por teléfono o WhatsApp para acelerar la conversión.</span>
+					<strong style="color:#665100;font-size:13px">Sugerencia:</strong> <span style="font-size:13px;color:#665100">esta cotización supera tu umbral de "pedido grande". Considera contactar al cliente directamente por teléfono o WhatsApp para acelerar la conversión.</span>
 				</div>
 
 				<p style="margin:22px 0 0;text-align:center">
-					<a href="<?php echo esc_url( $edit_url ); ?>" style="display:inline-block;background:#dc3545;color:#fff;padding:12px 24px;text-decoration:none;border-radius:6px;font-weight:bold;font-size:14px;box-shadow:0 4px 12px rgba(220,53,69,0.3)">Ver y responder en el panel →</a>
+					<a href="<?php echo esc_url( $edit_url ); ?>" style="display:inline-block;background:#dc3545;color:#fff;padding:12px 24px;text-decoration:none;border-radius:6px;font-weight:bold;font-size:14px;box-shadow:0 4px 12px rgba(220,53,69,0.3)">Ver y responder en el panel</a>
 				</p>
 			</td></tr>
 

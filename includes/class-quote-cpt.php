@@ -91,7 +91,7 @@ class Glotracol_Quote_CPT {
 			case 'glo_type':
 				$type = get_post_meta( $post_id, '_glo_type', true ) ?: 'quote';
 				$pricing = get_post_meta( $post_id, '_glo_pricing_status', true );
-				$auto = $pricing === 'priced' ? ' <span class="glo-type-auto" title="Auto-cotizada">⚡</span>' : '';
+				$auto = '';
 				echo '<span class="glo-type glo-type-' . esc_attr( $type ) . '">' . esc_html( glotracol_quote_type_label( $type ) ) . '</span>' . $auto;
 				break;
 			case 'glo_customer':
@@ -137,7 +137,7 @@ class Glotracol_Quote_CPT {
 				}
 				if ( $size ) {
 					$is_large = (int) get_post_meta( $post_id, '_glo_is_large_alert', true ) === 1;
-					$alert = $is_large ? ' <span class="glo-size-alert" title="Pedido grande">🔥</span>' : '';
+					$alert = '';
 					echo '<span class="glo-size glo-size-' . esc_attr( $size ) . '">' . esc_html( glotracol_quote_size_tag_label( $size ) ) . '</span>' . $alert;
 				} else {
 					echo '—';

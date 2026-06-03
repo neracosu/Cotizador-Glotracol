@@ -7,7 +7,6 @@ class Glotracol_Quote_Admin_Dashboard {
 
 	public function __construct() {
 		add_action( 'admin_menu', [ $this, 'add_menu' ], 9 );
-		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue' ] );
 	}
 
 	public function add_menu() {
@@ -40,11 +39,6 @@ class Glotracol_Quote_Admin_Dashboard {
 		}
 	}
 
-	public function enqueue( $hook ) {
-		if ( strpos( (string) $hook, self::PAGE_SLUG ) === false ) return;
-		wp_enqueue_style( 'glotracol-quote-admin', GLOTRACOL_QUOTE_URL . 'assets/css/admin.css', [], GLOTRACOL_QUOTE_VERSION );
-	}
-
 	public function render() {
 		$stats = $this->get_stats();
 		$config_checks = $this->config_checks();
@@ -69,47 +63,47 @@ class Glotracol_Quote_Admin_Dashboard {
 				<div class="gloq-hero-content">
 					<div class="gloq-hero-badge">v<?php echo esc_html( GLOTRACOL_QUOTE_VERSION ); ?> · RFQ + B2B + Pricing</div>
 					<h1>Cotizador Glotracol</h1>
-					<p>Sistema completo de cotizaciones y pedidos B2B con precios diferenciados por cliente, auto-respuesta cuando los precios están cargados, y conversión cotización → pedido.</p>
+					<p>Sistema completo de cotizaciones y pedidos B2B con precios diferenciados por cliente, auto-respuesta cuando los precios están cargados, y conversión cotización a pedido.</p>
 					<div class="gloq-hero-actions">
-						<a href="<?php echo esc_url( $list_url ); ?>" class="button button-primary button-hero">📋 Ver cotizaciones</a>
-						<a href="<?php echo esc_url( $reports_url ); ?>" class="button button-hero">📊 Reportes</a>
-						<a href="<?php echo esc_url( $form_url ); ?>" target="_blank" class="button button-hero">Ver formulario público ↗</a>
+						<a href="<?php echo esc_url( $list_url ); ?>" class="button button-primary button-hero">Ver cotizaciones</a>
+						<a href="<?php echo esc_url( $reports_url ); ?>" class="button button-hero">Reportes</a>
+						<a href="<?php echo esc_url( $form_url ); ?>" target="_blank" class="button button-hero">Ver formulario público</a>
 					</div>
 				</div>
-				<div class="gloq-hero-icon">📋</div>
+				<div class="gloq-hero-icon"><span class="dashicons dashicons-clipboard"></span></div>
 			</div>
 
 			<?php if ( $log_counts['error'] > 0 ) : ?>
 				<div class="notice notice-error inline gloq-log-alert">
-					<p><strong>⚠ Hay <?php echo (int) $log_counts['error']; ?> errores recientes en el log</strong>. <a href="<?php echo esc_url( $logs_url ); ?>">Revisar log →</a></p>
+					<p><span class="dashicons dashicons-warning"></span> <strong>Hay <?php echo (int) $log_counts['error']; ?> errores recientes en el log</strong>. <a href="<?php echo esc_url( $logs_url ); ?>">Revisar log</a></p>
 				</div>
 			<?php endif; ?>
 
 			<!-- Accesos rápidos a las pantallas v2.0 -->
 			<div class="gloq-quick-grid">
 				<a href="<?php echo esc_url( $clients_url ); ?>" class="gloq-quick-card">
-					<div class="gloq-quick-icon">🏢</div>
+					<div class="gloq-quick-icon"><span class="dashicons dashicons-groups"></span></div>
 					<div class="gloq-quick-body">
 						<strong>Clientes B2B</strong>
 						<span><?php echo (int) $stats['client_count']; ?> en CRM</span>
 					</div>
 				</a>
 				<a href="<?php echo esc_url( $pricing_url ); ?>" class="gloq-quick-card">
-					<div class="gloq-quick-icon">💰</div>
+					<div class="gloq-quick-icon"><span class="dashicons dashicons-money-alt"></span></div>
 					<div class="gloq-quick-body">
 						<strong>Lista de precios</strong>
 						<span><?php echo (int) $stats['public_skus']; ?> SKUs públicos</span>
 					</div>
 				</a>
 				<a href="<?php echo esc_url( $import_url ); ?>" class="gloq-quick-card">
-					<div class="gloq-quick-icon">📥</div>
+					<div class="gloq-quick-icon"><span class="dashicons dashicons-download"></span></div>
 					<div class="gloq-quick-body">
 						<strong>Importar CSV</strong>
 						<span>4 tipos disponibles</span>
 					</div>
 				</a>
 				<a href="<?php echo esc_url( $logs_url ); ?>" class="gloq-quick-card<?php echo $log_counts['error'] > 0 ? ' gloq-quick-alert' : ''; ?>">
-					<div class="gloq-quick-icon"><?php echo $log_counts['error'] > 0 ? '⚠️' : '📜'; ?></div>
+					<div class="gloq-quick-icon"><span class="dashicons <?php echo $log_counts['error'] > 0 ? 'dashicons-warning' : 'dashicons-list-view'; ?>"></span></div>
 					<div class="gloq-quick-body">
 						<strong>Logs</strong>
 						<span><?php echo (int) $log_counts['total']; ?> entradas<?php if ( $log_counts['error'] > 0 ) echo ' · ' . (int) $log_counts['error'] . ' errores'; ?></span>
@@ -130,7 +124,7 @@ class Glotracol_Quote_Admin_Dashboard {
 				<div class="gloq-stat gloq-stat-month-orders">
 					<div class="gloq-stat-value"><?php echo (int) $stats['month_orders']; ?></div>
 					<div class="gloq-stat-label">Pedidos confirmados</div>
-					<a class="gloq-stat-link" href="<?php echo esc_url( $reports_url ); ?>">Ver reportes →</a>
+					<a class="gloq-stat-link" href="<?php echo esc_url( $reports_url ); ?>">Ver reportes</a>
 				</div>
 			</div>
 
@@ -139,17 +133,17 @@ class Glotracol_Quote_Admin_Dashboard {
 				<div class="gloq-stat gloq-stat-new">
 					<div class="gloq-stat-value"><?php echo (int) $stats['new']; ?></div>
 					<div class="gloq-stat-label">Nuevas <?php if ( $stats['new'] > 0 ) echo '<span class="gloq-pulse"></span>'; ?></div>
-					<a class="gloq-stat-link" href="<?php echo esc_url( add_query_arg( 'post_status', 'glo-new', $list_url ) ); ?>">Ver →</a>
+					<a class="gloq-stat-link" href="<?php echo esc_url( add_query_arg( 'post_status', 'glo-new', $list_url ) ); ?>">Ver</a>
 				</div>
 				<div class="gloq-stat gloq-stat-pending">
 					<div class="gloq-stat-value"><?php echo (int) $stats['pending_prices']; ?></div>
-					<div class="gloq-stat-label">⚠ Pendiente precios</div>
-					<a class="gloq-stat-link" href="<?php echo esc_url( add_query_arg( 'post_status', 'glo-pending-prices', $list_url ) ); ?>">Ver →</a>
+					<div class="gloq-stat-label">Pendiente precios</div>
+					<a class="gloq-stat-link" href="<?php echo esc_url( add_query_arg( 'post_status', 'glo-pending-prices', $list_url ) ); ?>">Ver</a>
 				</div>
 				<div class="gloq-stat gloq-stat-auto">
 					<div class="gloq-stat-value"><?php echo (int) $stats['auto_priced']; ?></div>
-					<div class="gloq-stat-label">✓ Auto-cotizadas</div>
-					<a class="gloq-stat-link" href="<?php echo esc_url( add_query_arg( 'post_status', 'glo-auto-priced', $list_url ) ); ?>">Ver →</a>
+					<div class="gloq-stat-label">Auto-cotizadas</div>
+					<a class="gloq-stat-link" href="<?php echo esc_url( add_query_arg( 'post_status', 'glo-auto-priced', $list_url ) ); ?>">Ver</a>
 				</div>
 				<div class="gloq-stat gloq-stat-processing">
 					<div class="gloq-stat-value"><?php echo (int) $stats['processing']; ?></div>
@@ -167,7 +161,7 @@ class Glotracol_Quote_Admin_Dashboard {
 
 			<?php if ( $stats['total'] === 0 ) : ?>
 				<div class="gloq-empty-state">
-					<div class="gloq-empty-icon">📥</div>
+					<div class="gloq-empty-icon"><span class="dashicons dashicons-clipboard"></span></div>
 					<p><strong>Aún no has recibido cotizaciones.</strong> Cuando un cliente envíe el formulario, aparecerá aquí en tiempo real. Mientras tanto, puedes ir cargando clientes B2B y precios para que las primeras cotizaciones lleguen ya con auto-respuesta lista.</p>
 				</div>
 			<?php else : ?>
@@ -199,7 +193,7 @@ class Glotracol_Quote_Admin_Dashboard {
 
 			<section class="gloq-card gloq-compat-card gloq-compat-<?php echo esc_attr( $compat_summary['level'] ); ?>">
 				<div class="gloq-compat-header">
-					<h2><span class="gloq-emoji">🛡️</span> Estado de compatibilidad
+					<h2><span class="dashicons dashicons-shield"></span> Estado de compatibilidad
 						<span class="gloq-compat-badge gloq-compat-badge-<?php echo esc_attr( $compat_summary['level'] ); ?>">
 							<?php echo esc_html( $compat_summary['headline'] ); ?>
 						</span>
@@ -209,10 +203,10 @@ class Glotracol_Quote_Admin_Dashboard {
 				<ul class="gloq-checklist gloq-compat-list">
 					<?php foreach ( $compat_checks as $check ) :
 						$icon_class = 'gloq-check-' . $check['level']; // ok|warn|fail
-						$icon = $check['level'] === 'ok' ? '✓' : ( $check['level'] === 'warn' ? '⚠' : '✗' );
+						$icon = $check['level'] === 'ok' ? 'dashicons-yes-alt' : ( $check['level'] === 'warn' ? 'dashicons-warning' : 'dashicons-dismiss' );
 					?>
 						<li class="gloq-check <?php echo esc_attr( $icon_class ); ?>">
-							<span class="gloq-check-icon"><?php echo $icon; ?></span>
+							<span class="gloq-check-icon"><span class="dashicons <?php echo esc_attr( $icon ); ?>"></span></span>
 							<div class="gloq-check-body">
 								<strong><?php echo esc_html( $check['title'] ); ?></strong>
 								<p><?php echo wp_kses_post( $check['desc'] ); ?></p>
@@ -224,11 +218,11 @@ class Glotracol_Quote_Admin_Dashboard {
 
 			<div class="gloq-grid-2col">
 				<section class="gloq-card">
-					<h2><span class="gloq-emoji">⚙️</span> Estado de configuración</h2>
+					<h2><span class="dashicons dashicons-admin-generic"></span> Estado de configuración</h2>
 					<ul class="gloq-checklist">
 						<?php foreach ( $config_checks as $check ) : ?>
 							<li class="gloq-check <?php echo $check['ok'] ? 'gloq-check-ok' : 'gloq-check-todo'; ?>">
-								<span class="gloq-check-icon"><?php echo $check['ok'] ? '✓' : '○'; ?></span>
+								<span class="gloq-check-icon"><span class="dashicons <?php echo $check['ok'] ? 'dashicons-yes-alt' : 'dashicons-marker'; ?>"></span></span>
 								<div class="gloq-check-body">
 									<strong><?php echo esc_html( $check['title'] ); ?></strong>
 									<p><?php echo wp_kses_post( $check['desc'] ); ?></p>
@@ -242,35 +236,35 @@ class Glotracol_Quote_Admin_Dashboard {
 				</section>
 
 				<section class="gloq-card">
-					<h2><span class="gloq-emoji">🚀</span> Setup recomendado (en orden)</h2>
+					<h2><span class="dashicons dashicons-yes-alt"></span> Setup recomendado (en orden)</h2>
 					<ol class="gloq-steps">
 						<li>
 							<strong>Configura emails y remitente</strong>
-							<p>Ve a <a href="<?php echo esc_url( $settings_url ); ?>"><strong>Configuración → General</strong></a> y define a qué correo llegan las cotizaciones, el remitente y los textos de los emails. Si tienes Site Mailer activo, los emails ya salen autenticados.</p>
+							<p>Ve a <a href="<?php echo esc_url( $settings_url ); ?>"><strong>Configuración › General</strong></a> y define a qué correo llegan las cotizaciones, el remitente y los textos de los emails. Si tienes Site Mailer activo, los emails ya salen autenticados.</p>
 						</li>
 						<li>
 							<strong>Carga clientes B2B en el CRM</strong>
-							<p>Vía <a href="<?php echo esc_url( $import_url ); ?>"><strong>Importar → "Clientes B2B"</strong></a> sube un CSV con NIT/Razón social/email/etc. de tus clientes. O créalos manualmente en <a href="<?php echo esc_url( $clients_url ); ?>"><strong>Clientes B2B → Añadir cliente</strong></a>.</p>
+							<p>Vía <a href="<?php echo esc_url( $import_url ); ?>"><strong>Importar › "Clientes B2B"</strong></a> sube un CSV con NIT/Razón social/email/etc. de tus clientes. O créalos manualmente en <a href="<?php echo esc_url( $clients_url ); ?>"><strong>Clientes B2B › Añadir cliente</strong></a>.</p>
 						</li>
 						<li>
 							<strong>Carga precios públicos (semanal)</strong>
-							<p>Vía <a href="<?php echo esc_url( $import_url ); ?>"><strong>Importar → "Lista de precios públicos"</strong></a>. Estos precios se aplican a clientes <em>sin NIT identificado</em>. La actualización semanal es lo que mantiene la auto-respuesta funcionando.</p>
+							<p>Vía <a href="<?php echo esc_url( $import_url ); ?>"><strong>Importar › "Lista de precios públicos"</strong></a>. Estos precios se aplican a clientes <em>sin NIT identificado</em>. La actualización semanal es lo que mantiene la auto-respuesta funcionando.</p>
 						</li>
 						<li>
 							<strong>Carga precios negociados B2B (opcional)</strong>
-							<p>Si tienes acuerdos comerciales con clientes específicos, carga sus precios via <a href="<?php echo esc_url( $import_url ); ?>"><strong>Importar → "Precios negociados por cliente"</strong></a> con columnas <code>nit, sku, precio</code>. Se aplican automáticamente cuando ese NIT envíe una cotización.</p>
+							<p>Si tienes acuerdos comerciales con clientes específicos, carga sus precios via <a href="<?php echo esc_url( $import_url ); ?>"><strong>Importar › "Precios negociados por cliente"</strong></a> con columnas <code>nit, sku, precio</code>. Se aplican automáticamente cuando ese NIT envíe una cotización.</p>
 						</li>
 						<li>
 							<strong>Define presentaciones por producto (si aplica)</strong>
-							<p>Si un producto se vende en varias presentaciones (250g, 500g, 1kg…), edítalo en <em>Productos → editar</em>, abre la pestaña <strong>"Presentaciones"</strong> y agrega cada variante con su SKU. El cliente final podrá elegir presentación al añadirlo y cambiarla en el carrito.</p>
+							<p>Si un producto se vende en varias presentaciones (250g, 500g, 1kg…), edítalo en <em>Productos › editar</em>, abre la pestaña <strong>"Presentaciones"</strong> y agrega cada variante con su SKU. El cliente final podrá elegir presentación al añadirlo y cambiarla en el carrito.</p>
 						</li>
 						<li>
 							<strong>Configura reglas y auto-respuesta</strong>
-							<p>En <a href="<?php echo esc_url( $settings_url . '&tab=rules' ); ?>"><strong>Configuración → Reglas</strong></a> ajusta los umbrales de tamaño (Mediana/Grande), el email destacado para pedidos grandes y activa la auto-respuesta con precios.</p>
+							<p>En <a href="<?php echo esc_url( $settings_url . '&tab=rules' ); ?>"><strong>Configuración › Reglas</strong></a> ajusta los umbrales de tamaño (Mediana/Grande), el email destacado para pedidos grandes y activa la auto-respuesta con precios.</p>
 						</li>
 						<li>
 							<strong>(Opcional) Conecta automatización por WhatsApp</strong>
-							<p>Configura un webhook en <a href="<?php echo esc_url( $settings_url . '&tab=integrations' ); ?>"><strong>Configuración → Integraciones</strong></a> para que cada cotización dispare un mensaje automático vía Goja/Make/Zapier/n8n. El plugin firma cada POST con HMAC-SHA256.</p>
+							<p>Configura un webhook en <a href="<?php echo esc_url( $settings_url . '&tab=integrations' ); ?>"><strong>Configuración › Integraciones</strong></a> para que cada cotización dispare un mensaje automático vía Goja/Make/Zapier/n8n. El plugin firma cada POST con HMAC-SHA256.</p>
 						</li>
 						<li>
 							<strong>Prueba end-to-end y revisa reportes</strong>
@@ -282,11 +276,11 @@ class Glotracol_Quote_Admin_Dashboard {
 
 			<div class="gloq-grid-2col">
 				<section class="gloq-card">
-					<h2><span class="gloq-emoji">🛒</span> Cómo funciona para tus clientes</h2>
+					<h2><span class="dashicons dashicons-randomize"></span> Cómo funciona para tus clientes</h2>
 					<div class="gloq-flow">
 						<div class="gloq-flow-step">
 							<div class="gloq-flow-num">1</div>
-							<div><strong>Explora el catálogo</strong><p>No ve precios. Cada producto muestra <em>"Añadir a la cotización"</em>. Si tiene presentaciones, ve <em>"Ver presentaciones →"</em> y elige al entrar al producto.</p></div>
+							<div><strong>Explora el catálogo</strong><p>No ve precios. Cada producto muestra <em>"Añadir a la cotización"</em>. Si tiene presentaciones, ve <em>"Ver presentaciones"</em> y elige al entrar al producto.</p></div>
 						</div>
 						<div class="gloq-flow-step">
 							<div class="gloq-flow-num">2</div>
@@ -298,11 +292,11 @@ class Glotracol_Quote_Admin_Dashboard {
 						</div>
 						<div class="gloq-flow-step">
 							<div class="gloq-flow-num">4</div>
-							<div><strong>Modal "¿Cotización o Pedido?"</strong><p>Antes de enviar, el cliente elige entre 🔍 <strong>Cotización</strong> (necesita conocer precios para decidir) o 🛒 <strong>Pedido</strong> (ya decidió, espera factura).</p></div>
+							<div><strong>Modal "¿Cotización o Pedido?"</strong><p>Antes de enviar, el cliente elige entre <strong>Cotización</strong> (necesita conocer precios para decidir) o <strong>Pedido</strong> (ya decidió, espera factura).</p></div>
 						</div>
 						<div class="gloq-flow-step">
 							<div class="gloq-flow-num">5</div>
-							<div><strong>Recibe respuesta automática (si hay precios)</strong><p>Si todos sus SKUs tienen precio cargado, recibe email con la <strong>cotización formal</strong> (precios + total + validez 7 días). Si falta uno → confirmación simple y tu equipo recibe alerta de "Pendiente de precios".</p></div>
+							<div><strong>Recibe respuesta automática (si hay precios)</strong><p>Si todos sus SKUs tienen precio cargado, recibe email con la <strong>cotización formal</strong> (precios + total + validez 7 días). Si falta uno, confirmación simple y tu equipo recibe alerta de "Pendiente de precios".</p></div>
 						</div>
 						<div class="gloq-flow-step">
 							<div class="gloq-flow-num">6</div>
@@ -312,12 +306,12 @@ class Glotracol_Quote_Admin_Dashboard {
 				</section>
 
 				<section class="gloq-card">
-					<h2><span class="gloq-emoji">📂</span> Cómo gestionar las cotizaciones</h2>
+					<h2><span class="dashicons dashicons-list-view"></span> Cómo gestionar las cotizaciones</h2>
 					<ul class="gloq-bullets">
-						<li><strong>Vista general:</strong> menú <em>Cotizaciones → Todas las cotizaciones</em>. Cada fila muestra <strong>Tipo</strong> (Cotización/Pedido), <strong>Tamaño</strong> (Pequeña/Mediana/Grande), <strong>Total</strong> y <strong>Estado</strong>.</li>
+						<li><strong>Vista general:</strong> menú <em>Cotizaciones › Todas las cotizaciones</em>. Cada fila muestra <strong>Tipo</strong> (Cotización/Pedido), <strong>Tamaño</strong> (Pequeña/Mediana/Grande), <strong>Total</strong> y <strong>Estado</strong>.</li>
 						<li><strong>Estados:</strong> <span class="glo-status glo-status-glo-new">Nueva</span> · <span class="glo-status glo-status-glo-pending-prices">Pendiente</span> · <span class="glo-status glo-status-glo-auto-priced">Auto-cotizada</span> · <span class="glo-status glo-status-glo-processing">En proceso</span> · <span class="glo-status glo-status-glo-responded">Respondida</span> · <span class="glo-status glo-status-glo-closed">Cerrada</span>.</li>
 						<li><strong>Pendiente de precios:</strong> faltan precios. Carga el SKU faltante en <em>Precios</em> o usa "Convertir en pedido" para completar manualmente y notificar al cliente.</li>
-						<li><strong>Convertir en pedido:</strong> abre la cotización → metabox lateral <em>"Tipo, precios y conversión"</em> → botón <strong>"→ Convertir en pedido"</strong>. Se abre modal con tabla de precios editable; al confirmar, el cliente recibe email "Confirmación de pedido".</li>
+						<li><strong>Convertir en pedido:</strong> abre la cotización › metabox lateral <em>"Tipo, precios y conversión"</em> › botón <strong>"Convertir en pedido"</strong>. Se abre modal con tabla de precios editable; al confirmar, el cliente recibe email "Confirmación de pedido".</li>
 						<li><strong>Acciones rápidas:</strong> botones "Responder por email" y "Contactar por WhatsApp" en la parte superior de cada cotización.</li>
 						<li><strong>Reportes:</strong> en <em><a href="<?php echo esc_url( $reports_url ); ?>">Reportes</a></em> puedes filtrar por mes/cliente/tipo y exportar todo a CSV (formato expandido para Excel).</li>
 					</ul>
@@ -325,18 +319,18 @@ class Glotracol_Quote_Admin_Dashboard {
 			</div>
 
 			<section class="gloq-card">
-				<h2><span class="gloq-emoji">💡</span> Preguntas frecuentes</h2>
+				<h2><span class="dashicons dashicons-editor-help"></span> Preguntas frecuentes</h2>
 				<details class="gloq-faq">
 					<summary>¿Cuándo recibe el cliente cotización con precios y cuándo no?</summary>
 					<p>El cliente recibe cotización formal automáticamente <strong>solo si todos los SKUs de su solicitud tienen precio cargado</strong>. Si su NIT está en el CRM B2B, se usan precios negociados. Si no, se usan precios públicos. Si falta precio para algún SKU, el cliente recibe solo confirmación de recepción y la cotización entra como <em>"Pendiente de precios"</em> para que tu equipo la complete a mano.</p>
 				</details>
 				<details class="gloq-faq">
 					<summary>¿Cómo cargo precios? ¿Manual o por CSV?</summary>
-					<p>Lo recomendado es <strong>CSV semanal</strong>: ve a <a href="<?php echo esc_url( $import_url ); ?>">Importar → "Lista de precios públicos"</a>, descarga la plantilla, edítala en Excel y súbela. La importación es aditiva (actualiza/inserta sin borrar). Para edición puntual de un SKU, usa <a href="<?php echo esc_url( $pricing_url ); ?>">Precios</a>: tabla con búsqueda y edición inline.</p>
+					<p>Lo recomendado es <strong>CSV semanal</strong>: ve a <a href="<?php echo esc_url( $import_url ); ?>">Importar › "Lista de precios públicos"</a>, descarga la plantilla, edítala en Excel y súbela. La importación es aditiva (actualiza/inserta sin borrar). Para edición puntual de un SKU, usa <a href="<?php echo esc_url( $pricing_url ); ?>">Precios</a>: tabla con búsqueda y edición inline.</p>
 				</details>
 				<details class="gloq-faq">
 					<summary>¿Cómo funciona la diferencia "Cotización" vs "Pedido"?</summary>
-					<p>Antes de enviar el formulario, el cliente ve un modal con dos opciones: 🔍 <strong>Cotización</strong> (exploratorio, quiere precios) o 🛒 <strong>Pedido</strong> (firme, quiere comprar). En el panel admin las cotizaciones aparecen con badge azul ("Cotización") o naranja ("Pedido"). Tu equipo puede convertir una cotización en pedido en cualquier momento con el botón <em>"Convertir en pedido"</em>.</p>
+					<p>Antes de enviar el formulario, el cliente ve un modal con dos opciones: <strong>Cotización</strong> (exploratorio, quiere precios) o <strong>Pedido</strong> (firme, quiere comprar). En el panel admin las cotizaciones aparecen con badge azul ("Cotización") o naranja ("Pedido"). Tu equipo puede convertir una cotización en pedido en cualquier momento con el botón <em>"Convertir en pedido"</em>.</p>
 				</details>
 				<details class="gloq-faq">
 					<summary>¿Qué pasa con la pestaña "Información adicional" del producto?</summary>
@@ -356,11 +350,11 @@ class Glotracol_Quote_Admin_Dashboard {
 				</details>
 				<details class="gloq-faq">
 					<summary>¿Puedo conectar WhatsApp automático?</summary>
-					<p>Sí, vía webhook. Configura la URL de tu automatización (Make, Zapier, n8n, Goja) en <em>Configuración → Integraciones</em> y cada cotización dispara un POST con todos los datos en JSON (incluyendo tipo, total y client_id). El header <code>X-Glotracol-Signature</code> permite verificar autenticidad.</p>
+					<p>Sí, vía webhook. Configura la URL de tu automatización (Make, Zapier, n8n, Goja) en <em>Configuración › Integraciones</em> y cada cotización dispara un POST con todos los datos en JSON (incluyendo tipo, total y client_id). El header <code>X-Glotracol-Signature</code> permite verificar autenticidad.</p>
 				</details>
 				<details class="gloq-faq">
 					<summary>¿Cómo veo reportes y exporto a Excel?</summary>
-					<p>En <a href="<?php echo esc_url( $reports_url ); ?>">Reportes</a> filtras por mes/tipo/estado/cliente y ves stats panel con monto cotizado, conversión y top 5 clientes/SKUs. Botón <strong>"↓ Exportar CSV"</strong> descarga formato expandido (1 fila por producto solicitado) listo para abrir en Excel — incluye BOM UTF-8 para tildes y la ñ.</p>
+					<p>En <a href="<?php echo esc_url( $reports_url ); ?>">Reportes</a> filtras por mes/tipo/estado/cliente y ves stats panel con monto cotizado, conversión y top 5 clientes/SKUs. Botón <strong>"Exportar CSV"</strong> descarga formato expandido (1 fila por producto solicitado) listo para abrir en Excel — incluye BOM UTF-8 para tildes y la ñ.</p>
 				</details>
 				<details class="gloq-faq">
 					<summary>¿Puedo cambiar las páginas de formulario y gracias?</summary>
@@ -368,7 +362,7 @@ class Glotracol_Quote_Admin_Dashboard {
 				</details>
 				<details class="gloq-faq">
 					<summary>¿El plugin almacena datos sensibles?</summary>
-					<p>Guarda los datos del cliente (nombre, email, teléfono, NIT, etc.) y la lista de productos en la base de datos como Custom Post Types (<code>glo_quote</code> y <code>glo_client</code>). Los precios públicos viven en <code>wp_options</code>; los precios B2B en meta de cada cliente. En <em>Configuración → Avanzado</em> puedes activar <strong>"Borrar datos al desinstalar"</strong> para eliminar todo si retiras el plugin.</p>
+					<p>Guarda los datos del cliente (nombre, email, teléfono, NIT, etc.) y la lista de productos en la base de datos como Custom Post Types (<code>glo_quote</code> y <code>glo_client</code>). Los precios públicos viven en <code>wp_options</code>; los precios B2B en meta de cada cliente. En <em>Configuración › Avanzado</em> puedes activar <strong>"Borrar datos al desinstalar"</strong> para eliminar todo si retiras el plugin.</p>
 				</details>
 				<details class="gloq-faq">
 					<summary>¿Qué pasa si WooCommerce o el tema se actualizan?</summary>
@@ -377,7 +371,7 @@ class Glotracol_Quote_Admin_Dashboard {
 			</section>
 
 			<div class="gloq-footer">
-				<p>Plugin desarrollado por <a href="https://neracosu.com/" target="_blank" rel="noopener">Neracosu</a> para <a href="https://www.eagencia.co/" target="_blank" rel="noopener">eagencia</a> <span class="gloq-heart" aria-hidden="true">❤</span> · v<?php echo esc_html( GLOTRACOL_QUOTE_VERSION ); ?></p>
+				<p>Plugin desarrollado por <a href="https://neracosu.com/" target="_blank" rel="noopener">Neracosu</a> para <a href="https://www.eagencia.co/" target="_blank" rel="noopener">eagencia</a> · v<?php echo esc_html( GLOTRACOL_QUOTE_VERSION ); ?></p>
 			</div>
 		</div>
 		<?php
@@ -510,7 +504,7 @@ class Glotracol_Quote_Admin_Dashboard {
 			'desc'  => $internal_smtp
 				? 'Usando <strong>SMTP propio</strong> del plugin (host: <code>' . esc_html( $s['smtp_host'] ) . '</code>).'
 				: ( $external_smtp
-					? 'Usando <strong>' . esc_html( $external_smtp ) . '</strong> ✓ (plugin externo).'
+					? 'Usando <strong>' . esc_html( $external_smtp ) . '</strong> (plugin externo).'
 					: 'Ningún plugin SMTP detectado — los emails se envían vía <code>mail()</code> y podrían ir a SPAM. Configura SMTP en la pestaña correspondiente.' ),
 			'action_url'   => $settings_url . '&tab=smtp',
 			'action_label' => 'Configurar SMTP',
@@ -558,7 +552,7 @@ class Glotracol_Quote_Admin_Dashboard {
 	/**
 	 * Verificación de blindaje (resilience) ante updates de WC, tema, plugins.
 	 *
-	 * Cada entrada tiene `level` ∈ {ok, warn, fail}. El plugin no aborta si
+	 * Cada entrada tiene `level` entre {ok, warn, fail}. El plugin no aborta si
 	 * alguno falla — solo informa al admin.
 	 */
 	private function compatibility_checks() {
@@ -623,7 +617,7 @@ class Glotracol_Quote_Admin_Dashboard {
 					: 'No se detectó <code>WC_ABSPATH</code>. Usaremos fallback a <code>wp-content/plugins/woocommerce/</code> pero conviene verificar.' ),
 		];
 
-		// 5) Filtro gettext interceptando "Cart" → "Mi cotización" (capa 1)
+		// 5) Filtro gettext interceptando "Cart" › "Mi cotización" (capa 1)
 		$gettext_ok = method_exists( 'Glotracol_Quote_Cart_Overrides', 'self_test_gettext' )
 			? Glotracol_Quote_Cart_Overrides::self_test_gettext()
 			: false;

@@ -78,7 +78,7 @@ class Glotracol_Quote_Importer_Admin {
 
 			<h2 style="margin-top:24px">2. Descarga la plantilla</h2>
 			<p>
-				<a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=gloq_import_template&type=' . $selected_type ), self::NONCE_ACTION ) ); ?>">↓ Descargar plantilla <code><?php echo esc_html( $selected_type ); ?>.csv</code></a>
+				<a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=gloq_import_template&type=' . $selected_type ), self::NONCE_ACTION ) ); ?>">Descargar plantilla <code><?php echo esc_html( $selected_type ); ?>.csv</code></a>
 			</p>
 
 			<h2 style="margin-top:24px">3. Sube el archivo CSV</h2>
@@ -94,18 +94,6 @@ class Glotracol_Quote_Importer_Admin {
 				<p class="submit"><input type="submit" class="button button-primary" value="Subir y previsualizar →"></p>
 			</form>
 		</div>
-
-		<style>
-		.gloq-importer-card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:24px 28px;margin-top:18px;max-width:920px}
-		.gloq-importer-card h2{font-size:16px;margin:0 0 14px;border-bottom:1px solid #edf2f7;padding-bottom:10px;color:#1a202c}
-		.gloq-importer-types{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-		.gloq-importer-type{display:flex;gap:12px;padding:14px 16px;border:2px solid #e2e8f0;border-radius:8px;cursor:pointer;transition:all 0.15s;background:#fff}
-		.gloq-importer-type:hover{border-color:#0a4d3a;background:#fafffe}
-		.gloq-importer-type-selected{border-color:#0a4d3a;background:#f0fff4;box-shadow:0 0 0 3px rgba(10,77,58,0.08)}
-		.gloq-importer-type input{margin-top:4px;flex-shrink:0}
-		.gloq-importer-type-body strong{display:block;color:#0a4d3a;font-size:14px;margin-bottom:4px}
-		.gloq-importer-type-body p{margin:0;font-size:12px;color:#5a6470;line-height:1.5}
-		</style>
 		<?php
 	}
 
@@ -184,7 +172,7 @@ class Glotracol_Quote_Importer_Admin {
 				<input type="hidden" name="gloq_type" value="<?php echo esc_attr( $type ); ?>">
 				<?php wp_nonce_field( self::NONCE_ACTION ); ?>
 				<p class="submit">
-					<input type="submit" class="button button-primary button-large" value="✓ Confirmar e importar <?php echo (int) $total; ?> filas">
+					<input type="submit" class="button button-primary button-large" value="Confirmar e importar <?php echo (int) $total; ?> filas">
 					<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=glo_quote&page=' . self::PAGE_SLUG . '&type=' . $type ) ); ?>" class="button">Cancelar</a>
 				</p>
 			</form>
@@ -224,31 +212,13 @@ class Glotracol_Quote_Importer_Admin {
 				<h3 style="margin-top:24px;color:#7a1d12">Detalle de errores</h3>
 				<div class="gloq-import-errors">
 					<?php foreach ( $report['errors'] as $err ) : ?>
-						<div class="gloq-import-error">⚠ <?php echo esc_html( $err ); ?></div>
+						<div class="gloq-import-error"><?php echo esc_html( $err ); ?></div>
 					<?php endforeach; ?>
 				</div>
 			<?php endif; ?>
 
 			<p style="margin-top:24px"><a href="<?php echo esc_url( admin_url( 'edit.php?post_type=glo_quote&page=' . self::PAGE_SLUG ) ); ?>" class="button button-primary">Importar otro archivo</a></p>
 		</div>
-
-		<style>
-		.gloq-import-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0}
-		.gloq-import-stat{background:#f7f8fa;border-radius:8px;padding:18px 20px;text-align:center;border-left:4px solid #ccc}
-		.gloq-import-stat-inserted{border-left-color:#28a745;background:#f0fff4}
-		.gloq-import-stat-inserted .gloq-import-num{color:#155724}
-		.gloq-import-stat-updated{border-left-color:#17a2b8;background:#e1f5f8}
-		.gloq-import-stat-updated .gloq-import-num{color:#0c5460}
-		.gloq-import-stat-skipped{border-left-color:#f7b500;background:#fff8e1}
-		.gloq-import-stat-skipped .gloq-import-num{color:#856404}
-		.gloq-import-stat-errors{border-left-color:#dc3545;background:#fdecea}
-		.gloq-import-stat-errors .gloq-import-num{color:#7a1d12}
-		.gloq-import-num{font-size:32px;font-weight:700;line-height:1}
-		.gloq-import-label{font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:#5a6470;margin-top:6px;font-weight:600}
-		.gloq-import-errors{max-height:300px;overflow:auto;background:#fff;border:1px solid #fdecea;border-radius:6px;padding:12px}
-		.gloq-import-error{padding:6px 0;border-bottom:1px solid #fdecea;font-size:13px;color:#7a1d12;font-family:monospace}
-		.gloq-import-error:last-child{border-bottom:0}
-		</style>
 		<?php
 	}
 

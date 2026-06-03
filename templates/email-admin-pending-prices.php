@@ -6,13 +6,13 @@ foreach ( (array) $items as $it ) {
 ?>
 <!DOCTYPE html>
 <html lang="es">
-<head><meta charset="UTF-8"><title>⚠️ Cotización pendiente de precios — #<?php echo (int) $quote_id; ?></title></head>
+<head><meta charset="UTF-8"><title>Cotización pendiente de precios — #<?php echo (int) $quote_id; ?></title></head>
 <body style="margin:0;padding:0;background:#fffbf2;font-family:Arial,Helvetica,sans-serif;color:#222">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fffbf2;padding:24px 0">
 	<tr><td align="center">
 		<table role="presentation" width="640" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 4px 16px rgba(247,181,0,0.15);border:2px solid #f7b500">
 			<tr><td style="background:linear-gradient(135deg,#f7b500 0%,#cc8c00 100%);color:#fff;padding:24px 28px">
-				<div style="display:inline-block;background:rgba(255,255,255,0.2);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px">⚠ Acción requerida</div>
+				<div style="display:inline-block;background:rgba(255,255,255,0.2);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px">Acción requerida</div>
 				<h1 style="margin:0;font-size:22px;line-height:1.3">Cotización pendiente — completar precios</h1>
 				<p style="margin:8px 0 0;font-size:14px;opacity:0.95">#<?php echo (int) $quote_id; ?> · <strong><?php echo (int) $missing_count; ?></strong> SKUs sin precio · Cliente espera respuesta manual</p>
 			</td></tr>
@@ -37,7 +37,7 @@ foreach ( (array) $items as $it ) {
 						$phone = $customer['phone'] ?? '';
 						$wa = $phone ? preg_replace( '/[^0-9]/', '', $phone ) : '';
 						if ( $wa ) {
-							echo '<a href="https://wa.me/' . esc_attr( $wa ) . '" style="color:#25D366;font-weight:600">📱 ' . esc_html( $phone ) . '</a>';
+							echo '<a href="https://wa.me/' . esc_attr( $wa ) . '" style="color:#25D366;font-weight:600">' . esc_html( $phone ) . '</a>';
 						} else {
 							echo esc_html( $phone );
 						}
@@ -63,7 +63,7 @@ foreach ( (array) $items as $it ) {
 							<td style="text-align:center"><strong><?php echo (int) ( $it['quantity'] ?? 0 ); ?></strong></td>
 							<td style="text-align:right">
 								<?php if ( $source === 'pendiente' ) : ?>
-									<span style="background:#f7b500;color:#fff;padding:3px 10px;border-radius:11px;font-size:11px;font-weight:700">⚠ FALTA PRECIO</span>
+									<span style="background:#f7b500;color:#fff;padding:3px 10px;border-radius:11px;font-size:11px;font-weight:700">FALTA PRECIO</span>
 								<?php else : ?>
 									<?php echo esc_html( glotracol_quote_format_price( $price ) ); ?>
 								<?php endif; ?>
@@ -74,7 +74,7 @@ foreach ( (array) $items as $it ) {
 				</table>
 
 				<p style="margin:24px 0 0;text-align:center">
-					<a href="<?php echo esc_url( $edit_url ); ?>" style="display:inline-block;background:#f7b500;color:#fff;padding:12px 24px;text-decoration:none;border-radius:6px;font-weight:bold;font-size:14px">Completar precios y responder →</a>
+					<a href="<?php echo esc_url( $edit_url ); ?>" style="display:inline-block;background:#f7b500;color:#fff;padding:12px 24px;text-decoration:none;border-radius:6px;font-weight:bold;font-size:14px">Completar precios y responder</a>
 				</p>
 			</td></tr>
 

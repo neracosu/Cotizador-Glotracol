@@ -33,7 +33,47 @@ class Glotracol_Quote_Plugin {
 		new Glotracol_Quote_Admin_Dashboard();
 
 		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_assets' ] );
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
 		add_filter( 'plugin_action_links_' . GLOTRACOL_QUOTE_BASENAME, [ $this, 'plugin_action_links' ] );
+	}
+
+	/**
+	 * Encola CSS + JS del admin en TODAS las pantallas del plugin (no solo el
+	 * dashboard). Cubre los submenús bajo el CPT, las pantallas de edición de
+	 * cotizaciones/clientes y el editor de producto (metabox de presentaciones).
+	 */
+	public function enqueue_admin_assets() {
+		if ( ! $this->is_plugin_admin_screen() ) {
+			return;
+		}
+		wp_enqueue_style( 'glotracol-quote-admin', GLOTRACOL_QUOTE_URL . 'assets/css/admin.css', [ 'dashicons' ], GLOTRACOL_QUOTE_VERSION );
+		wp_enqueue_script( 'glotracol-quote-admin', GLOTRACOL_QUOTE_URL . 'assets/js/admin.js', [ 'jquery' ], GLOTRACOL_QUOTE_VERSION, true );
+		wp_localize_script( 'glotracol-quote-admin', 'GloqAdmin', [
+			'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
+			'smtpNonce'    => wp_create_nonce( 'gloq_smtp_test' ),
+			'convertNonce' => wp_create_nonce( 'gloq_convert_to_order' ),
+			'i18n'         => [
+				'confirmDeleteRow' => 'Quitar esta fila.',
+				'sending'          => 'Enviando…',
+				'converting'       => 'Convirtiendo…',
+			],
+		] );
+	}
+
+	/**
+	 * True si la pantalla admin actual pertenece al plugin. Los submenús
+	 * registrados bajo `edit.php?post_type=glo_quote` heredan post_type glo_quote
+	 * en su WP_Screen, así que basta con mirar el post_type del screen.
+	 */
+	private function is_plugin_admin_screen() {
+		if ( ! function_exists( 'get_current_screen' ) ) {
+			return false;
+		}
+		$screen = get_current_screen();
+		if ( ! $screen ) {
+			return false;
+		}
+		return in_array( $screen->post_type, [ 'glo_quote', 'glo_client', 'product' ], true );
 	}
 
 	public function enqueue_assets() {

@@ -82,41 +82,8 @@ class Glotracol_Quote_Client_Admin {
 				?>
 			</tbody>
 		</table>
-		<p style="margin-top:10px"><button type="button" class="button" id="glo-pricing-add">+ Añadir fila</button> <span class="description" style="margin-left:10px">Para borrar una fila, deja el SKU en blanco al guardar.</span></p>
-		<script>
-		(function(){
-			var idx = <?php echo (int) $row_idx + 1; ?>;
-			var btn = document.getElementById('glo-pricing-add');
-			if (btn) btn.addEventListener('click', function(){
-				var tbody = document.getElementById('glo-pricing-rows');
-				var tr = document.createElement('tr');
-				tr.innerHTML = '<td><input type="text" name="glo_pricing[' + idx + '][sku]" class="regular-text" placeholder="SKU"></td>' +
-					'<td><input type="number" name="glo_pricing[' + idx + '][price]" min="0" step="1" placeholder="0"></td>' +
-					'<td><button type="button" class="button-link-delete glo-pricing-remove" aria-label="Quitar">×</button></td>';
-				tbody.appendChild(tr);
-				idx++;
-				attachRemoveHandlers();
-			});
-			function attachRemoveHandlers(){
-				document.querySelectorAll('.glo-pricing-remove').forEach(function(b){
-					b.onclick = function(){
-						var tr = b.closest('tr');
-						var skuInput = tr.querySelector('input[name$="[sku]"]');
-						if (skuInput) skuInput.value = '';
-						tr.style.opacity = 0.4;
-					};
-				});
-			}
-			attachRemoveHandlers();
-		})();
-		</script>
-		<style>
-		#glo-pricing-table th{background:#f6f7f7}
-		#glo-pricing-table td{padding:8px 12px}
-		#glo-pricing-table input[type=number]{width:140px}
-		.glo-pricing-remove{color:#c0392b!important;font-size:18px;font-weight:bold;text-decoration:none;cursor:pointer;background:none;border:0;padding:4px 8px}
-		.glo-pricing-remove:hover{background:#fdecea;border-radius:3px}
-		</style>
+		<template id="glo-pricing-tpl"><?php $this->render_pricing_row( '__IDX__', '', '' ); ?></template>
+		<p style="margin-top:10px"><button type="button" class="button" id="glo-pricing-add" data-gloq-add-row data-target="#glo-pricing-rows" data-template="#glo-pricing-tpl" data-next="<?php echo (int) $row_idx + 1; ?>">+ Añadir fila</button> <span class="description" style="margin-left:10px">Para borrar una fila, deja el SKU en blanco al guardar.</span></p>
 		<?php
 	}
 
@@ -125,7 +92,7 @@ class Glotracol_Quote_Client_Admin {
 		<tr>
 			<td><input type="text" name="glo_pricing[<?php echo (int) $idx; ?>][sku]" value="<?php echo esc_attr( $sku ); ?>" class="regular-text" placeholder="SKU"></td>
 			<td><input type="number" name="glo_pricing[<?php echo (int) $idx; ?>][price]" value="<?php echo esc_attr( $price ); ?>" min="0" step="1" placeholder="0"></td>
-			<td><button type="button" class="button-link-delete glo-pricing-remove" aria-label="Quitar">×</button></td>
+			<td><button type="button" class="button-link-delete glo-pricing-remove gloq-remove-row" aria-label="Quitar">×</button></td>
 		</tr>
 		<?php
 	}
