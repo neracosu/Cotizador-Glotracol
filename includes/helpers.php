@@ -350,3 +350,16 @@ function glotracol_quote_set_product_price( $product_id, $price ) {
 	update_post_meta( $product_id, '_glo_price', $price );
 	return true;
 }
+
+/**
+ * Cantidad de productos con precio público cargado (meta _glo_price > 0).
+ * Fuente de verdad del modelo por ID (reemplaza el conteo de la opción legada
+ * `glotracol_quote_public_pricing`, que solo aplica a datos antiguos por SKU).
+ */
+function glotracol_quote_count_products_with_price() {
+	global $wpdb;
+	return (int) $wpdb->get_var(
+		"SELECT COUNT(DISTINCT post_id) FROM {$wpdb->postmeta}
+		 WHERE meta_key = '_glo_price' AND meta_value != '' AND meta_value > 0"
+	);
+}

@@ -92,14 +92,14 @@ class Glotracol_Quote_Admin_Dashboard {
 					<div class="gloq-quick-icon"><span class="dashicons dashicons-money-alt"></span></div>
 					<div class="gloq-quick-body">
 						<strong>Lista de precios</strong>
-						<span><?php echo (int) $stats['public_skus']; ?> SKUs públicos</span>
+						<span><?php echo (int) $stats['public_skus']; ?> productos con precio</span>
 					</div>
 				</a>
 				<a href="<?php echo esc_url( $import_url ); ?>" class="gloq-quick-card">
 					<div class="gloq-quick-icon"><span class="dashicons dashicons-download"></span></div>
 					<div class="gloq-quick-body">
 						<strong>Importar CSV</strong>
-						<span>4 tipos disponibles</span>
+						<span><?php echo (int) count( Glotracol_Quote_Importer::TYPES ); ?> tipos disponibles</span>
 					</div>
 				</a>
 				<a href="<?php echo esc_url( $logs_url ); ?>" class="gloq-quick-card<?php echo $log_counts['error'] > 0 ? ' gloq-quick-alert' : ''; ?>">
@@ -410,7 +410,7 @@ class Glotracol_Quote_Admin_Dashboard {
 
 		// Conteos de B2B / pricing público
 		$client_count = (int) wp_count_posts( 'glo_client' )->publish;
-		$public_pricing_count = class_exists( 'Glotracol_Quote_Pricing' ) ? Glotracol_Quote_Pricing::count_public_skus() : 0;
+		$public_pricing_count = glotracol_quote_count_products_with_price();
 
 		return [
 			'total'           => $total,
@@ -523,12 +523,12 @@ class Glotracol_Quote_Admin_Dashboard {
 		];
 
 		// v2.0: Precios públicos
-		$public_skus = class_exists( 'Glotracol_Quote_Pricing' ) ? Glotracol_Quote_Pricing::count_public_skus() : 0;
+		$public_skus = glotracol_quote_count_products_with_price();
 		$checks[] = [
 			'ok'    => $public_skus > 0,
 			'title' => 'Lista de precios públicos cargada',
 			'desc'  => $public_skus > 0
-				? '<strong>' . (int) $public_skus . '</strong> SKUs con precio público. Recuerda actualizarla semanalmente vía el importador CSV.'
+				? '<strong>' . (int) $public_skus . '</strong> productos con precio público. Recuerda actualizarla vía el importador CSV (Precios del catálogo por ID).'
 				: 'Sin precios públicos cargados. Sin estos precios, los clientes <em>sin NIT B2B</em> no recibirán cotización automática y todas sus solicitudes quedarán como "Pendiente de precios".',
 			'action_url'   => admin_url( 'edit.php?post_type=glo_quote&page=glotracol-quote-pricing' ),
 			'action_label' => 'Cargar precios',
