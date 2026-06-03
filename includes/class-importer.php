@@ -20,6 +20,7 @@ class Glotracol_Quote_Importer {
 		'precios_publicos'  => 'Lista de precios públicos',
 		'precios_b2b'       => 'Precios negociados por cliente',
 		'presentaciones'    => 'Presentaciones por producto',
+		'precios_catalogo'  => 'Precios del catálogo (por ID)',
 	];
 
 	/**
@@ -49,6 +50,11 @@ class Glotracol_Quote_Importer {
 				'required'  => [ 'sku_producto', 'label' ],
 				'optional'  => [ 'sku_variante', 'peso_g', 'precio_publico' ],
 				'plantilla' => [ 'sku_producto', 'label', 'sku_variante', 'peso_g', 'precio_publico' ],
+			],
+			'precios_catalogo' => [
+				'required'  => [ 'id', 'precio normal' ],
+				'optional'  => [ 'nombre', 'peso (kg)', 'disponibilidad', 'precio' ],
+				'plantilla' => [ 'id', 'nombre', 'peso (kg)', 'precio normal', 'disponibilidad' ],
 			],
 		];
 	}
@@ -140,7 +146,7 @@ class Glotracol_Quote_Importer {
 	 * @param array  $rows  Array de filas asociativas (output de parse_csv).
 	 * @return array{ inserted: int, updated: int, skipped: int, errors: array<string> }
 	 */
-	public static function import( $type, $rows ) {
+	public static function import( $type, $rows, $opts = [] ) {
 		switch ( $type ) {
 			case 'clientes':
 				return self::import_clients( $rows );
@@ -150,6 +156,8 @@ class Glotracol_Quote_Importer {
 				return self::import_b2b_pricing( $rows );
 			case 'presentaciones':
 				return self::import_presentations( $rows );
+			case 'precios_catalogo':
+				return self::import_catalog_prices( $rows, $opts );
 			default:
 				return [ 'inserted' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => [ 'Tipo desconocido: ' . $type ] ];
 		}
@@ -333,5 +341,79 @@ class Glotracol_Quote_Importer {
 			}
 		}
 		return $report;
+	}
+
+	/**
+	 * Importa precios del catálogo por ID de producto.
+	 *
+	 * @param array $rows
+	 * @param array $opts  { mode: 'publico'|'b2b', client_id: int, sync_stock: bool }
+	 */
+	public static function import_catalog_prices( $rows, $opts = [] ) {
+		$report = [ 'inserted' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => [] ];
+		$mode       = ( ( $opts['mode'] ?? 'publico' ) === 'b2b' ) ? 'b2b' : 'publico';
+		$client_id  = (int) ( $opts['client_id'] ?? 0 );
+		$sync_stock = ! empty( $opts['sync_stock'] );
+
+		$existing = [];
+		if ( $mode === 'b2b' ) {
+			if ( $client_id <= 0 || get_post_type( $client_id ) !== Glotracol_Quote_Client_CPT::POST_TYPE ) {
+				return [ 'inserted' => 0, 'updated' => 0, 'skipped' => count( (array) $rows ), 'errors' => [ 'Modo B2B sin cliente válido seleccionado.' ] ];
+			}
+			$existing = get_post_meta( $client_id, '_glo_client_pricing', true );
+			if ( ! is_array( $existing ) ) $existing = [];
+		}
+
+		foreach ( (array) $rows as $row ) {
+			$line = $row['__line'] ?? '?';
+			$pid  = (int) ( $row['id'] ?? 0 );
+			$price_raw = $row['precio normal'] ?? ( $row['precio'] ?? '' );
+			$price = (int) preg_replace( '/[^0-9]/', '', (string) $price_raw );
+
+			if ( $pid <= 0 ) {
+				$report['skipped']++;
+				$report['errors'][] = "Línea $line: ID vacío o inválido.";
+				continue;
+			}
+			$product = function_exists( 'wc_get_product' ) ? wc_get_product( $pid ) : null;
+			if ( ! $product ) {
+				$report['skipped']++;
+				$report['errors'][] = "Línea $line: el producto ID $pid no existe en el catálogo.";
+				continue;
+			}
+			if ( $price <= 0 ) {
+				$report['skipped']++;
+				$report['errors'][] = "Línea $line: producto ID $pid sin precio (queda pendiente).";
+				if ( $mode === 'publico' && $sync_stock ) {
+					self::apply_stock( $product, $row['disponibilidad'] ?? '' );
+				}
+				continue;
+			}
+
+			if ( $mode === 'b2b' ) {
+				if ( isset( $existing[ $pid ] ) ) $report['updated']++; else $report['inserted']++;
+				$existing[ $pid ] = $price;
+			} else {
+				$had = (int) get_post_meta( $pid, '_glo_price', true );
+				update_post_meta( $pid, '_glo_price', $price );
+				if ( $had > 0 ) $report['updated']++; else $report['inserted']++;
+				if ( $sync_stock ) {
+					self::apply_stock( $product, $row['disponibilidad'] ?? '' );
+				}
+			}
+		}
+
+		if ( $mode === 'b2b' ) {
+			update_post_meta( $client_id, '_glo_client_pricing', $existing );
+		}
+		return $report;
+	}
+
+	/** Sincroniza el stock WC desde el texto de disponibilidad (AGOTADO/DISPONIBLE). */
+	private static function apply_stock( $product, $disp ) {
+		$d = strtolower( trim( (string) $disp ) );
+		if ( $d === '' ) return;
+		$product->set_stock_status( strpos( $d, 'agot' ) !== false ? 'outofstock' : 'instock' );
+		$product->save();
 	}
 }
