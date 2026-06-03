@@ -91,6 +91,28 @@ class Glotracol_Quote_Importer_Admin {
 						<td><input type="file" name="gloq_csv" accept=".csv,text/csv" required>
 						<p class="description">Tamaño máximo: <?php echo size_format( wp_max_upload_size() ); ?>. Si el archivo viene de Excel, exporta como "CSV (delimitado por comas)" o "CSV UTF-8".</p></td></tr>
 				</table>
+				<?php if ( $selected_type === 'precios_catalogo' ) :
+					$clients = get_posts( [ 'post_type' => Glotracol_Quote_Client_CPT::POST_TYPE, 'post_status' => 'publish', 'numberposts' => -1, 'orderby' => 'title', 'order' => 'ASC' ] );
+				?>
+				<table class="form-table">
+					<tr><th>Tipo de lista</th><td>
+						<label><input type="radio" name="gloq_mode" value="publico" checked> Lista pública (precio general)</label><br>
+						<label><input type="radio" name="gloq_mode" value="b2b"> Tarifa de un cliente B2B</label>
+					</td></tr>
+					<tr><th>Cliente B2B</th><td>
+						<select name="gloq_client_id">
+							<option value="0">— (solo para tarifa B2B) —</option>
+							<?php foreach ( $clients as $c ) {
+								printf( '<option value="%d">%s</option>', (int) $c->ID, esc_html( get_post_meta( $c->ID, '_glo_client_nit', true ) . ' — ' . $c->post_title ) );
+							} ?>
+						</select>
+						<p class="description">Requerido si elegiste "Tarifa de un cliente B2B".</p>
+					</td></tr>
+					<tr><th>Sincronizar stock</th><td>
+						<label><input type="checkbox" name="gloq_sync_stock" value="1"> Actualizar disponibilidad en WooCommerce desde la columna Disponibilidad (solo lista pública)</label>
+					</td></tr>
+				</table>
+				<?php endif; ?>
 				<p class="submit"><input type="submit" class="button button-primary" value="Subir y previsualizar →"></p>
 			</form>
 		</div>
@@ -107,6 +129,8 @@ class Glotracol_Quote_Importer_Admin {
 				return 'Precios negociados por cliente. Requiere que los NITs ya existan en el CRM. Columnas: <code>nit, sku, precio</code>.';
 			case 'presentaciones':
 				return 'Define las presentaciones (250g, 500g, etc.) por producto. Columnas: <code>sku_producto, label, sku_variante, peso_g, precio_publico</code>.';
+			case 'precios_catalogo':
+				return 'Carga precios por <strong>ID de producto</strong> desde el export del catálogo. Columnas: <code>ID, Nombre, Peso (kg), Precio normal, Disponibilidad</code>. Elige abajo si es lista pública o tarifa de un cliente B2B.';
 		}
 		return '';
 	}
@@ -114,6 +138,9 @@ class Glotracol_Quote_Importer_Admin {
 	private function render_preview() {
 		$token = isset( $_GET['token'] ) ? sanitize_key( $_GET['token'] ) : '';
 		$type = isset( $_GET['type'] ) ? sanitize_key( $_GET['type'] ) : '';
+		$mode       = isset( $_GET['mode'] ) && $_GET['mode'] === 'b2b' ? 'b2b' : 'publico';
+		$client_id  = isset( $_GET['client_id'] ) ? (int) $_GET['client_id'] : 0;
+		$sync_stock = ! empty( $_GET['sync_stock'] ) ? 1 : 0;
 		if ( ! $token || ! $type ) {
 			if ( class_exists( 'Glotracol_Quote_Logger' ) ) {
 				Glotracol_Quote_Logger::warn( 'import', 'render_preview: token o type vacíos en query', [
@@ -166,15 +193,32 @@ class Glotracol_Quote_Importer_Admin {
 				</tbody>
 			</table>
 
+			<?php if ( $type === 'precios_catalogo' ) :
+				$client_label = '';
+				if ( $mode === 'b2b' && $client_id > 0 ) { $cp = get_post( $client_id ); $client_label = $cp ? $cp->post_title : ''; }
+			?>
+			<p><strong>Modo:</strong> <?php echo $mode === 'b2b' ? 'Tarifa B2B' . ( $client_label ? ' — ' . esc_html( $client_label ) : '' ) : 'Lista pública'; ?> · <strong>Sincronizar stock:</strong> <?php echo $sync_stock ? 'sí' : 'no'; ?></p>
+			<?php if ( $mode === 'b2b' && $client_id <= 0 ) : ?>
+				<div class="notice notice-error inline"><p>Elegiste tarifa B2B pero no seleccionaste un cliente. Vuelve atrás y elige el cliente.</p></div>
+			<?php endif; ?>
+			<?php endif; ?>
+
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-top:20px">
 				<input type="hidden" name="action" value="gloq_import_run">
 				<input type="hidden" name="token" value="<?php echo esc_attr( $token ); ?>">
 				<input type="hidden" name="gloq_type" value="<?php echo esc_attr( $type ); ?>">
+				<input type="hidden" name="gloq_mode" value="<?php echo esc_attr( $mode ); ?>">
+				<input type="hidden" name="gloq_client_id" value="<?php echo (int) $client_id; ?>">
+				<input type="hidden" name="gloq_sync_stock" value="<?php echo (int) $sync_stock; ?>">
 				<?php wp_nonce_field( self::NONCE_ACTION ); ?>
+				<?php if ( ! ( $type === 'precios_catalogo' && $mode === 'b2b' && $client_id <= 0 ) ) : ?>
 				<p class="submit">
 					<input type="submit" class="button button-primary button-large" value="Confirmar e importar <?php echo (int) $total; ?> filas">
 					<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=glo_quote&page=' . self::PAGE_SLUG . '&type=' . $type ) ); ?>" class="button">Cancelar</a>
 				</p>
+				<?php else : ?>
+				<p><a href="<?php echo esc_url( admin_url( 'edit.php?post_type=glo_quote&page=' . self::PAGE_SLUG . '&type=' . $type ) ); ?>" class="button">← Volver y elegir cliente</a></p>
+				<?php endif; ?>
 			</form>
 		</div>
 		<?php
@@ -290,13 +334,20 @@ class Glotracol_Quote_Importer_Admin {
 		// Programar limpieza en 1h
 		wp_schedule_single_event( time() + HOUR_IN_SECONDS, 'gloq_importer_cleanup', [ $token ] );
 
-		wp_safe_redirect( add_query_arg( [
+		$extra = [];
+		if ( $type === 'precios_catalogo' ) {
+			$extra['mode']       = ( ( $_POST['gloq_mode'] ?? 'publico' ) === 'b2b' ) ? 'b2b' : 'publico';
+			$extra['client_id']  = (int) ( $_POST['gloq_client_id'] ?? 0 );
+			$extra['sync_stock'] = ! empty( $_POST['gloq_sync_stock'] ) ? 1 : 0;
+		}
+
+		wp_safe_redirect( add_query_arg( array_merge( [
 			'post_type' => 'glo_quote',
 			'page'      => self::PAGE_SLUG,
 			'step'      => 'preview',
 			'type'      => $type,
 			'token'     => $token,
-		], admin_url( 'edit.php' ) ) );
+		], $extra ), admin_url( 'edit.php' ) ) );
 		exit;
 	}
 
@@ -316,7 +367,15 @@ class Glotracol_Quote_Importer_Admin {
 		if ( $parse['error'] ) {
 			$this->redirect_back( $parse['error'] );
 		}
-		$report = Glotracol_Quote_Importer::import( $type, $parse['rows'] );
+		$opts = [];
+		if ( $type === 'precios_catalogo' ) {
+			$opts = [
+				'mode'       => ( ( $_POST['gloq_mode'] ?? 'publico' ) === 'b2b' ) ? 'b2b' : 'publico',
+				'client_id'  => (int) ( $_POST['gloq_client_id'] ?? 0 ),
+				'sync_stock' => ! empty( $_POST['gloq_sync_stock'] ),
+			];
+		}
+		$report = Glotracol_Quote_Importer::import( $type, $parse['rows'], $opts );
 		$report['type'] = $type;
 		$report['imported_at'] = current_time( 'mysql' );
 		set_transient( 'gloq_import_last_report', $report, HOUR_IN_SECONDS );
