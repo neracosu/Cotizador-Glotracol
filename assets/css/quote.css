@@ -1,0 +1,226 @@
+/* Glotracol Cotizador — frontend styles */
+
+/* ============================================
+   TOAST DE CONFIRMACIÓN
+   ============================================ */
+#gloq-toast-container{position:fixed;top:24px;right:24px;z-index:99999;display:flex;flex-direction:column;gap:10px;max-width:380px;pointer-events:none}
+.gloq-toast{display:flex;align-items:flex-start;gap:12px;background:#fff;border:1px solid #d4edda;border-left:4px solid #28a745;border-radius:8px;padding:14px 16px 14px 14px;box-shadow:0 6px 24px rgba(0,0,0,0.12);transform:translateX(120%);opacity:0;transition:transform 0.32s cubic-bezier(0.16,1,0.3,1),opacity 0.25s;pointer-events:auto;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.gloq-toast-show{transform:translateX(0);opacity:1}
+.gloq-toast-hide{transform:translateX(120%);opacity:0}
+.gloq-toast-icon{flex-shrink:0;width:32px;height:32px;border-radius:50%;background:#28a745;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold}
+.gloq-toast-body{flex:1;min-width:0}
+.gloq-toast-msg{font-size:14px;color:#1a202c;line-height:1.4;margin-bottom:8px}
+.gloq-toast-msg strong{color:#0a4d3a}
+.gloq-toast-actions{display:flex;gap:6px;flex-wrap:wrap}
+.gloq-toast-link{font-size:12px;color:#0a4d3a;text-decoration:none;padding:5px 10px;border:1px solid #cce5d5;border-radius:4px;background:#f0fff4;font-weight:600;transition:all 0.15s}
+.gloq-toast-link:hover{background:#0a4d3a;color:#fff;border-color:#0a4d3a}
+.gloq-toast-link-primary{background:#0a4d3a;color:#fff;border-color:#0a4d3a}
+.gloq-toast-link-primary:hover{background:#0d6149;color:#fff}
+
+/* Cart icon (SVG) — usado en "Ver mi cotización" en toast y en mensaje post add-to-cart */
+.gloq-with-icon{display:inline-flex;align-items:center;gap:6px;line-height:1}
+.gloq-cart-icon{flex-shrink:0;vertical-align:middle;stroke:currentColor;transition:transform 0.2s ease}
+.gloq-with-icon:hover .gloq-cart-icon{transform:translateX(-1px) scale(1.05)}
+.gloq-toast-close{position:absolute;top:6px;right:8px;background:transparent;border:0;font-size:20px;line-height:1;color:#94a3b8;cursor:pointer;padding:2px 6px;border-radius:3px}
+.gloq-toast-close:hover{background:#f1f5f9;color:#475569}
+.gloq-toast{position:relative;padding-right:28px}
+@media (max-width:540px){#gloq-toast-container{top:16px;right:16px;left:16px;max-width:none}.gloq-toast{transform:translateY(-150%)}.gloq-toast-show{transform:translateY(0)}.gloq-toast-hide{transform:translateY(-150%)}}
+
+/* ============================================
+   BOTÓN "AÑADIR A LA COTIZACIÓN" (loop)
+   ============================================ */
+.gloq-add-button{position:relative;transition:background 0.2s,transform 0.15s}
+.gloq-add-button.gloq-just-added{background:#28a745!important;color:#fff!important;transform:scale(0.97)}
+.gloq-add-button.gloq-just-added:after{content:"  ✓";font-weight:700}
+.gloq-add-button.added{background:#13855e!important;color:#fff!important}
+.gloq-in-cart{background:#0a4d3a!important;color:#fff!important;border-color:#0a4d3a!important}
+.gloq-in-cart:hover{background:#0d6149!important}
+.gloq-cart-badge{display:block;margin-top:6px;padding:3px 9px;background:#d4edda;color:#155724;font-size:11px;font-weight:600;border-radius:11px;text-align:center;letter-spacing:0.3px}
+
+/* WC's "Ver mi cotización" link after AJAX add — mantenido para fragments WC nativos.
+   La visualización principal usa .gloq-msg-* (más abajo) generada por add_to_cart_message. */
+.added_to_cart.wc-forward{display:inline-flex;align-items:center;gap:8px;margin-top:8px;padding:8px 14px;font-size:12px;background:#0a4d3a;color:#fff!important;border-radius:6px;text-decoration:none;letter-spacing:0.2px;font-weight:600;line-height:1.3;transition:background 0.2s,transform 0.15s,box-shadow 0.2s}
+.added_to_cart.wc-forward:hover{background:#0d6149;transform:translateY(-1px);box-shadow:0 4px 10px rgba(10,77,58,0.18)}
+.added_to_cart.wc-forward::before{content:'';display:inline-block;width:14px;height:14px;flex-shrink:0;background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='21' r='1'/%3E%3Ccircle cx='20' cy='21' r='1'/%3E%3Cpath d='M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:center;background-size:contain}
+
+/* Wrapper del mensaje post-add-to-cart (woocommerce_message) generado por
+   add_to_cart_message(). Layout flex con buen spacing y alineación. */
+.gloq-msg-wrap{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 18px;background:#f0fff4;border-left:4px solid #28a745;border-radius:6px;margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.gloq-msg-wrap::before{content:"✓";flex-shrink:0;width:28px;height:28px;border-radius:50%;background:#28a745;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
+.gloq-msg-text{flex:1 1 220px;font-size:14px;color:#155724;line-height:1.45;min-width:0}
+.gloq-msg-text strong{color:#0a4d3a;font-weight:700}
+.gloq-msg-actions{display:inline-flex;gap:8px;flex-wrap:wrap;align-items:center}
+.gloq-msg-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;font-size:13px;font-weight:600;line-height:1.3;border-radius:6px;text-decoration:none;letter-spacing:0.1px;transition:background 0.18s,transform 0.15s,box-shadow 0.2s,border-color 0.2s;white-space:nowrap;border:1px solid transparent}
+.gloq-msg-btn-secondary{background:#fff;color:#0a4d3a!important;border-color:#cce5d5}
+.gloq-msg-btn-secondary:hover{background:#0a4d3a;color:#fff!important;border-color:#0a4d3a;transform:translateY(-1px);box-shadow:0 4px 10px rgba(10,77,58,0.16)}
+.gloq-msg-btn-secondary .gloq-cart-icon{stroke:currentColor;flex-shrink:0}
+.gloq-msg-btn-primary{background:#0a4d3a;color:#fff!important;border-color:#0a4d3a}
+.gloq-msg-btn-primary:hover{background:#0d6149;border-color:#0d6149;transform:translateY(-1px);box-shadow:0 4px 12px rgba(10,77,58,0.22)}
+@media (max-width:600px){
+  .gloq-msg-wrap{padding:12px 14px;gap:10px}
+  .gloq-msg-text{flex-basis:100%}
+  .gloq-msg-actions{width:100%;justify-content:flex-start}
+  .gloq-msg-btn{flex:1 1 auto;justify-content:center}
+}
+
+/* ============================================
+   MODAL "COTIZACIÓN VS PEDIDO" (pre-submit)
+   ============================================ */
+.gloq-modal-overlay{position:fixed;inset:0;background:rgba(13,30,24,0.62);z-index:99998;display:none;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity 0.22s ease}
+.gloq-modal-overlay[hidden]{display:none!important}
+.gloq-modal-overlay.gloq-modal-open{display:flex;opacity:1;animation:gloq-modal-fade 0.22s ease forwards}
+@keyframes gloq-modal-fade{from{opacity:0}to{opacity:1}}
+.gloq-modal{background:#fff;border-radius:14px;max-width:560px;width:100%;padding:32px 32px 26px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.32);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;animation:gloq-modal-slide 0.28s cubic-bezier(0.16,1,0.3,1) forwards}
+@keyframes gloq-modal-slide{from{transform:translateY(20px) scale(0.96);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+.gloq-modal h2{margin:0 0 8px;font-size:22px;color:#0a4d3a;font-weight:700;line-height:1.3}
+.gloq-modal-intro{margin:0 0 22px;font-size:14px;line-height:1.55;color:#3d4856}
+.gloq-modal-intro strong{color:#0a4d3a}
+.gloq-modal-options{display:flex;flex-direction:column;gap:12px;margin:0 0 18px}
+.gloq-modal-option{display:flex;align-items:flex-start;gap:14px;padding:18px 20px;background:#fafbfc;border:2px solid #e2e8f0;border-radius:10px;cursor:pointer;text-align:left;font-family:inherit;width:100%;transition:all 0.18s ease}
+.gloq-modal-option:hover,.gloq-modal-option:focus{border-color:#0a4d3a;background:#f0fff4;transform:translateY(-1px);box-shadow:0 6px 16px rgba(10,77,58,0.12);outline:none}
+.gloq-modal-option-icon{flex-shrink:0;font-size:32px;line-height:1;width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:50%;border:1px solid #e2e8f0}
+.gloq-modal-option:hover .gloq-modal-option-icon,.gloq-modal-option:focus .gloq-modal-option-icon{background:#0a4d3a;border-color:#0a4d3a}
+.gloq-modal-option-body{flex:1}
+.gloq-modal-option-body strong{display:block;font-size:16px;color:#0a4d3a;margin-bottom:3px;font-weight:700}
+.gloq-modal-option-body span{display:block;font-size:13px;color:#5a6470;line-height:1.45}
+.gloq-modal-hint{margin:0;font-size:12px;color:#94a3b8;text-align:center;font-style:italic}
+.gloq-modal-close{position:absolute;top:12px;right:14px;width:32px;height:32px;background:transparent;border:0;font-size:24px;line-height:1;color:#94a3b8;cursor:pointer;border-radius:6px;transition:all 0.15s}
+.gloq-modal-close:hover{background:#f1f5f9;color:#1a202c}
+@media (max-width:560px){
+  .gloq-modal{padding:26px 22px 22px;border-radius:12px}
+  .gloq-modal h2{font-size:19px}
+  .gloq-modal-option{padding:16px}
+  .gloq-modal-option-icon{font-size:26px;width:40px;height:40px}
+  .gloq-modal-option-body strong{font-size:15px}
+}
+
+/* ============================================
+   SELECTOR DE PRESENTACIÓN (single product)
+   ============================================ */
+.gloq-presentation-selector{margin:14px 0 18px;padding:14px 16px;background:#f0fff4;border-left:4px solid #0a4d3a;border-radius:6px}
+.gloq-presentation-selector label{display:block;font-size:13px;color:#0a4d3a;margin-bottom:6px}
+.gloq-presentation-selector select{width:100%;max-width:360px;padding:9px 12px;border:1px solid #cce5d5;border-radius:6px;font-size:14px;background:#fff;cursor:pointer}
+.gloq-presentation-selector select:focus{outline:none;border-color:#0a4d3a;box-shadow:0 0 0 3px rgba(10,77,58,0.12)}
+.gloq-presentation-hint{display:block;margin-top:6px;font-size:12px;color:#3d4a3f;font-style:italic}
+
+/* Dropdown de cambio de presentación en cart */
+.gloq-cart-pres-dropdown{margin-top:6px;font-size:12px}
+.gloq-cart-pres-dropdown label{color:#666;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.gloq-cart-pres-dropdown select{padding:4px 8px;border:1px solid #cbd2d9;border-radius:4px;font-size:12px;max-width:200px}
+
+/* Presentación en el formulario de cotización */
+.gloq-form-presentacion{display:inline-block;margin-left:6px;font-size:12px;color:#0a4d3a;font-weight:600;background:#f0fff4;padding:1px 8px;border-radius:11px}
+
+/* ============================================
+   CTA AL FINAL DE PESTAÑA DESCRIPCIÓN (single product)
+   ============================================ */
+.gloq-desc-cta{margin:28px 0 8px;padding:20px 24px;background:linear-gradient(135deg,#f0fff4 0%,#fafffe 100%);border:1px solid #cce5d5;border-left:4px solid #0a4d3a;border-radius:8px}
+.gloq-desc-cta-content{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.gloq-desc-cta-text{flex:1 1 280px;min-width:0}
+.gloq-desc-cta-text strong{display:block;font-size:15px;color:#0a4d3a;margin-bottom:4px;line-height:1.3}
+.gloq-desc-cta-sub{display:block;font-size:13px;color:#3d4a3f;line-height:1.5}
+.gloq-desc-cta-actions{display:inline-flex;gap:10px;flex-wrap:wrap;align-items:center}
+.gloq-desc-cta-btn{display:inline-flex;align-items:center;gap:6px;padding:11px 20px!important;font-size:14px!important;font-weight:600!important;background:#0a4d3a!important;color:#fff!important;border-radius:6px!important;text-decoration:none!important;border:1px solid #0a4d3a!important;letter-spacing:0.1px!important;transition:background 0.2s,transform 0.15s,box-shadow 0.2s!important;line-height:1.3!important}
+.gloq-desc-cta-btn:hover{background:#0d6149!important;transform:translateY(-1px);box-shadow:0 4px 12px rgba(10,77,58,0.22)}
+.gloq-desc-cta-secondary{padding:11px 18px!important;font-size:13px!important;background:#fff!important;color:#0a4d3a!important;border:1px solid #cce5d5!important;border-radius:6px!important;font-weight:600!important;text-decoration:none!important;transition:all 0.18s!important}
+.gloq-desc-cta-secondary:hover{background:#0a4d3a!important;color:#fff!important;border-color:#0a4d3a!important}
+@media (max-width:600px){
+  .gloq-desc-cta{padding:16px 18px}
+  .gloq-desc-cta-content{flex-direction:column;align-items:stretch}
+  .gloq-desc-cta-actions{width:100%}
+  .gloq-desc-cta-btn,.gloq-desc-cta-secondary{flex:1 1 auto;justify-content:center}
+}
+
+/* ============================================
+   CART PAGE — visual rename a "Cotización"
+   ============================================ */
+.woocommerce-cart-form .woocommerce-cart-form__cart-item.cart_item .product-thumbnail img{max-width:80px}
+.woocommerce-cart .cart-empty.woocommerce-info{background:#f0fff4!important;border-left:4px solid #0a4d3a!important;color:#0a4d3a!important;font-size:15px;padding:18px 22px!important}
+
+/* ============================================
+   FORMULARIO DE COTIZACIÓN
+   ============================================ */
+.glotracol-quote-wrapper{max-width:880px;margin:0 auto}
+.glotracol-quote-intro{font-size:15px;color:#444;margin:0 0 22px}
+.glotracol-quote-alert{padding:12px 16px;border-radius:4px;margin:0 0 18px;font-size:14px}
+.glotracol-quote-alert-error{background:#fdecea;border-left:4px solid #c0392b;color:#7a1d12}
+.glotracol-quote-empty{padding:32px;background:#f7f8fa;border-radius:8px;text-align:center}
+
+.glotracol-quote-items{width:100%;border-collapse:collapse;margin:0 0 10px;font-size:14px;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.glotracol-quote-items th,.glotracol-quote-items td{text-align:left;padding:12px 14px;border-bottom:1px solid #e6e9ec;vertical-align:middle}
+.glotracol-quote-items thead{background:#f4f6f8}
+.glotracol-quote-items thead th{font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:#666;font-weight:600}
+.glotracol-quote-items tbody tr{transition:background 0.15s}
+.glotracol-quote-items tbody tr:hover{background:#fafbfc}
+.glotracol-quote-items tbody tr.gloq-loading{opacity:0.5}
+.glotracol-quote-items tbody tr.gloq-saved{background:#f0fff4!important;animation:gloq-saved-flash 1s}
+@keyframes gloq-saved-flash{0%{background:#d4edda}100%{background:transparent}}
+.glotracol-quote-items img{vertical-align:middle;margin-right:8px;border-radius:4px}
+.gloq-qty-cell{display:flex;align-items:center;gap:8px}
+.gloq-qty-input{width:64px;padding:6px 8px;border:1px solid #cbd2d9;border-radius:4px;font-size:14px;text-align:center}
+.gloq-qty-input:focus{outline:none;border-color:#0a4d3a;box-shadow:0 0 0 3px rgba(10,77,58,0.12)}
+.gloq-remove-item{background:transparent;border:0;color:#c0392b;cursor:pointer;font-size:20px;line-height:1;padding:4px 8px;border-radius:4px;transition:background 0.15s}
+.gloq-remove-item:hover{background:#fdecea}
+
+.glotracol-quote-edit-cart{font-size:13px;margin:0 0 24px}
+.glotracol-quote-items-header{display:flex;justify-content:space-between;align-items:center;margin:0 0 12px;flex-wrap:wrap;gap:10px}
+.glotracol-quote-items-header h3{margin:0;font-size:18px;color:#0a4d3a}
+.gloq-items-count{color:#666;font-weight:400;font-size:14px}
+.glotracol-quote-add-more{font-size:13px;color:#0a4d3a;text-decoration:none;font-weight:600;padding:6px 12px;border:1px dashed #0a4d3a;border-radius:4px;transition:all 0.15s}
+.glotracol-quote-add-more:hover{background:#0a4d3a;color:#fff}
+.gloq-helper-text{font-size:12px;color:#666;margin:8px 0 24px;font-style:italic}
+
+.glotracol-quote-form{background:#fff;border:1px solid #e6e9ec;border-radius:8px;padding:24px}
+.glotracol-quote-form h3{font-size:16px;margin:6px 0 16px;color:#0a4d3a}
+.glotracol-quote-row{display:flex;gap:16px;margin:0 0 14px;flex-wrap:wrap}
+.glotracol-quote-row > label,.glotracol-quote-block{flex:1 1 240px;display:flex;flex-direction:column;font-size:13px;color:#444}
+.glotracol-quote-block{display:block;margin:0 0 14px}
+.glotracol-quote-row span,.glotracol-quote-block > span{margin:0 0 4px;font-weight:600;color:#222}
+.glotracol-quote-row .req,.glotracol-quote-block .req{color:#c0392b;font-weight:bold}
+.glotracol-quote-form input[type=text],
+.glotracol-quote-form input[type=email],
+.glotracol-quote-form input[type=tel],
+.glotracol-quote-form textarea{width:100%;padding:9px 11px;border:1px solid #cbd2d9;border-radius:4px;font-size:14px;font-family:inherit;box-sizing:border-box}
+.glotracol-quote-form textarea{min-height:90px;resize:vertical}
+.glotracol-quote-form input:focus,.glotracol-quote-form textarea:focus{outline:none;border-color:#0a4d3a;box-shadow:0 0 0 3px rgba(10,77,58,0.12)}
+
+.glotracol-quote-honeypot{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+
+.glotracol-quote-terms{display:flex;align-items:flex-start;gap:8px;margin:14px 0 18px;font-size:13px;line-height:1.4;color:#444}
+.glotracol-quote-terms input{margin-top:3px}
+
+.glotracol-quote-submit{display:inline-block;background:#0a4d3a;color:#fff;border:0;padding:12px 24px;border-radius:4px;font-size:15px;font-weight:600;cursor:pointer;text-transform:none}
+.glotracol-quote-submit:hover{background:#0d6149}
+.glotracol-quote-submit[disabled]{opacity:0.6;cursor:wait}
+
+.glotracol-quote-thanks{max-width:560px;margin:0 auto;text-align:center;padding:36px 24px;background:#f7f8fa;border-radius:8px}
+.glotracol-quote-thanks-icon{display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;background:#0a4d3a;color:#fff;border-radius:50%;font-size:32px;margin:0 0 12px}
+.glotracol-quote-thanks h2{margin:8px 0 6px;color:#0a4d3a}
+.glotracol-quote-thanks-id{font-size:13px;color:#666;margin:0 0 14px}
+.glotracol-quote-thanks-cta{margin-top:18px}
+
+.glotracol-quote-button{background:#0a4d3a!important;color:#fff!important}
+.glotracol-quote-button:hover{background:#0d6149!important}
+
+/* Admin column status colors */
+.glo-status{display:inline-block;padding:2px 10px;border-radius:11px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px}
+.glo-status-glo-new{background:#d4edda;color:#155724}
+.glo-status-glo-pending-prices{background:#fff3cd;color:#7a4f00;border:1px solid #f7b500}
+.glo-status-glo-auto-priced{background:#cfe2ff;color:#0a3a6e;border:1px solid #6ea8fe}
+.glo-status-glo-processing{background:#fff3cd;color:#856404}
+.glo-status-glo-responded{background:#d1ecf1;color:#0c5460}
+.glo-status-glo-closed{background:#e2e3e5;color:#495057}
+
+/* Type column (quote vs order) */
+.glo-type{display:inline-block;padding:2px 10px;border-radius:11px;font-size:11px;font-weight:600;letter-spacing:0.3px}
+.glo-type-quote{background:#e7f3ff;color:#0c5298;border:1px solid #b6d8ff}
+.glo-type-order{background:#fff0e6;color:#a64900;border:1px solid #ffb380}
+.glo-type-auto{display:inline-block;margin-left:4px;font-size:13px;color:#0a3a6e}
+
+/* Admin column size tag */
+.glo-size{display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:600;letter-spacing:0.3px}
+.glo-size-small{background:#e2e3e5;color:#495057}
+.glo-size-medium{background:#fff3cd;color:#856404}
+.glo-size-large{background:#fdecea;color:#7a1d12;border:1px solid #dc3545}
+.glo-size-alert{display:inline-block;margin-left:4px;font-size:13px;animation:gloq-pulse-glow 1.6s infinite}
+@keyframes gloq-pulse-glow{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:0.85}}

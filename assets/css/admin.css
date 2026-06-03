@@ -1,0 +1,158 @@
+/* Glotracol Cotizador — Admin Dashboard styles */
+.gloq-dashboard{margin:20px 20px 40px 0;max-width:1200px}
+.gloq-dashboard h1,.gloq-dashboard h2,.gloq-dashboard h3{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+
+.gloq-hero{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#0a4d3a 0%,#0d6149 50%,#13855e 100%);color:#fff;border-radius:12px;padding:32px 40px;margin:0 0 28px;box-shadow:0 4px 20px rgba(10,77,58,0.18);position:relative;overflow:hidden}
+.gloq-hero:before{content:"";position:absolute;top:-40px;right:-40px;width:240px;height:240px;background:rgba(255,255,255,0.04);border-radius:50%}
+.gloq-hero-content{position:relative;z-index:1;flex:1}
+.gloq-hero-icon{font-size:80px;opacity:0.85;line-height:1;margin-left:24px}
+.gloq-hero h1{color:#fff;font-size:32px;margin:8px 0 10px;font-weight:700;letter-spacing:-0.5px;padding:0}
+.gloq-hero p{font-size:15px;line-height:1.55;margin:0 0 18px;max-width:680px;opacity:0.95}
+.gloq-hero-badge{display:inline-block;background:rgba(255,255,255,0.18);color:#fff;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase}
+.gloq-hero-actions{display:flex;gap:8px;flex-wrap:wrap}
+.gloq-hero .button{background:rgba(255,255,255,0.18);color:#fff!important;border:1px solid rgba(255,255,255,0.4);text-shadow:none;box-shadow:none}
+.gloq-hero .button:hover{background:rgba(255,255,255,0.28);border-color:rgba(255,255,255,0.6)}
+.gloq-hero .button-primary{background:#fff;color:#0a4d3a!important;border-color:#fff;font-weight:600}
+.gloq-hero .button-primary:hover{background:#f0f7f4;color:#0a4d3a!important}
+
+.gloq-section-title{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:#666;margin:18px 0 10px;font-weight:600}
+
+.gloq-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin:0 0 28px}
+.gloq-stat{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:18px 20px;position:relative;transition:transform 0.2s,box-shadow 0.2s}
+.gloq-stat:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.06)}
+.gloq-stat-value{font-size:32px;font-weight:700;line-height:1;color:#0a4d3a;margin-bottom:6px}
+.gloq-stat-label{font-size:12px;color:#666;text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:6px}
+.gloq-stat-link{font-size:11px;color:#0a4d3a;text-decoration:none;position:absolute;top:14px;right:14px;font-weight:600}
+.gloq-stat-link:hover{text-decoration:underline}
+.gloq-stat-total{border-left:4px solid #0a4d3a}
+.gloq-stat-new{border-left:4px solid #28a745;background:linear-gradient(135deg,#fff 0%,#f0fff4 100%)}
+.gloq-stat-new .gloq-stat-value{color:#28a745}
+.gloq-stat-processing{border-left:4px solid #f7b500}
+.gloq-stat-processing .gloq-stat-value{color:#b88600}
+.gloq-stat-responded{border-left:4px solid #17a2b8}
+.gloq-stat-responded .gloq-stat-value{color:#117a8b}
+.gloq-stat-closed{border-left:4px solid #6c757d}
+.gloq-stat-closed .gloq-stat-value{color:#5a6268}
+
+.gloq-pulse{display:inline-block;width:8px;height:8px;background:#28a745;border-radius:50%;animation:gloq-pulse 2s infinite}
+@keyframes gloq-pulse{0%{box-shadow:0 0 0 0 rgba(40,167,69,0.6)}70%{box-shadow:0 0 0 8px rgba(40,167,69,0)}100%{box-shadow:0 0 0 0 rgba(40,167,69,0)}}
+
+/* Log alert banner */
+.gloq-log-alert{margin:14px 0 18px;border-left-color:#dc3545!important}
+.gloq-log-alert p{margin:0;padding:8px 0}
+.gloq-log-alert a{font-weight:600;color:#7a1d12;text-decoration:none}
+.gloq-log-alert a:hover{text-decoration:underline}
+
+/* Quick access cards */
+.gloq-quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 28px}
+.gloq-quick-alert{border-color:#dc3545!important;background:#fdecea!important}
+.gloq-quick-alert .gloq-quick-icon{background:#fdecea!important}
+.gloq-quick-alert .gloq-quick-body strong{color:#7a1d12!important}
+@media (max-width:1100px){.gloq-quick-grid{grid-template-columns:repeat(2,1fr)}}
+.gloq-quick-card{display:flex;align-items:center;gap:12px;padding:16px 18px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;text-decoration:none;color:inherit;transition:all 0.18s ease}
+.gloq-quick-card:hover{border-color:#0a4d3a;background:#f0fff4;transform:translateY(-2px);box-shadow:0 6px 16px rgba(10,77,58,0.12);color:inherit}
+.gloq-quick-icon{flex-shrink:0;font-size:28px;width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:#f0fff4;border-radius:10px}
+.gloq-quick-card:hover .gloq-quick-icon{background:#0a4d3a;filter:brightness(1.5)}
+.gloq-quick-body{min-width:0}
+.gloq-quick-body strong{display:block;font-size:14px;color:#0a4d3a;margin-bottom:2px;font-weight:700}
+.gloq-quick-body span{display:block;font-size:12px;color:#5a6470}
+
+/* Stats del mes (3 tarjetas grandes) */
+.gloq-stats-month{grid-template-columns:repeat(3,1fr);gap:16px}
+@media (max-width:900px){.gloq-stats-month{grid-template-columns:1fr}}
+.gloq-stat-month-total{border-left:4px solid #0a4d3a;background:linear-gradient(135deg,#fff 0%,#f0fff4 100%)}
+.gloq-stat-month-money{border-left:4px solid #13855e;background:linear-gradient(135deg,#fff 0%,#f0fff4 100%)}
+.gloq-stat-month-money .gloq-stat-value{font-size:24px;color:#13855e}
+.gloq-stat-month-orders{border-left:4px solid #17a2b8;background:linear-gradient(135deg,#fff 0%,#e1f5f8 100%)}
+.gloq-stat-month-orders .gloq-stat-value{color:#117a8b}
+
+/* Statuses adicionales en stats grid */
+.gloq-stat-pending{border-left:4px solid #f7b500;background:linear-gradient(135deg,#fff 0%,#fff8e1 100%)}
+.gloq-stat-pending .gloq-stat-value{color:#7a4f00}
+.gloq-stat-auto{border-left:4px solid #6ea8fe;background:linear-gradient(135deg,#fff 0%,#cfe2ff 50%,#fff 100%)}
+.gloq-stat-auto .gloq-stat-value{color:#0a3a6e}
+
+.gloq-empty-state{background:#f8fafb;border:2px dashed #d1d9e0;border-radius:10px;padding:40px;text-align:center;margin:0 0 28px}
+.gloq-empty-icon{font-size:56px;margin-bottom:12px;opacity:0.7}
+.gloq-empty-state p{margin:0;color:#666;font-size:14px}
+
+.gloq-recent{margin:0 0 28px;border-radius:8px;overflow:hidden}
+
+.gloq-grid-2col{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:0 0 24px}
+@media (max-width:1100px){.gloq-grid-2col{grid-template-columns:1fr}.gloq-stats{grid-template-columns:repeat(2,1fr)}.gloq-hero{flex-direction:column;text-align:center;padding:28px 24px}.gloq-hero-icon{margin:18px 0 0}}
+
+.gloq-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:22px 26px;box-shadow:0 1px 3px rgba(0,0,0,0.03)}
+.gloq-card h2{font-size:17px;margin:0 0 16px;color:#1a202c;display:flex;align-items:center;gap:10px;padding-bottom:10px;border-bottom:1px solid #edf2f7}
+.gloq-emoji{font-size:22px;line-height:1}
+
+.gloq-checklist{list-style:none;padding:0;margin:0}
+.gloq-check{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid #f1f5f9}
+.gloq-check:last-child{border-bottom:0}
+.gloq-check-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-size:14px}
+.gloq-check-ok .gloq-check-icon{background:#d4edda;color:#155724}
+.gloq-check-todo .gloq-check-icon{background:#fff3cd;color:#856404;border:1px dashed #d4a017}
+.gloq-check-body strong{display:block;font-size:14px;color:#1a202c;margin-bottom:2px}
+.gloq-check-body p{margin:0 0 6px;font-size:13px;color:#5a6470;line-height:1.5}
+.gloq-check-body code{background:#f1f5f9;padding:1px 6px;border-radius:3px;font-size:12px}
+
+.gloq-steps{list-style:none;counter-reset:step;padding:0;margin:0}
+.gloq-steps li{counter-increment:step;padding:12px 0 12px 48px;position:relative;border-bottom:1px solid #f1f5f9}
+.gloq-steps li:last-child{border-bottom:0}
+.gloq-steps li:before{content:counter(step);position:absolute;left:0;top:14px;width:32px;height:32px;background:linear-gradient(135deg,#0a4d3a 0%,#13855e 100%);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+.gloq-steps li strong{display:block;font-size:14px;color:#1a202c;margin-bottom:3px}
+.gloq-steps li p{margin:0;font-size:13px;color:#5a6470;line-height:1.55}
+.gloq-steps li code{background:#f1f5f9;padding:1px 6px;border-radius:3px;font-size:12px}
+
+.gloq-flow{display:flex;flex-direction:column;gap:0}
+.gloq-flow-step{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid #f1f5f9;align-items:flex-start}
+.gloq-flow-step:last-child{border-bottom:0}
+.gloq-flow-num{flex-shrink:0;width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#13855e 0%,#0a4d3a 100%);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
+.gloq-flow-step strong{display:block;font-size:14px;color:#1a202c;margin-bottom:2px}
+.gloq-flow-step p{margin:0;font-size:13px;color:#5a6470;line-height:1.5}
+.gloq-flow-step code{background:#f1f5f9;padding:1px 6px;border-radius:3px;font-size:12px}
+
+.gloq-bullets{list-style:none;padding:0;margin:0}
+.gloq-bullets li{padding:9px 0 9px 22px;border-bottom:1px solid #f1f5f9;font-size:13px;line-height:1.55;color:#3d4856;position:relative}
+.gloq-bullets li:last-child{border-bottom:0}
+.gloq-bullets li:before{content:"›";position:absolute;left:4px;color:#13855e;font-weight:700;font-size:16px;top:8px}
+.gloq-bullets li code{background:#f1f5f9;padding:1px 6px;border-radius:3px;font-size:12px}
+.gloq-bullets li strong{color:#1a202c}
+
+.gloq-faq{padding:14px 0;border-bottom:1px solid #f1f5f9}
+.gloq-faq:last-child{border-bottom:0}
+.gloq-faq summary{cursor:pointer;font-weight:600;color:#1a202c;font-size:14px;padding:4px 0;list-style:none;position:relative;padding-left:24px;outline:none}
+.gloq-faq summary:before{content:"+";position:absolute;left:0;top:2px;width:18px;height:18px;background:#edf2f7;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#0a4d3a;transition:transform 0.2s}
+.gloq-faq[open] summary:before{content:"−"}
+.gloq-faq summary::-webkit-details-marker{display:none}
+.gloq-faq summary:hover{color:#0a4d3a}
+.gloq-faq p{margin:8px 0 0 24px;font-size:13px;color:#5a6470;line-height:1.6}
+.gloq-faq code{background:#f1f5f9;padding:1px 6px;border-radius:3px;font-size:12px}
+
+.gloq-footer{margin-top:32px;padding-top:18px;border-top:1px solid #e2e8f0;text-align:center;color:#94a3b8;font-size:12px}
+.gloq-footer a{color:#0a4d3a;text-decoration:none;font-weight:600}
+.gloq-footer a:hover{text-decoration:underline}
+.gloq-heart{color:#e74c3c;display:inline-block;animation:gloq-heart-beat 1.6s ease-in-out infinite}
+@keyframes gloq-heart-beat{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+
+/* Status pills (admin list table también) */
+.glo-status{display:inline-block;padding:3px 10px;border-radius:11px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px}
+.glo-status-glo-new{background:#d4edda;color:#155724}
+.glo-status-glo-processing{background:#fff3cd;color:#856404}
+.glo-status-glo-responded{background:#d1ecf1;color:#0c5460}
+.glo-status-glo-closed{background:#e2e3e5;color:#495057}
+
+/* ============================================
+   COMPATIBILITY CHECK CARD
+   ============================================ */
+.gloq-compat-card{margin:0 0 24px;border-left:4px solid #28a745}
+.gloq-compat-card.gloq-compat-warn{border-left-color:#f7b500}
+.gloq-compat-card.gloq-compat-fail{border-left-color:#dc3545}
+.gloq-compat-header h2{margin-bottom:6px;border-bottom:0;padding-bottom:0}
+.gloq-compat-intro{margin:0 0 14px;color:#5a6470;font-size:13px;line-height:1.55}
+.gloq-compat-badge{display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;letter-spacing:0.4px;text-transform:uppercase;margin-left:auto}
+.gloq-compat-badge-ok{background:#d4edda;color:#155724}
+.gloq-compat-badge-warn{background:#fff3cd;color:#856404}
+.gloq-compat-badge-fail{background:#fdecea;color:#7a1d12}
+.gloq-compat-list .gloq-check-warn .gloq-check-icon{background:#fff3cd;color:#856404;border:1px solid #f7b500}
+.gloq-compat-list .gloq-check-fail .gloq-check-icon{background:#fdecea;color:#7a1d12;border:1px solid #dc3545}
+.gloq-compat-list .gloq-check-ok .gloq-check-icon{background:#d4edda;color:#155724}

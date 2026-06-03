@@ -1,0 +1,11 @@
+# Runtime / local
+error_log
+*.log
+
+# Compilados de traducción (se generan)
+languages/*.mo
+
+# OS
+.DS_Store
+Thumbs.db
+*~
