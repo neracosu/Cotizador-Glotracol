@@ -327,3 +327,26 @@ function glotracol_quote_semaforo( $weight_kg, $units_total = 0, $skus_distinct 
 	if ( $legacy === 'medium' ) return 'large';  // medio → amarillo
 	return 'small';
 }
+
+/**
+ * Precio público (COP) de un producto, leído del meta privado _glo_price.
+ * @return int|null  null si no tiene precio.
+ */
+function glotracol_quote_get_product_price( $product_id ) {
+	$product_id = (int) $product_id;
+	if ( $product_id <= 0 ) return null;
+	$p = get_post_meta( $product_id, '_glo_price', true );
+	return ( $p === '' || $p === null ) ? null : (int) $p;
+}
+
+/**
+ * Setea el precio público del producto en _glo_price. price<=0 borra el meta.
+ */
+function glotracol_quote_set_product_price( $product_id, $price ) {
+	$product_id = (int) $product_id;
+	if ( $product_id <= 0 ) return false;
+	$price = (int) $price;
+	if ( $price <= 0 ) { delete_post_meta( $product_id, '_glo_price' ); return true; }
+	update_post_meta( $product_id, '_glo_price', $price );
+	return true;
+}
