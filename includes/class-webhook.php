@@ -66,7 +66,7 @@ class Glotracol_Quote_Webhook {
 			'total'           => (int) get_post_meta( $quote_id, '_glo_total', true ),
 			'units_total'     => (int) get_post_meta( $quote_id, '_glo_units_total', true ),
 			'weight_total_kg' => (float) get_post_meta( $quote_id, '_glo_weight_total_kg', true ),
-			'size_tag'        => get_post_meta( $quote_id, '_glo_size_tag', true ) ?: 'small',
+			'size_tag'        => ( ( get_post_meta( $quote_id, '_glo_size_tag', true ) ?: 'small' ) === 'medium' ) ? 'large' : ( get_post_meta( $quote_id, '_glo_size_tag', true ) ?: 'small' ),
 			'created_at'      => mysql2date( 'c', $post->post_date_gmt, false ),
 			'converted_at'    => $converted_at ? mysql2date( 'c', get_gmt_from_date( $converted_at ), false ) : null,
 			'client'          => $client,

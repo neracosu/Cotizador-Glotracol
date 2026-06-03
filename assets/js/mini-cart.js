@@ -31,7 +31,7 @@
 	function updateQty( key, qty ) {
 		return $.post( GloqMiniCart.ajaxUrl, {
 			action: 'gloq_update_qty',
-			nonce: GloqMiniCart.qtyNonce,
+			_wpnonce: GloqMiniCart.qtyNonce,
 			key: key,
 			qty: qty
 		} ).done( function () {
