@@ -36,13 +36,22 @@ class Glotracol_Quote_Changelog_Admin {
 	private static function has_unseen() {
 		$uid = get_current_user_id();
 		if ( ! $uid ) return false;
-		return (string) get_user_meta( $uid, 'glo_changelog_seen', true ) !== (string) self::current_version();
+		return (string) get_user_meta( $uid, 'glo_changelog_seen', true ) !== (string) self::latest_news_version();
 	}
 
-	/** Versión actual = primera entrada del listado (imposible desincronizar). */
+	/** Versión instalada del plugin (fuente única: la constante). Es la que se muestra y la que actualiza. */
 	public static function current_version() {
+		return defined( 'GLOTRACOL_QUOTE_VERSION' ) ? GLOTRACOL_QUOTE_VERSION : ( self::entries()[0]['version'] ?? '1.0.0' );
+	}
+
+	/**
+	 * Versión de la última NOTA del changelog (no la instalada). El aviso "hay novedades"
+	 * se ata a esto, no a la versión: así publicar parches seguidos no nag-ea a Diana si no
+	 * hay una nota nueva que leer.
+	 */
+	private static function latest_news_version() {
 		$entries = self::entries();
-		return isset( $entries[0]['version'] ) ? $entries[0]['version'] : GLOTRACOL_QUOTE_VERSION;
+		return isset( $entries[0]['version'] ) ? (string) $entries[0]['version'] : self::current_version();
 	}
 
 	/** Metadatos por tipo de cambio: etiqueta y colores (fondo;texto;borde / punto). */
@@ -156,7 +165,7 @@ class Glotracol_Quote_Changelog_Admin {
 
 		// Marcar como vista la versión actual: limpia el globo del menú para este usuario.
 		if ( $uid = get_current_user_id() ) {
-			update_user_meta( $uid, 'glo_changelog_seen', self::current_version() );
+			update_user_meta( $uid, 'glo_changelog_seen', self::latest_news_version() );
 		}
 
 		$entries = self::entries();
