@@ -17,14 +17,26 @@ class Glotracol_Quote_Changelog_Admin {
 	}
 
 	public function add_menu() {
+		$menu_title = 'Novedades';
+		if ( self::has_unseen() ) {
+			// Globo estilo WordPress: marca que hay una versión que el usuario no ha visto.
+			$menu_title .= ' <span class="awaiting-mod"><span class="pending-count">1</span></span>';
+		}
 		add_submenu_page(
 			'edit.php?post_type=glo_quote',
 			'Novedades',
-			'Novedades',
+			$menu_title,
 			'manage_options',
 			self::PAGE_SLUG,
 			[ $this, 'render' ]
 		);
+	}
+
+	/** True si la versión actual no coincide con la última que vio este usuario. */
+	private static function has_unseen() {
+		$uid = get_current_user_id();
+		if ( ! $uid ) return false;
+		return (string) get_user_meta( $uid, 'glo_changelog_seen', true ) !== (string) self::current_version();
 	}
 
 	/** Versión actual = primera entrada del listado (imposible desincronizar). */
@@ -57,6 +69,16 @@ class Glotracol_Quote_Changelog_Admin {
 	 */
 	public static function entries() {
 		return [
+			[
+				'date' => '2026-06-04', 'version' => '2.3.0', 'type' => 'feature',
+				'title' => 'Sección de Novedades y actualizaciones automáticas',
+				'summary' => 'Esta misma sección, y ahora el plugin se actualiza solo cuando publicamos una versión nueva, sin instalar archivos a mano.',
+				'details' => [
+					'Nueva sección "Novedades" con el historial de versiones en lenguaje claro.',
+					'WordPress avisa cuando hay una versión nueva y la instala con un clic.',
+					'El número de versión del tablero ahora es un botón que abre esta sección.',
+				],
+			],
 			[
 				'date' => '2026-06-04', 'version' => '2.2.2', 'type' => 'improvement',
 				'title' => 'Más avisos para evitar errores al cargar o borrar datos',
@@ -131,6 +153,11 @@ class Glotracol_Quote_Changelog_Admin {
 
 	public function render() {
 		if ( ! current_user_can( 'manage_options' ) ) return;
+
+		// Marcar como vista la versión actual: limpia el globo del menú para este usuario.
+		if ( $uid = get_current_user_id() ) {
+			update_user_meta( $uid, 'glo_changelog_seen', self::current_version() );
+		}
 
 		$entries = self::entries();
 		$current = self::current_version();

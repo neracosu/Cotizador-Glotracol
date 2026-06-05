@@ -61,7 +61,7 @@ class Glotracol_Quote_Admin_Dashboard {
 
 			<div class="gloq-hero">
 				<div class="gloq-hero-content">
-					<div class="gloq-hero-badge">v<?php echo esc_html( GLOTRACOL_QUOTE_VERSION ); ?> · RFQ + B2B + Pricing</div>
+					<a class="gloq-hero-badge gloq-hero-badge-link" href="<?php echo esc_url( admin_url( 'edit.php?post_type=glo_quote&page=' . Glotracol_Quote_Changelog_Admin::PAGE_SLUG ) ); ?>" title="Ver el historial de novedades y versiones">v<?php echo esc_html( GLOTRACOL_QUOTE_VERSION ); ?> · Novedades <span aria-hidden="true">&rarr;</span></a>
 					<h1>Cotizador Glotracol</h1>
 					<p>Sistema completo de cotizaciones y pedidos B2B con precios diferenciados por cliente, auto-respuesta cuando los precios están cargados, y conversión cotización a pedido.</p>
 					<div class="gloq-hero-actions">
