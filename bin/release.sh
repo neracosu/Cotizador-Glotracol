@@ -38,8 +38,8 @@ if [ "$(printf '%s\n%s\n' "$current" "$new" | sort -V | tail -1)" != "$new" ] ||
   echo "La versión nueva ($new) debe ser mayor que la actual ($current)."; exit 1
 fi
 if git rev-parse "v$new" >/dev/null 2>&1; then echo "El tag v$new ya existe."; exit 1; fi
-if [ -n "$(git status --porcelain)" ]; then
-  echo "Hay cambios sin commitear. Commitéalos o descártalos antes de publicar."; exit 1
+if ! git diff --quiet || ! git diff --cached --quiet; then
+  echo "Hay cambios sin commitear en archivos versionados. Commitéalos o descártalos antes de publicar."; exit 1
 fi
 
 echo "Publicando v$current → v$new ..."
