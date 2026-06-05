@@ -191,7 +191,7 @@ class Glotracol_Quote_Pricing_Admin {
 
 			<form method="post"
 				action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"
-				onsubmit="return confirm('Eliminar TODOS los precios publicos asignados? Esta accion no se puede deshacer.');">
+				onsubmit="return confirm('Vas a borrar el precio interno de <?php echo (int) $with_price; ?> productos. Sus cotizaciones futuras quedaran en \'pendiente de precios\'. Es irreversible. Continuar?');">
 				<input type="hidden" name="action" value="gloq_pricing_clear">
 				<?php wp_nonce_field( self::NONCE_ACTION ); ?>
 				<details>

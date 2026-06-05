@@ -327,7 +327,8 @@ class Glotracol_Quote_Admin_Settings {
 						<td><input type="number" min="0" max="100" name="<?php echo $opt; ?>[rate_limit_per_hour]" value="<?php echo esc_attr( $s['rate_limit_per_hour'] ); ?>">
 						<p class="description">0 = sin límite. Recomendado: 3-5.</p></td></tr>
 					<tr><th><label>Borrar datos al desinstalar</label></th>
-						<td><label><input type="checkbox" name="<?php echo $opt; ?>[delete_data_on_uninstall]" value="yes" <?php checked( $s['delete_data_on_uninstall'], 'yes' ); ?>> Eliminar todas las cotizaciones y configuraciones al desinstalar el plugin</label></td></tr>
+						<td><label><input type="checkbox" name="<?php echo $opt; ?>[delete_data_on_uninstall]" value="yes" <?php checked( $s['delete_data_on_uninstall'], 'yes' ); ?>> Eliminar todas las cotizaciones y configuraciones al desinstalar el plugin</label>
+						<p class="description" style="color:#b32d2e"><strong>Peligroso:</strong> si lo activas, al desinstalar el plugin se borrarán <strong>todas</strong> las cotizaciones, los clientes B2B y los ajustes, <strong>sin respaldo y sin posibilidad de recuperarlos</strong>. Déjalo desactivado salvo que quieras una desinstalación que no deje rastro.</p></td></tr>
 				</table>
 				<?php
 				break;

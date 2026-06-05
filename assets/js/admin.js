@@ -37,7 +37,15 @@
 	$( document ).on( 'click', '.gloq-remove-row', function ( e ) {
 		e.preventDefault();
 		var $tr  = $( this ).closest( 'tr' );
-		var $key = $tr.find( 'input[name$="[sku]"], input[name$="[label]"]' ).first();
+		// Si la fila ya tiene datos, confirmar: al guardar se eliminará ese registro.
+		var hasData = false;
+		$tr.find( 'input' ).each( function () {
+			if ( $.trim( $( this ).val() ) !== '' ) { hasData = true; }
+		} );
+		if ( hasData && ! window.confirm( 'Quitar esta fila eliminará ese registro al guardar el cambio. ¿Continuar?' ) ) {
+			return;
+		}
+		var $key = $tr.find( 'input[name$="[sku]"], input[name$="[label]"], input[name$="[product_id]"]' ).first();
 		if ( $key.length ) {
 			$key.val( '' );
 		}
@@ -54,6 +62,9 @@
 		var to   = $.trim( $( '#gloq-smtp-test-to' ).val() );
 		if ( ! to ) {
 			$r.html( '<span class="gloq-msg gloq-msg-err">Email requerido</span>' );
+			return;
+		}
+		if ( ! window.confirm( 'Se enviará un email de prueba real a ' + to + '. ¿Continuar?' ) ) {
 			return;
 		}
 		$btn.data( 'label', $btn.text() ).prop( 'disabled', true ).text( I18N.sending || 'Enviando…' );
@@ -106,6 +117,9 @@
 		$( document ).on( 'input change', '.gloq-convert-price', recompute );
 
 		$( '#gloq-convert-confirm' ).on( 'click', function () {
+			if ( ! window.confirm( 'El cliente recibirá ahora el email de confirmación de pedido con estos precios. ¿Enviar?' ) ) {
+				return;
+			}
 			var $c = $( this );
 			var prices = {};
 			$( '.gloq-convert-price' ).each( function () {

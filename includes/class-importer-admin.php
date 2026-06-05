@@ -122,6 +122,73 @@ class Glotracol_Quote_Importer_Admin {
 		<?php
 	}
 
+	/**
+	 * Aviso de impacto mostrado en el preview, antes de confirmar la importación.
+	 * Describe en lenguaje claro qué se va a escribir/sobrescribir según el tipo de hoja,
+	 * para que el operador no confirme una carga equivocada. Devuelve HTML.
+	 */
+	private function preview_impact_notice( $type, $opts = [] ) {
+		$mode           = $opts['mode'] ?? 'publico';
+		$client_label   = $opts['client_label'] ?? '';
+		$create_missing = ! empty( $opts['create_missing'] );
+		$no_id_count    = (int) ( $opts['no_id_count'] ?? 0 );
+
+		$lines = [];
+		switch ( $type ) {
+			case 'precios_catalogo':
+				if ( $mode === 'b2b' ) {
+					$lines[] = sprintf(
+						'Vas a escribir la <strong>tarifa negociada</strong> de <strong>%s</strong> sobre los productos de este archivo, identificados por <strong>ID</strong>.',
+						esc_html( $client_label ?: 'el cliente seleccionado' )
+					);
+				} else {
+					$lines[] = 'Vas a escribir el <strong>precio de Lista pública (interno)</strong> sobre los productos de este archivo, identificados por <strong>ID</strong>. <em>Este precio no se muestra en la tienda</em>: solo lo usa el sistema para armar la cotización.';
+					$lines[] = '<strong>Confirma que este archivo es la Lista pública.</strong> Si subes otra lista con las mismas columnas (p. ej. una lista con descuento) sobrescribirás los precios públicos: el sistema no puede distinguirla por su contenido.';
+					if ( $create_missing ) {
+						$lines[] = sprintf(
+							'Las filas <strong>sin ID</strong> (%d en este archivo) <strong>crearán productos nuevos publicados</strong> en el catálogo (sin foto/categoría/descripción). Si el nombre ya existe, se actualiza el producto existente <strong>sin duplicar</strong>.',
+							$no_id_count
+						);
+					} elseif ( $no_id_count > 0 ) {
+						$lines[] = sprintf(
+							'"Crear faltantes" está <strong>desactivado</strong>: las <strong>%d filas sin ID se omitirán</strong> (no se crea ningún producto). Si este archivo trae productos nuevos, vuelve atrás y actívalo.',
+							$no_id_count
+						);
+					}
+				}
+				break;
+			case 'precios_b2b':
+				$lines[] = 'Escribe la <strong>tarifa negociada</strong> de cada cliente del archivo (por NIT y SKU). Un NIT/SKU repetido <strong>pisa</strong> el precio anterior; los SKU que no vengan en el CSV se mantienen.';
+				$lines[] = 'Los NITs deben existir ya en el CRM; las filas con NIT desconocido se omiten.';
+				break;
+			case 'precios_publicos':
+				$lines[] = 'Actualiza o inserta precios de la <strong>Lista pública</strong> por <strong>SKU</strong>. Un SKU repetido pisa el valor anterior.';
+				break;
+			case 'presentaciones':
+				$lines[] = 'Para cada producto del archivo <strong>reemplaza toda su lista de presentaciones</strong>: las presentaciones que no estén en el CSV <strong>dejarán de aparecer</strong> en la tienda.';
+				break;
+			case 'clientes':
+				$lines[] = 'Crea o actualiza <strong>clientes B2B</strong> por NIT. Un NIT existente actualiza sus datos con los del archivo.';
+				break;
+			default:
+				return '';
+		}
+
+		// Salvedad común a todas las hojas.
+		$lines[] = 'Reimportar el mismo archivo es seguro: <strong>actualiza, no duplica</strong>. Las filas inválidas o sin precio se omiten y se reportan al final.';
+
+		$html  = '<div class="notice notice-warning inline" style="margin:16px 0;padding:12px 16px">';
+		$html .= '<p style="margin:0 0 8px"><strong>Antes de confirmar, verifica qué hará esta importación:</strong></p>';
+		$html .= '<ul style="margin:0 0 4px 18px;list-style:disc">';
+		foreach ( $lines as $l ) {
+			$html .= '<li>' . wp_kses_post( $l ) . '</li>';
+		}
+		$html .= '</ul>';
+		$html .= '<p style="margin:8px 0 0">Si algo de esto no es lo que quieres, usa <strong>Cancelar</strong> y vuelve a empezar.</p>';
+		$html .= '</div>';
+		return $html;
+	}
+
 	private function describe_type( $type ) {
 		switch ( $type ) {
 			case 'clientes':
@@ -197,15 +264,33 @@ class Glotracol_Quote_Importer_Admin {
 				</tbody>
 			</table>
 
-			<?php if ( $type === 'precios_catalogo' ) :
-				$client_label = '';
-				if ( $mode === 'b2b' && $client_id > 0 ) { $cp = get_post( $client_id ); $client_label = $cp ? $cp->post_title : ''; }
-			?>
+			<?php
+			$client_label = '';
+			if ( $type === 'precios_catalogo' && $mode === 'b2b' && $client_id > 0 ) {
+				$cp = get_post( $client_id );
+				$client_label = $cp ? $cp->post_title : '';
+			}
+			// Filas sin ID (relevante solo para "crear faltantes").
+			$no_id_count = 0;
+			foreach ( $parse['rows'] as $r ) {
+				if ( (int) ( $r['id'] ?? 0 ) <= 0 ) $no_id_count++;
+			}
+			if ( $type === 'precios_catalogo' ) : ?>
 			<p><strong>Modo:</strong> <?php echo $mode === 'b2b' ? 'Tarifa B2B' . ( $client_label ? ' — ' . esc_html( $client_label ) : '' ) : 'Lista pública'; ?> · <strong>Sincronizar stock:</strong> <?php echo $sync_stock ? 'sí' : 'no'; ?><?php if ( $mode === 'publico' ) : ?> · <strong>Crear faltantes:</strong> <?php echo $create_missing ? 'sí' : 'no'; ?><?php endif; ?></p>
 			<?php if ( $mode === 'b2b' && $client_id <= 0 ) : ?>
 				<div class="notice notice-error inline"><p>Elegiste tarifa B2B pero no seleccionaste un cliente. Vuelve atrás y elige el cliente.</p></div>
 			<?php endif; ?>
 			<?php endif; ?>
+
+			<?php
+			// Aviso de impacto: qué va a escribir/sobrescribir esta importación, antes de confirmar.
+			echo $this->preview_impact_notice( $type, [
+				'mode'           => $mode,
+				'client_label'   => $client_label,
+				'create_missing' => $create_missing,
+				'no_id_count'    => $no_id_count,
+			] );
+			?>
 
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-top:20px">
 				<input type="hidden" name="action" value="gloq_import_run">

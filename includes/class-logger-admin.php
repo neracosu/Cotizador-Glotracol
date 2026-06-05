@@ -82,7 +82,7 @@ class Glotracol_Quote_Logger_Admin {
 				<input type="submit" class="button button-primary" value="Filtrar">
 				<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=glo_quote&page=' . self::PAGE_SLUG ) ); ?>" class="button">Limpiar filtros</a>
 
-				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline-block;margin-left:10px" onsubmit="return confirm('¿Vaciar todo el log? Esta acción no se puede deshacer.');">
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline-block;margin-left:10px" onsubmit="return confirm('Vas a borrar <?php echo (int) $counts['total']; ?> entradas del log de auditoria (incluye registros de envios a clientes). Es irreversible. Vaciar?');">
 					<input type="hidden" name="action" value="gloq_logs_clear">
 					<?php wp_nonce_field( self::NONCE_ACTION ); ?>
 					<input type="submit" class="button button-link-delete" value="Vaciar log">

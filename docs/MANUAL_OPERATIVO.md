@@ -54,6 +54,44 @@ Cuando llega un correo con **"🔥 [GRANDE]"** en el asunto:
 - El correo destacado resalta el WhatsApp del cliente.
 - **Recomendación**: contactar directo por WhatsApp en menos de 4 horas.
 
+### 2.4. Cargar el catálogo por ID (precios y productos nuevos)
+
+Cuando recibas el catálogo en el formato del **export de WooCommerce** (columnas
+`ID, Nombre, Inventario, Peso (kg), Precio normal, Imágenes`), úsalo así:
+
+1. Ve a **Cotizaciones → Importar** y elige **"Precios del catálogo (por ID)"**.
+2. Sube el archivo y, según de qué archivo se trate, marca los toggles:
+
+| Archivo | Tipo de lista | Sincronizar stock | Crear faltantes |
+|---|---|---|---|
+| Catálogo **con ID** (refresco de precios) | Lista pública | ✅ | ❌ |
+| Catálogo de **productos nuevos** (columna ID vacía) | Lista pública | ✅ | ✅ **obligatorio** |
+
+3. Revisa el preview (te dice modo, si sincroniza stock y si crea faltantes) y confirma.
+
+**Qué hace cada toggle:**
+- **Sincronizar stock** — pone cada producto como *disponible* o *agotado* según la columna
+  `Inventario` (o `Disponibilidad`). Sin marcar, solo toca el precio.
+- **Crear faltantes** — para las filas **sin ID**: crea el producto (publicado, con su peso, stock y
+  precio interno). **Si el nombre ya existe en el catálogo, actualiza el existente en vez de duplicarlo.**
+  Solo aplica en *Lista pública*.
+
+> El **precio que cargas aquí nunca se muestra en la tienda** — es el precio interno de Lista A que el
+> sistema usa para armar la cotización. Los productos nuevos salen sin foto/categoría/descripción: complétalos
+> después en **Productos → editar**.
+
+> Las filas **sin precio** se omiten (el producto queda pendiente). Aparecen en el reporte final para que sepas
+> cuáles cargar luego.
+
+**Dudas frecuentes:**
+- **¿Y si importo el mismo archivo dos veces?** No pasa nada: actualiza en vez de duplicar. Los productos
+  nuevos se reconocen **por nombre**, así que no se crean de nuevo. *(Salvedad: si renombras un producto en WC
+  después de crearlo, una reimportación lo crearía como uno aparte.)*
+- **¿Y si subo el archivo en el tipo equivocado?** El importador valida las columnas antes de escribir: si no
+  coinciden, lo rechaza en el preview y **no toca nada**. Aun así, **elige siempre el tipo correcto** — si dos
+  listas tienen las mismas columnas (p. ej. una lista con descuento), el validador no puede distinguirlas por
+  el contenido.
+
 ---
 
 ## 3. Gestionar clientes B2B
