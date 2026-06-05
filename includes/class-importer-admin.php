@@ -109,7 +109,10 @@ class Glotracol_Quote_Importer_Admin {
 						<p class="description">Requerido si elegiste "Tarifa de un cliente B2B".</p>
 					</td></tr>
 					<tr><th>Sincronizar stock</th><td>
-						<label><input type="checkbox" name="gloq_sync_stock" value="1"> Actualizar disponibilidad en WooCommerce desde la columna Disponibilidad (solo lista pública)</label>
+						<label><input type="checkbox" name="gloq_sync_stock" value="1"> Actualizar disponibilidad en WooCommerce desde la columna Disponibilidad / Inventario (solo lista pública)</label>
+					</td></tr>
+					<tr><th>Crear faltantes</th><td>
+						<label><input type="checkbox" name="gloq_create_missing" value="1"> Crear el producto cuando la fila venga sin ID (solo lista pública). Si el nombre ya existe, actualiza el producto existente en vez de duplicar.</label>
 					</td></tr>
 				</table>
 				<?php endif; ?>
@@ -130,7 +133,7 @@ class Glotracol_Quote_Importer_Admin {
 			case 'presentaciones':
 				return 'Define las presentaciones (250g, 500g, etc.) por producto. Columnas: <code>sku_producto, label, sku_variante, peso_g, precio_publico</code>.';
 			case 'precios_catalogo':
-				return 'Carga precios por <strong>ID de producto</strong> desde el export del catálogo. Columnas: <code>ID, Nombre, Peso (kg), Precio normal, Disponibilidad</code>. Elige abajo si es lista pública o tarifa de un cliente B2B.';
+				return 'Carga precios por <strong>ID de producto</strong> desde el export del catálogo. Columnas: <code>ID, Nombre, Peso (kg), Precio normal, Disponibilidad</code> (acepta <code>Inventario</code> como alias de Disponibilidad). Elige abajo si es lista pública o tarifa de un cliente B2B; en lista pública puedes <strong>crear los productos cuyas filas vengan sin ID</strong>.';
 		}
 		return '';
 	}
@@ -141,6 +144,7 @@ class Glotracol_Quote_Importer_Admin {
 		$mode       = isset( $_GET['mode'] ) && $_GET['mode'] === 'b2b' ? 'b2b' : 'publico';
 		$client_id  = isset( $_GET['client_id'] ) ? (int) $_GET['client_id'] : 0;
 		$sync_stock = ! empty( $_GET['sync_stock'] ) ? 1 : 0;
+		$create_missing = ! empty( $_GET['create_missing'] ) ? 1 : 0;
 		if ( ! $token || ! $type ) {
 			if ( class_exists( 'Glotracol_Quote_Logger' ) ) {
 				Glotracol_Quote_Logger::warn( 'import', 'render_preview: token o type vacíos en query', [
@@ -197,7 +201,7 @@ class Glotracol_Quote_Importer_Admin {
 				$client_label = '';
 				if ( $mode === 'b2b' && $client_id > 0 ) { $cp = get_post( $client_id ); $client_label = $cp ? $cp->post_title : ''; }
 			?>
-			<p><strong>Modo:</strong> <?php echo $mode === 'b2b' ? 'Tarifa B2B' . ( $client_label ? ' — ' . esc_html( $client_label ) : '' ) : 'Lista pública'; ?> · <strong>Sincronizar stock:</strong> <?php echo $sync_stock ? 'sí' : 'no'; ?></p>
+			<p><strong>Modo:</strong> <?php echo $mode === 'b2b' ? 'Tarifa B2B' . ( $client_label ? ' — ' . esc_html( $client_label ) : '' ) : 'Lista pública'; ?> · <strong>Sincronizar stock:</strong> <?php echo $sync_stock ? 'sí' : 'no'; ?><?php if ( $mode === 'publico' ) : ?> · <strong>Crear faltantes:</strong> <?php echo $create_missing ? 'sí' : 'no'; ?><?php endif; ?></p>
 			<?php if ( $mode === 'b2b' && $client_id <= 0 ) : ?>
 				<div class="notice notice-error inline"><p>Elegiste tarifa B2B pero no seleccionaste un cliente. Vuelve atrás y elige el cliente.</p></div>
 			<?php endif; ?>
@@ -210,6 +214,7 @@ class Glotracol_Quote_Importer_Admin {
 				<input type="hidden" name="gloq_mode" value="<?php echo esc_attr( $mode ); ?>">
 				<input type="hidden" name="gloq_client_id" value="<?php echo (int) $client_id; ?>">
 				<input type="hidden" name="gloq_sync_stock" value="<?php echo (int) $sync_stock; ?>">
+				<input type="hidden" name="gloq_create_missing" value="<?php echo (int) $create_missing; ?>">
 				<?php wp_nonce_field( self::NONCE_ACTION ); ?>
 				<?php if ( ! ( $type === 'precios_catalogo' && $mode === 'b2b' && $client_id <= 0 ) ) : ?>
 				<p class="submit">
@@ -339,6 +344,7 @@ class Glotracol_Quote_Importer_Admin {
 			$extra['mode']       = ( ( $_POST['gloq_mode'] ?? 'publico' ) === 'b2b' ) ? 'b2b' : 'publico';
 			$extra['client_id']  = (int) ( $_POST['gloq_client_id'] ?? 0 );
 			$extra['sync_stock'] = ! empty( $_POST['gloq_sync_stock'] ) ? 1 : 0;
+			$extra['create_missing'] = ! empty( $_POST['gloq_create_missing'] ) ? 1 : 0;
 		}
 
 		wp_safe_redirect( add_query_arg( array_merge( [
@@ -373,6 +379,7 @@ class Glotracol_Quote_Importer_Admin {
 				'mode'       => ( ( $_POST['gloq_mode'] ?? 'publico' ) === 'b2b' ) ? 'b2b' : 'publico',
 				'client_id'  => (int) ( $_POST['gloq_client_id'] ?? 0 ),
 				'sync_stock' => ! empty( $_POST['gloq_sync_stock'] ),
+				'create_missing' => ! empty( $_POST['gloq_create_missing'] ),
 			];
 		}
 		$report = Glotracol_Quote_Importer::import( $type, $parse['rows'], $opts );

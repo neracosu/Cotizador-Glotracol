@@ -53,7 +53,7 @@ class Glotracol_Quote_Importer {
 			],
 			'precios_catalogo' => [
 				'required'  => [ 'id', 'precio normal' ],
-				'optional'  => [ 'nombre', 'peso (kg)', 'disponibilidad', 'precio' ],
+				'optional'  => [ 'nombre', 'peso (kg)', 'disponibilidad', 'inventario', 'precio' ],
 				'plantilla' => [ 'id', 'nombre', 'peso (kg)', 'precio normal', 'disponibilidad' ],
 			],
 		];
@@ -354,6 +354,8 @@ class Glotracol_Quote_Importer {
 		$mode       = ( ( $opts['mode'] ?? 'publico' ) === 'b2b' ) ? 'b2b' : 'publico';
 		$client_id  = (int) ( $opts['client_id'] ?? 0 );
 		$sync_stock = ! empty( $opts['sync_stock'] );
+		// Crear productos faltantes solo aplica en lista pública.
+		$create_missing = ! empty( $opts['create_missing'] ) && $mode === 'publico';
 
 		$existing = [];
 		if ( $mode === 'b2b' ) {
@@ -364,15 +366,61 @@ class Glotracol_Quote_Importer {
 			if ( ! is_array( $existing ) ) $existing = [];
 		}
 
+		// Índice nombre normalizado → product_id, construido perezosamente solo si se crean faltantes.
+		$name_index = null;
+
 		foreach ( (array) $rows as $row ) {
 			$line = $row['__line'] ?? '?';
 			$pid  = (int) ( $row['id'] ?? 0 );
 			$price_raw = $row['precio normal'] ?? ( $row['precio'] ?? '' );
 			$price = (int) preg_replace( '/[^0-9]/', '', (string) $price_raw );
+			$stock_text = self::row_stock( $row );
 
 			if ( $pid <= 0 ) {
-				$report['skipped']++;
-				$report['errors'][] = "Línea $line: ID vacío o inválido.";
+				// Fila sin ID: si está habilitado, resolver por nombre (crear o actualizar el existente).
+				if ( $create_missing ) {
+					if ( $name_index === null ) $name_index = self::build_name_index();
+					$name = trim( (string) ( $row['nombre'] ?? '' ) );
+					if ( $name === '' ) {
+						$report['skipped']++;
+						$report['errors'][] = "Línea $line: fila sin ID y sin nombre; no se puede crear.";
+						continue;
+					}
+					if ( $price <= 0 ) {
+						$report['skipped']++;
+						$report['errors'][] = "Línea $line: producto nuevo \"$name\" sin precio (no se crea).";
+						continue;
+					}
+					$weight = self::parse_weight( $row['peso (kg)'] ?? '' );
+					$key = self::normalize_name( $name );
+					if ( isset( $name_index[ $key ] ) ) {
+						// Ya existe por nombre → actualizar ese producto, sin duplicar.
+						$existing_id = (int) $name_index[ $key ];
+						$product = function_exists( 'wc_get_product' ) ? wc_get_product( $existing_id ) : null;
+						if ( ! $product ) {
+							$report['skipped']++;
+							$report['errors'][] = "Línea $line: \"$name\" mapeó a ID $existing_id pero no es un producto válido.";
+							continue;
+						}
+						update_post_meta( $existing_id, '_glo_price', $price );
+						if ( $weight !== null ) $product->set_weight( $weight );
+						if ( $stock_text !== '' ) $product->set_stock_status( strpos( strtolower( $stock_text ), 'agot' ) !== false ? 'outofstock' : 'instock' );
+						$product->save();
+						$report['updated']++;
+					} else {
+						$new_id = self::create_product( $name, $price, $weight, $stock_text );
+						if ( ! $new_id ) {
+							$report['skipped']++;
+							$report['errors'][] = "Línea $line: no se pudo crear el producto \"$name\".";
+							continue;
+						}
+						$name_index[ $key ] = $new_id; // evita duplicar si el nombre se repite en el archivo
+						$report['inserted']++;
+					}
+				} else {
+					$report['skipped']++;
+					$report['errors'][] = "Línea $line: ID vacío o inválido.";
+				}
 				continue;
 			}
 			$product = function_exists( 'wc_get_product' ) ? wc_get_product( $pid ) : null;
@@ -385,7 +433,7 @@ class Glotracol_Quote_Importer {
 				$report['skipped']++;
 				$report['errors'][] = "Línea $line: producto ID $pid sin precio (queda pendiente).";
 				if ( $mode === 'publico' && $sync_stock ) {
-					self::apply_stock( $product, $row['disponibilidad'] ?? '' );
+					self::apply_stock( $product, $stock_text );
 				}
 				continue;
 			}
@@ -398,7 +446,7 @@ class Glotracol_Quote_Importer {
 				update_post_meta( $pid, '_glo_price', $price );
 				if ( $had > 0 ) $report['updated']++; else $report['inserted']++;
 				if ( $sync_stock ) {
-					self::apply_stock( $product, $row['disponibilidad'] ?? '' );
+					self::apply_stock( $product, $stock_text );
 				}
 			}
 		}
@@ -409,11 +457,73 @@ class Glotracol_Quote_Importer {
 		return $report;
 	}
 
+	/** Disponibilidad de la fila: acepta la columna `disponibilidad` o su alias `inventario`. */
+	private static function row_stock( $row ) {
+		$d = trim( (string) ( $row['disponibilidad'] ?? '' ) );
+		if ( $d === '' ) $d = trim( (string) ( $row['inventario'] ?? '' ) );
+		return $d;
+	}
+
 	/** Sincroniza el stock WC desde el texto de disponibilidad (AGOTADO/DISPONIBLE). */
 	private static function apply_stock( $product, $disp ) {
 		$d = strtolower( trim( (string) $disp ) );
 		if ( $d === '' ) return;
 		$product->set_stock_status( strpos( $d, 'agot' ) !== false ? 'outofstock' : 'instock' );
 		$product->save();
+	}
+
+	/** Normaliza un nombre de producto para comparar: sin acentos, espacios colapsados, mayúsculas. */
+	private static function normalize_name( $s ) {
+		$s = (string) $s;
+		if ( function_exists( 'remove_accents' ) ) $s = remove_accents( $s );
+		$s = preg_replace( '/\s+/u', ' ', $s );
+		return strtoupper( trim( $s ) );
+	}
+
+	/** Convierte un peso con coma decimal ("22,68") a float. '' o ≤0 → null (no setear). */
+	private static function parse_weight( $raw ) {
+		$raw = str_replace( ',', '.', trim( (string) $raw ) );
+		$raw = preg_replace( '/[^0-9.]/', '', $raw );
+		if ( $raw === '' || ! is_numeric( $raw ) ) return null;
+		$w = (float) $raw;
+		return $w > 0 ? $w : null;
+	}
+
+	/** Mapa nombre_normalizado → product_id de todo el catálogo (incluye borradores). */
+	private static function build_name_index() {
+		$index = [];
+		$q = new WP_Query( [
+			'post_type'      => 'product',
+			'post_status'    => 'any',
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+			'no_found_rows'  => true,
+			'orderby'        => 'ID',
+			'order'          => 'ASC',
+		] );
+		foreach ( $q->posts as $id ) {
+			$title = get_the_title( $id );
+			$key = self::normalize_name( $title );
+			// El primero gana (ID menor): conserva determinismo si hay nombres repetidos.
+			if ( $key !== '' && ! isset( $index[ $key ] ) ) $index[ $key ] = (int) $id;
+		}
+		return $index;
+	}
+
+	/** Crea un producto simple publicado con su precio interno, peso y stock. Devuelve el ID o 0. */
+	private static function create_product( $name, $price, $weight, $stock_text ) {
+		if ( ! class_exists( 'WC_Product_Simple' ) ) return 0;
+		$product = new WC_Product_Simple();
+		$product->set_name( $name );
+		$product->set_status( 'publish' );
+		$product->set_catalog_visibility( 'visible' );
+		if ( $weight !== null ) $product->set_weight( $weight );
+		if ( $stock_text !== '' ) {
+			$product->set_stock_status( strpos( strtolower( $stock_text ), 'agot' ) !== false ? 'outofstock' : 'instock' );
+		}
+		$id = $product->save();
+		if ( ! $id ) return 0;
+		update_post_meta( $id, '_glo_price', (int) $price );
+		return (int) $id;
 	}
 }
