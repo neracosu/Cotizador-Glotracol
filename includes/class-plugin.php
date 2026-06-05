@@ -32,6 +32,7 @@ class Glotracol_Quote_Plugin {
 		new Glotracol_Quote_Admin_Meta_Box();
 		new Glotracol_Quote_Admin_Settings();
 		new Glotracol_Quote_Admin_Dashboard();
+		new Glotracol_Quote_Changelog_Admin();
 
 		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_assets' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );

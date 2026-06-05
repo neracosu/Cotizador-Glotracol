@@ -49,6 +49,7 @@ require_once GLOTRACOL_QUOTE_PATH . 'includes/class-quote-form.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-admin-meta-box.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-admin-settings.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-admin-dashboard.php';
+require_once GLOTRACOL_QUOTE_PATH . 'includes/class-changelog-admin.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-plugin.php';
 
 register_activation_hook( __FILE__, [ 'Glotracol_Quote_Activator', 'activate' ] );
