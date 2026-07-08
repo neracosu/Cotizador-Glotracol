@@ -203,6 +203,8 @@ class Glotracol_Quote_Importer_Admin {
 				return 'Carga precios por <strong>ID de producto</strong> desde el export del catálogo. Columnas: <code>ID, Nombre, Peso (kg), Precio normal, Disponibilidad</code> (acepta <code>Inventario</code> como alias de Disponibilidad). Elige abajo si es lista pública o tarifa de un cliente B2B; en lista pública puedes <strong>crear los productos cuyas filas vengan sin ID</strong>.';
 			case 'clientes_lista':
 				return 'Marca qué clientes reciben la <strong>Lista B</strong> (mayoreo). Acepta la plantilla (<code>nit, nombre, lista</code>) o el Excel de clientes con precio diferente (<code>identificacion, nombre de la compañia, precio</code>): los rótulos <code>LISTA B</code> y <code>PRECIO DIFERENTE</code> se toman como Lista B. Si el NIT no existe, crea una ficha mínima etiquetada B.';
+			case 'precios_lista_b':
+				return 'Carga los precios de <strong>Lista B</strong> (mayoreo) por <strong>ID de producto</strong>, usando el mismo archivo del catálogo (columna <code>Precio normal</code>). Escribe un precio B aparte, sin tocar la Lista A. Las filas sin ID se resuelven por <strong>nombre</strong> a un producto ya existente (primero carga la Lista A para crear los productos nuevos).';
 		}
 		return '';
 	}

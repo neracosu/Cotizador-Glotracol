@@ -22,6 +22,7 @@ class Glotracol_Quote_Importer {
 		'presentaciones'    => 'Presentaciones por producto',
 		'precios_catalogo'  => 'Precios del catálogo (por ID)',
 		'clientes_lista'    => 'Asignar clientes a Lista B',
+		'precios_lista_b'   => 'Precios de Lista B',
 	];
 
 	/**
@@ -61,6 +62,11 @@ class Glotracol_Quote_Importer {
 				'required'  => [],
 				'optional'  => [ 'nit', 'identificacion', 'nombre', 'lista', 'precio' ],
 				'plantilla' => [ 'nit', 'nombre', 'lista' ],
+			],
+			'precios_lista_b' => [
+				'required'  => [ 'id' ],
+				'optional'  => [ 'nombre', 'precio', 'precio normal' ],
+				'plantilla' => [ 'id', 'nombre', 'precio' ],
 			],
 		];
 	}
@@ -166,6 +172,8 @@ class Glotracol_Quote_Importer {
 				return self::import_catalog_prices( $rows, $opts );
 			case 'clientes_lista':
 				return self::import_clients_lista( $rows );
+			case 'precios_lista_b':
+				return self::import_prices_lista_b( $rows );
 			default:
 				return [ 'inserted' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => [ 'Tipo desconocido: ' . $type ] ];
 		}
@@ -314,6 +322,57 @@ class Glotracol_Quote_Importer {
 		}
 		if ( $touched ) {
 			Glotracol_Quote_Client_CPT::rebuild_full_index();
+		}
+		return $report;
+	}
+
+	/**
+	 * Importa precios de Lista B por ID de producto (mismo formato que la Lista A).
+	 * Escribe `_glo_price_b`. Filas sin ID se resuelven por NOMBRE a un producto YA
+	 * existente (no se crean productos: B es solo una capa de precio; los productos
+	 * nuevos se crean al cargar la Lista A). Sin precio → saltada (cae a Lista A al cotizar).
+	 */
+	public static function import_prices_lista_b( $rows ) {
+		$report = [ 'inserted' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => [] ];
+		$name_index = null; // perezoso: solo si hay filas sin ID
+		foreach ( (array) $rows as $row ) {
+			$line = $row['__line'] ?? '?';
+			$pid  = (int) ( $row['id'] ?? 0 );
+			$price_raw = $row['precio'] ?? ( $row['precio normal'] ?? '' );
+			$price = (int) preg_replace( '/[^0-9]/', '', (string) $price_raw );
+
+			if ( $pid <= 0 ) {
+				$name = trim( (string) ( $row['nombre'] ?? '' ) );
+				if ( $name === '' ) {
+					$report['skipped']++;
+					$report['errors'][] = "Línea $line: fila sin ID y sin nombre.";
+					continue;
+				}
+				if ( $name_index === null ) $name_index = self::build_name_index();
+				$key = self::normalize_name( $name );
+				if ( ! isset( $name_index[ $key ] ) ) {
+					$report['skipped']++;
+					$report['errors'][] = "Línea $line: \"$name\" no existe en el catálogo (carga primero la Lista A). Precio B omitido.";
+					continue;
+				}
+				$pid = (int) $name_index[ $key ];
+			} else {
+				$product = function_exists( 'wc_get_product' ) ? wc_get_product( $pid ) : null;
+				if ( ! $product ) {
+					$report['skipped']++;
+					$report['errors'][] = "Línea $line: el producto ID $pid no existe en el catálogo.";
+					continue;
+				}
+			}
+
+			if ( $price <= 0 ) {
+				$report['skipped']++;
+				$report['errors'][] = "Línea $line: producto ID $pid sin precio B (queda sin B → cae a Lista A al cotizar).";
+				continue;
+			}
+			$had = glotracol_quote_get_product_price_b( $pid );
+			glotracol_quote_set_product_price_b( $pid, $price );
+			if ( $had !== null ) $report['updated']++; else $report['inserted']++;
 		}
 		return $report;
 	}
