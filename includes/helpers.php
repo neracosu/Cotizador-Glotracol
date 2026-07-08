@@ -363,3 +363,37 @@ function glotracol_quote_count_products_with_price() {
 		 WHERE meta_key = '_glo_price' AND meta_value != '' AND meta_value > 0"
 	);
 }
+
+/**
+ * Precio de Lista B (COP) de un producto, leído del meta privado _glo_price_b.
+ * @return int|null  null si no tiene precio B.
+ */
+function glotracol_quote_get_product_price_b( $product_id ) {
+	$product_id = (int) $product_id;
+	if ( $product_id <= 0 ) return null;
+	$p = get_post_meta( $product_id, '_glo_price_b', true );
+	return ( $p === '' || $p === null ) ? null : (int) $p;
+}
+
+/**
+ * Setea el precio de Lista B del producto en _glo_price_b. price<=0 borra el meta.
+ */
+function glotracol_quote_set_product_price_b( $product_id, $price ) {
+	$product_id = (int) $product_id;
+	if ( $product_id <= 0 ) return false;
+	$price = (int) $price;
+	if ( $price <= 0 ) { delete_post_meta( $product_id, '_glo_price_b' ); return true; }
+	update_post_meta( $product_id, '_glo_price_b', $price );
+	return true;
+}
+
+/**
+ * Nivel de lista de precios de un cliente: 'A' (default) o 'B'.
+ * Cualquier valor distinto de 'B' se trata como 'A'.
+ */
+function glotracol_quote_get_client_price_list( $client_id ) {
+	$client_id = (int) $client_id;
+	if ( $client_id <= 0 ) return 'A';
+	$v = get_post_meta( $client_id, '_glo_price_list', true );
+	return ( $v === 'B' ) ? 'B' : 'A';
+}

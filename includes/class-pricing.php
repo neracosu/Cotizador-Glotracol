@@ -51,10 +51,10 @@ class Glotracol_Quote_Pricing {
 
 	/**
 	 * Resuelve el precio por ID de producto (camino principal v2.2.0).
-	 * Cascada: B2B (cliente, por product_id; compat por SKU) → público (_glo_price;
-	 * compat lista pública por SKU) → pendiente.
+	 * Cascada: B2B (cliente, por product_id; compat por SKU) → Lista B (_glo_price_b)
+	 * → público (_glo_price; compat lista pública por SKU) → pendiente.
 	 *
-	 * @return array{ price: int|null, source: string }  source: b2b|publico|pendiente
+	 * @return array{ price: int|null, source: string }  source: b2b|lista_b|publico|pendiente
 	 */
 	public static function resolve_by_product_id( $product_id, $client_id = 0 ) {
 		$product_id = (int) $product_id;
@@ -74,12 +74,19 @@ class Glotracol_Quote_Pricing {
 				}
 			}
 		}
-		// 2) Público por producto (_glo_price)
+		// 2) Lista B: cliente marcado B y producto con precio B > 0.
+		if ( $client_id > 0 && glotracol_quote_get_client_price_list( $client_id ) === 'B' ) {
+			$pb = (int) get_post_meta( $product_id, '_glo_price_b', true );
+			if ( $pb > 0 ) {
+				return [ 'price' => $pb, 'source' => 'lista_b' ];
+			}
+		}
+		// 3) Público por producto (_glo_price)  — fallback de un cliente B sin precio B.
 		$pub = (int) get_post_meta( $product_id, '_glo_price', true );
 		if ( $pub > 0 ) {
 			return [ 'price' => $pub, 'source' => 'publico' ];
 		}
-		// 3) Compat: lista pública por SKU
+		// 4) Compat: lista pública por SKU
 		$sku = (string) get_post_meta( $product_id, '_sku', true );
 		if ( $sku !== '' ) {
 			$legacy = self::get_public_pricing();
@@ -101,7 +108,7 @@ class Glotracol_Quote_Pricing {
 		$out_items = [];
 		$total = 0;
 		$all_priced = true;
-		$sources = [ 'b2b' => 0, 'publico' => 0, 'pendiente' => 0 ];
+		$sources = [ 'b2b' => 0, 'lista_b' => 0, 'publico' => 0, 'pendiente' => 0 ];
 		foreach ( (array) $items as $item ) {
 			$pid = isset( $item['product_id'] ) ? (int) $item['product_id'] : 0;
 			$qty = isset( $item['quantity'] ) ? max( 0, (int) $item['quantity'] ) : 0;
