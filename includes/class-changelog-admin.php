@@ -79,6 +79,17 @@ class Glotracol_Quote_Changelog_Admin {
 	public static function entries() {
 		return [
 			[
+				'date' => '2026-07-08', 'version' => '2.4.0', 'type' => 'feature',
+				'title' => 'Precios diferenciados: Lista A y Lista B',
+				'summary' => 'Ahora se puede manejar una segunda lista de precios (Lista B, mayoreo) además de la lista regular. Cada cliente puede quedar asignado a la Lista B y recibir esos precios automáticamente al cotizar.',
+				'details' => [
+					'Nueva columna "Precio B" en la pantalla de Precios, junto al precio regular.',
+					'En la ficha del cliente, un selector para asignarlo a Lista A (regular) o Lista B (mayoreo).',
+					'Dos cargas nuevas: una para marcar qué clientes son Lista B y otra para los precios de Lista B.',
+					'Si un producto no tiene precio de Lista B, el cliente de esa lista recibe automáticamente el precio regular.',
+				],
+			],
+			[
 				'date' => '2026-06-04', 'version' => '2.3.0', 'type' => 'feature',
 				'title' => 'Sección de Novedades y actualizaciones automáticas',
 				'summary' => 'Esta misma sección, y ahora el plugin se actualiza solo cuando publicamos una versión nueva, sin instalar archivos a mano.',
