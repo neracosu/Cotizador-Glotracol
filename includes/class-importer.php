@@ -21,6 +21,7 @@ class Glotracol_Quote_Importer {
 		'precios_b2b'       => 'Precios negociados por cliente',
 		'presentaciones'    => 'Presentaciones por producto',
 		'precios_catalogo'  => 'Precios del catálogo (por ID)',
+		'clientes_lista'    => 'Asignar clientes a Lista B',
 	];
 
 	/**
@@ -55,6 +56,11 @@ class Glotracol_Quote_Importer {
 				'required'  => [ 'id', 'precio normal' ],
 				'optional'  => [ 'nombre', 'peso (kg)', 'disponibilidad', 'inventario', 'precio' ],
 				'plantilla' => [ 'id', 'nombre', 'peso (kg)', 'precio normal', 'disponibilidad' ],
+			],
+			'clientes_lista' => [
+				'required'  => [],
+				'optional'  => [ 'nit', 'identificacion', 'nombre', 'lista', 'precio' ],
+				'plantilla' => [ 'nit', 'nombre', 'lista' ],
 			],
 		];
 	}
@@ -158,6 +164,8 @@ class Glotracol_Quote_Importer {
 				return self::import_presentations( $rows );
 			case 'precios_catalogo':
 				return self::import_catalog_prices( $rows, $opts );
+			case 'clientes_lista':
+				return self::import_clients_lista( $rows );
 			default:
 				return [ 'inserted' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => [ 'Tipo desconocido: ' . $type ] ];
 		}
@@ -225,6 +233,86 @@ class Glotracol_Quote_Importer {
 		// Rebuild explícito del index de NIT — no depende de hooks save_post,
 		// que pueden no dispararse en contextos no estándar (wp-cli, wp eval).
 		if ( $report['inserted'] > 0 || $report['updated'] > 0 ) {
+			Glotracol_Quote_Client_CPT::rebuild_full_index();
+		}
+		return $report;
+	}
+
+	/**
+	 * Asigna clientes a Lista B (o A) por NIT/identificación.
+	 * - Columna `lista` explícita (B/A), o se deriva de `precio` (LISTA B / PRECIO DIFERENTE → B).
+	 * - NIT existente → actualiza `_glo_price_list`. NIT nuevo con lista B → crea ficha mínima etiquetada B.
+	 * - Un NIT nuevo con lista A se omite (A es el valor por defecto; no hay nada que crear).
+	 */
+	public static function import_clients_lista( $rows ) {
+		$report = [ 'inserted' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => [] ];
+		$touched = false;
+		// Índice NIT → post_id (incluye inactivos), leído una vez. Se complementa con
+		// $seen para NITs creados/tocados en esta misma corrida (el índice-opción no se
+		// refresca hasta el rebuild final).
+		$nit_index = Glotracol_Quote_Client_CPT::get_nit_index();
+		$seen = [];
+		foreach ( (array) $rows as $row ) {
+			$line = $row['__line'] ?? '?';
+			$nit_raw = (string) ( $row['nit'] ?? ( $row['identificacion'] ?? '' ) );
+			// Nombre: 'nombre' o cualquier header que empiece por 'nombre de la' (evita el ñ de "compañia").
+			$name = sanitize_text_field( (string) ( $row['nombre'] ?? '' ) );
+			if ( $name === '' ) {
+				foreach ( $row as $k => $v ) {
+					if ( strpos( (string) $k, 'nombre de la' ) === 0 ) { $name = sanitize_text_field( (string) $v ); break; }
+				}
+			}
+			// Lista: columna explícita, o derivada del rótulo de 'precio'.
+			$lista_raw = strtoupper( trim( (string) ( $row['lista'] ?? '' ) ) );
+			if ( $lista_raw === '' ) {
+				$precio_lbl = strtoupper( trim( (string) ( $row['precio'] ?? '' ) ) );
+				if ( strpos( $precio_lbl, 'LISTA B' ) !== false || strpos( $precio_lbl, 'DIFERENTE' ) !== false ) {
+					$lista_raw = 'B';
+				}
+			}
+			$lista = ( $lista_raw === 'B' ) ? 'B' : 'A';
+
+			$nit_clean = Glotracol_Quote_Client_CPT::normalize_nit( $nit_raw );
+			if ( ! $nit_clean ) {
+				$report['skipped']++;
+				$report['errors'][] = "Línea $line: identificación/NIT vacío o inválido.";
+				continue;
+			}
+			// Buscar ficha existente por NIT, INCLUYENDO inactivos, para no duplicar.
+			$existing_id = $seen[ $nit_clean ] ?? ( isset( $nit_index[ $nit_clean ] ) ? (int) $nit_index[ $nit_clean ] : 0 );
+			if ( $existing_id && get_post_type( $existing_id ) !== Glotracol_Quote_Client_CPT::POST_TYPE ) {
+				$existing_id = 0; // entrada de índice obsoleta
+			}
+			if ( $existing_id ) {
+				update_post_meta( $existing_id, '_glo_price_list', $lista );
+				$seen[ $nit_clean ] = $existing_id;
+				$report['updated']++;
+				$touched = true;
+			} elseif ( $lista === 'B' ) {
+				$title = $name !== '' ? $name : $nit_clean;
+				$new_id = wp_insert_post( [
+					'post_type'   => Glotracol_Quote_Client_CPT::POST_TYPE,
+					'post_status' => 'publish',
+					'post_title'  => $title,
+				], true );
+				if ( is_wp_error( $new_id ) || ! $new_id ) {
+					$report['skipped']++;
+					$report['errors'][] = "Línea $line: no se pudo crear el cliente $nit_clean.";
+					continue;
+				}
+				update_post_meta( $new_id, '_glo_client_nit', $nit_clean );
+				if ( $name !== '' ) update_post_meta( $new_id, '_glo_client_name', $name );
+				update_post_meta( $new_id, '_glo_client_active', 'yes' );
+				update_post_meta( $new_id, '_glo_price_list', 'B' );
+				$seen[ $nit_clean ] = (int) $new_id;
+				$report['inserted']++;
+				$touched = true;
+			} else {
+				$report['skipped']++;
+				$report['errors'][] = "Línea $line: NIT $nit_clean no existe y la lista es A (A es el valor por defecto; no se crea ficha).";
+			}
+		}
+		if ( $touched ) {
 			Glotracol_Quote_Client_CPT::rebuild_full_index();
 		}
 		return $report;
