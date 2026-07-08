@@ -58,6 +58,17 @@ class Glotracol_Quote_Pricing_Admin {
 		);
 	}
 
+	/**
+	 * Cuenta cuantos productos tienen _glo_price_b asignado.
+	 */
+	private function count_products_with_price_b() {
+		global $wpdb;
+		return (int) $wpdb->get_var(
+			"SELECT COUNT(DISTINCT post_id) FROM {$wpdb->postmeta}
+			 WHERE meta_key = '_glo_price_b' AND meta_value != '' AND meta_value > 0"
+		);
+	}
+
 	// -------------------------------------------------------------------------
 	// Renderizado
 	// -------------------------------------------------------------------------
@@ -68,6 +79,7 @@ class Glotracol_Quote_Pricing_Admin {
 		$all_products  = $this->get_all_products();
 		$total_products = count( $all_products );
 		$with_price     = $this->count_products_with_price();
+		$with_price_b   = $this->count_products_with_price_b();
 
 		// Filtro de busqueda por nombre o ID
 		$search = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '';
@@ -100,6 +112,7 @@ class Glotracol_Quote_Pricing_Admin {
 
 			<div class="gloq-pricing-stats">
 				<div class="gloq-pricing-stat"><strong><?php echo (int) $with_price; ?></strong> productos con precio publico de <strong><?php echo (int) $total_products; ?></strong></div>
+				<div class="gloq-pricing-stat"><strong><?php echo (int) $with_price_b; ?></strong> con precio de Lista B</div>
 				<?php if ( $search !== '' ) : ?>
 					<div class="gloq-pricing-stat gloq-pricing-stat-filtered">
 						Mostrando <strong><?php echo (int) $total_filtered; ?></strong> coincidencias para
@@ -124,23 +137,25 @@ class Glotracol_Quote_Pricing_Admin {
 					<thead>
 						<tr>
 							<th style="width:8%">ID</th>
-							<th style="width:52%">Nombre del producto</th>
-							<th style="width:25%">Precio publico (COP)</th>
-							<th style="width:15%">Borrar</th>
+							<th style="width:44%">Nombre del producto</th>
+							<th style="width:20%">Precio A — Lista pública (COP)</th>
+							<th style="width:20%">Precio B — Mayorista (COP)</th>
+							<th style="width:8%">Borrar</th>
 						</tr>
 					</thead>
 					<tbody>
 					<?php if ( empty( $page_products ) ) : ?>
 						<tr>
-							<td colspan="4" style="text-align:center;padding:40px">
+							<td colspan="5" style="text-align:center;padding:40px">
 								<?php echo $search !== '' ? 'No hay productos que coincidan con la busqueda.' : 'No se encontraron productos publicados.'; ?>
 							</td>
 						</tr>
 					<?php else : ?>
 						<?php foreach ( $page_products as $product ) :
-							$pid   = $product->get_id();
-							$name  = $product->get_name();
-							$price = glotracol_quote_get_product_price( $pid );
+							$pid     = $product->get_id();
+							$name    = $product->get_name();
+							$price   = glotracol_quote_get_product_price( $pid );
+							$price_b = glotracol_quote_get_product_price_b( $pid );
 						?>
 							<tr>
 								<td><code><?php echo (int) $pid; ?></code>
@@ -153,6 +168,13 @@ class Glotracol_Quote_Pricing_Admin {
 										value="<?php echo $price !== null ? (int) $price : ''; ?>"
 										min="0" step="1" style="width:160px"
 										placeholder="Sin precio">
+								</td>
+								<td>
+									<input type="number"
+										name="rows[<?php echo (int) $pid; ?>][price_b]"
+										value="<?php echo $price_b !== null ? (int) $price_b : ''; ?>"
+										min="0" step="1" style="width:160px"
+										placeholder="Sin precio B">
 								</td>
 								<td>
 									<label>
@@ -216,17 +238,20 @@ class Glotracol_Quote_Pricing_Admin {
 
 		foreach ( $rows as $pid_key => $row ) {
 			if ( ! is_array( $row ) ) continue;
-			$pid    = isset( $row['id'] ) ? (int) $row['id'] : (int) $pid_key;
-			$price  = isset( $row['price'] ) && $row['price'] !== '' ? (int) $row['price'] : 0;
-			$delete = ! empty( $row['delete'] );
+			$pid     = isset( $row['id'] ) ? (int) $row['id'] : (int) $pid_key;
+			$price   = isset( $row['price'] ) && $row['price'] !== '' ? (int) $row['price'] : 0;
+			$price_b = isset( $row['price_b'] ) && $row['price_b'] !== '' ? (int) $row['price_b'] : 0;
+			$delete  = ! empty( $row['delete'] );
 
 			if ( $pid <= 0 || get_post_type( $pid ) !== 'product' ) continue;
 
-			if ( $delete || $price <= 0 ) {
-				glotracol_quote_set_product_price( $pid, 0 ); // 0 borra el meta
-			} else {
-				glotracol_quote_set_product_price( $pid, $price );
+			if ( $delete ) {
+				glotracol_quote_set_product_price( $pid, 0 );   // 0 borra el meta
+				glotracol_quote_set_product_price_b( $pid, 0 );
+				continue;
 			}
+			glotracol_quote_set_product_price( $pid, $price );       // <=0 borra el meta
+			glotracol_quote_set_product_price_b( $pid, $price_b );   // <=0 borra el meta
 		}
 
 		wp_safe_redirect( add_query_arg( 'gloq_pricing_msg', 'saved', admin_url( 'edit.php?post_type=glo_quote&page=' . self::PAGE_SLUG ) ) );

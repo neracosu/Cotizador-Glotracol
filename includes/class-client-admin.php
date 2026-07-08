@@ -53,6 +53,13 @@ class Glotracol_Quote_Client_Admin {
 		$is_active = $active !== 'no'; // default activo si no hay valor
 		echo '<p><label><input type="checkbox" name="_glo_client_active" value="yes"' . checked( $is_active, true, false ) . '> <strong>Cliente activo</strong></label></p>';
 		echo '<p class="description">Si está inactivo, sus precios negociados se ignoran y los pedidos con su NIT recibirán precios públicos.</p>';
+		$price_list = glotracol_quote_get_client_price_list( $post->ID );
+		echo '<hr style="margin:14px 0"><p><label for="_glo_price_list"><strong>Lista de precios</strong></label></p>';
+		echo '<select name="_glo_price_list" id="_glo_price_list" style="width:100%">';
+		echo '<option value="A"' . selected( $price_list, 'A', false ) . '>Lista A — regular</option>';
+		echo '<option value="B"' . selected( $price_list, 'B', false ) . '>Lista B — mayorista</option>';
+		echo '</select>';
+		echo '<p class="description">La Lista B aplica precios de mayoreo. Si un producto no tiene precio B, ese ítem usa el precio de la Lista A.</p>';
 	}
 
 	public function render_pricing( $post ) {
@@ -181,6 +188,10 @@ class Glotracol_Quote_Client_Admin {
 		// Estado activo
 		$active = ! empty( $_POST['_glo_client_active'] ) && $_POST['_glo_client_active'] === 'yes' ? 'yes' : 'no';
 		update_post_meta( $post_id, '_glo_client_active', $active );
+
+		// Lista de precios A/B
+		$price_list = ( isset( $_POST['_glo_price_list'] ) && $_POST['_glo_price_list'] === 'B' ) ? 'B' : 'A';
+		update_post_meta( $post_id, '_glo_price_list', $price_list );
 
 		// Pricing rows — keyed by product_id (int).
 		$pricing = [];
