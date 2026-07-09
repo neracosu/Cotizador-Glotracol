@@ -326,6 +326,39 @@ class Glotracol_Quote_Import_Reader {
 		return $bytes;
 	}
 
+	/**
+	 * Arma las hojas de la plantilla de un tipo: 'Datos' (verbatim del CSV template:
+	 * headers de display + fila de ejemplo) e 'Instrucciones' (por columna: requerida
+	 * y nombres/sinónimos que el sistema reconoce). [] si el tipo no existe.
+	 */
+	public static function template_sheets( $type ) {
+		$schemas = Glotracol_Quote_Importer::get_schemas();
+		if ( ! isset( $schemas[ $type ] ) ) return [];
+		$schema = $schemas[ $type ];
+
+		// Datos: verbatim del CSV template (primeras 2 líneas no vacías).
+		$datos = [];
+		$path = GLOTRACOL_QUOTE_PATH . 'templates/csv/' . $type . '.csv';
+		if ( file_exists( $path ) ) {
+			$lines = array_values( array_filter(
+				array_map( 'rtrim', (array) file( $path, FILE_IGNORE_NEW_LINES ) ),
+				function ( $l ) { return trim( (string) $l ) !== ''; }
+			) );
+			foreach ( array_slice( $lines, 0, 2 ) as $ln ) $datos[] = str_getcsv( $ln );
+		}
+		$cols = ! empty( $schema['plantilla'] ) ? $schema['plantilla'] : array_merge( $schema['required'], $schema['optional'] );
+		if ( empty( $datos ) ) $datos = [ $cols ];
+
+		// Instrucciones: por columna canónica → requerida + sinónimos aceptados.
+		$req = $schema['required'];
+		$instr = [ [ 'Columna', 'Requerida', 'Nombres aceptados (el sistema los reconoce igual)' ] ];
+		foreach ( $cols as $c ) {
+			$syn = self::SYNONYMS[ $c ] ?? [ $c ];
+			$instr[] = [ $c, in_array( $c, $req, true ) ? 'Sí' : 'No', implode( ', ', $syn ) ];
+		}
+		return [ 'Datos' => $datos, 'Instrucciones' => $instr ];
+	}
+
 	/** Columnas conocidas de un schema (required + optional + plantilla), únicas, minúscula. */
 	public static function schema_columns( $schema ) {
 		$cols = array_merge( $schema['required'] ?? [], $schema['optional'] ?? [], $schema['plantilla'] ?? [] );

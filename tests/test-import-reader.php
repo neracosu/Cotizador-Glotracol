@@ -126,4 +126,16 @@ chk( 'round-trip celda con &', ( function() {
 } )(), 'x & y < z' );
 @unlink( $rt );
 
+// --- v2.6.0 Task 2: template_sheets ---
+$ts = Glotracol_Quote_Import_Reader::template_sheets( 'precios_catalogo' );
+chk( 'template tiene Datos e Instrucciones', array_keys( $ts ), [ 'Datos', 'Instrucciones' ] );
+chk( 'Datos headers = del CSV template', $ts['Datos'][0], [ 'ID', 'Nombre', 'Peso (kg)', 'Precio normal', 'Disponibilidad' ] );
+chk( 'Datos tiene fila de ejemplo', isset( $ts['Datos'][1] ) && count( $ts['Datos'][1] ) >= 3, true );
+chk( 'Instrucciones cabecera', $ts['Instrucciones'][0][0], 'Columna' );
+// La fila de 'precio normal' en Instrucciones incluye 'valor' como sinónimo.
+$found = false;
+foreach ( $ts['Instrucciones'] as $row ) { if ( ( $row[0] ?? '' ) === 'precio normal' && strpos( (string) ( $row[2] ?? '' ), 'valor' ) !== false ) $found = true; }
+chk( 'Instrucciones lista sinónimos (valor)', $found, true );
+chk( 'tipo inexistente => []', Glotracol_Quote_Import_Reader::template_sheets( 'noexiste' ), [] );
+
 echo $GLOBALS['gloq_fail'] === 0 ? "\nALL PASS\n" : "\n{$GLOBALS['gloq_fail']} FAILED\n";
