@@ -157,6 +157,77 @@ class Glotracol_Quote_Import_Reader {
 		return [ 'headers' => $clean_headers, 'rows' => $rows, 'error' => null ];
 	}
 
+	/** Columnas que se normalizan como precio / peso, por nombre canónico. */
+	const PRICE_COLS  = [ 'precio', 'precio normal', 'precio_publico' ];
+	const WEIGHT_COLS = [ 'peso (kg)', 'peso_g' ];
+
+	/**
+	 * Lee un archivo y devuelve filas normalizadas con claves de schema + metadatos.
+	 * Barreras: no escribe nada; xlsx acotado; auto-detección solo sugiere (chosen_type
+	 * respeta $forced_type si viene).
+	 */
+	public static function read( $file_path, $forced_type = null ) {
+		$is_xlsx = self::looks_xlsx( $file_path );
+		$raw = $is_xlsx ? self::read_xlsx( $file_path ) : Glotracol_Quote_Importer::read_delimited( $file_path );
+		if ( $raw['error'] !== null ) {
+			return array_merge( $raw, [ 'raw_headers' => $raw['headers'], 'detected_type' => null, 'type_confidence' => 0.0, 'type_ambiguous' => false, 'chosen_type' => null, 'mapping' => [], 'unmapped' => [], 'corrections' => [] ] );
+		}
+		$raw_headers = $raw['headers'];
+		$det = self::detect_type( $raw_headers );
+		$chosen = $forced_type ?: $det['type'];
+		$schemas = Glotracol_Quote_Importer::get_schemas();
+		if ( ! $chosen || ! isset( $schemas[ $chosen ] ) ) {
+			return [ 'rows' => [], 'headers' => [], 'raw_headers' => $raw_headers, 'detected_type' => $det['type'], 'type_confidence' => $det['confidence'], 'type_ambiguous' => $det['ambiguous'], 'chosen_type' => null, 'mapping' => [], 'unmapped' => $raw_headers, 'corrections' => [], 'error' => 'No pude reconocer el tipo de archivo. Elige el tipo manualmente.' ];
+		}
+		$schema = $schemas[ $chosen ];
+		$mm = self::map_headers_to_schema( $raw_headers, $schema );
+		$map = $mm['map']; // canonical => raw
+		$rows = [];
+		$corr = [];
+		foreach ( $raw['rows'] as $rrow ) {
+			$out = [ '__line' => $rrow['__line'] ?? '?' ];
+			foreach ( $map as $canonical => $raw_h ) {
+				$val = (string) ( $rrow[ $raw_h ] ?? '' );
+				if ( in_array( $canonical, self::PRICE_COLS, true ) ) {
+					$n_int = self::norm_price( $val );
+					$n = (string) $n_int;
+					if ( $n !== '' && $n !== '0' && $n !== $val ) $corr[ "precio \"$val\" → $n" ] = true;
+					$out[ $canonical ] = ( $n_int > 0 ) ? $n : '';
+				} elseif ( in_array( $canonical, self::WEIGHT_COLS, true ) ) {
+					$n = self::norm_weight( $val );
+					if ( $n !== '' && $n !== $val ) $corr[ "peso \"$val\" → $n" ] = true;
+					$out[ $canonical ] = $n;
+				} else {
+					$out[ $canonical ] = self::norm_text( $val );
+				}
+			}
+			$rows[] = $out;
+		}
+		return [
+			'rows'            => $rows,
+			'headers'         => array_keys( $map ),
+			'raw_headers'     => $raw_headers,
+			'detected_type'   => $det['type'],
+			'type_confidence' => $det['confidence'],
+			'type_ambiguous'  => $det['ambiguous'],
+			'chosen_type'     => $chosen,
+			'mapping'         => $map,
+			'unmapped'        => $mm['unmapped'],
+			'corrections'     => array_slice( array_keys( $corr ), 0, 30 ),
+			'error'           => null,
+		];
+	}
+
+	/** Detecta xlsx por firma ZIP (PK\x03\x04) o extensión. */
+	private static function looks_xlsx( $file_path ) {
+		if ( preg_match( '/\.xlsx$/i', $file_path ) ) return true;
+		$fh = @fopen( $file_path, 'rb' );
+		if ( ! $fh ) return false;
+		$sig = fread( $fh, 4 );
+		fclose( $fh );
+		return $sig === "PK\x03\x04";
+	}
+
 	/** "A"->0, "B"->1, ... "AA"->26. */
 	private static function col_to_index( $letters ) {
 		$n = 0;

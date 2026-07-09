@@ -88,4 +88,14 @@ $rn = Glotracol_Quote_Importer::read_delimited( $tmpn );
 chk( 'CSV header Ñ -> ñ minúscula (consistente con xlsx)', $rn['headers'][0], 'nombre de la compañia' );
 @unlink( $tmpn );
 
-echo $GLOBALS['gloq_fail'] === 0 ? "\nTASK5 PASS\n" : "\n{$GLOBALS['gloq_fail']} FAILED\n";
+// --- Task 6: read() end-to-end ---
+$csvA = GLOTRACOL_QUOTE_PATH . '../glotracol-quote/uploads/lista  a - Hoja 2 (1).csv';
+if ( file_exists( $csvA ) ) {
+	$r = Glotracol_Quote_Import_Reader::read( $csvA ); // sin forzar tipo
+	chk( 'read sin error', $r['error'], null );
+	chk( 'read detecta tipo con id+precio', in_array( $r['chosen_type'], [ 'precios_catalogo', 'precios_lista_b' ], true ), true );
+	chk( 'read fila tiene clave id', isset( $r['rows'][0]['id'] ), true );
+	chk( 'read normalizó precio a int-string', ctype_digit( (string) $r['rows'][0]['precio normal'] ) || $r['rows'][0]['precio normal'] === '', true );
+} else { echo "[SKIP] CSV A real no encontrado\n"; }
+
+echo $GLOBALS['gloq_fail'] === 0 ? "\nTASK6 PASS\n" : "\n{$GLOBALS['gloq_fail']} FAILED\n";
