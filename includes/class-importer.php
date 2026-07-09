@@ -81,75 +81,65 @@ class Glotracol_Quote_Importer {
 	 * @return array{ headers: array<string>, rows: array<array<string,string>>, error: string|null }
 	 */
 	public static function parse_csv( $file_path, $type ) {
+		// Orden idéntico al original: primero lectura (chequeo de archivo), luego tipo.
+		$raw = self::read_delimited( $file_path );
+		if ( $raw['error'] !== null ) return $raw;
+		$schemas = self::get_schemas();
+		if ( ! isset( $schemas[ $type ] ) ) {
+			return [ 'headers' => $raw['headers'], 'rows' => [], 'error' => 'Tipo de hoja desconocido: ' . $type ];
+		}
+		// Validar headers requeridos del tipo.
+		$missing = array_diff( $schemas[ $type ]['required'], $raw['headers'] );
+		if ( ! empty( $missing ) ) {
+			return [ 'headers' => $raw['headers'], 'rows' => [], 'error' => 'Faltan columnas requeridas: ' . implode( ', ', $missing ) . '. Headers detectados: ' . implode( ', ', $raw['headers'] ) ];
+		}
+		return [ 'headers' => $raw['headers'], 'rows' => $raw['rows'], 'error' => null ];
+	}
+
+	/**
+	 * Lectura delimitada cruda (CSV/TSV): detecta delimitador y BOM, minúsculas en
+	 * headers, filas asociativas + __line. NO valida contra ningún schema.
+	 */
+	public static function read_delimited( $file_path ) {
 		if ( ! file_exists( $file_path ) || ! is_readable( $file_path ) ) {
 			return [ 'headers' => [], 'rows' => [], 'error' => 'No se pudo leer el archivo.' ];
 		}
-		$schemas = self::get_schemas();
-		if ( ! isset( $schemas[ $type ] ) ) {
-			return [ 'headers' => [], 'rows' => [], 'error' => 'Tipo de hoja desconocido: ' . $type ];
-		}
-		$schema = $schemas[ $type ];
-
 		$fh = fopen( $file_path, 'r' );
 		if ( ! $fh ) {
 			return [ 'headers' => [], 'rows' => [], 'error' => 'No se pudo abrir el archivo.' ];
 		}
-
-		// Detectar BOM UTF-8 y saltarlo
 		$bom = fread( $fh, 3 );
-		if ( $bom !== "\xEF\xBB\xBF" ) {
-			rewind( $fh );
-		}
-
-		// Detectar separador: probar coma, punto y coma, tab
+		if ( $bom !== "\xEF\xBB\xBF" ) rewind( $fh );
 		$first_line = fgets( $fh );
 		if ( $first_line === false ) {
 			fclose( $fh );
 			return [ 'headers' => [], 'rows' => [], 'error' => 'Archivo vacío.' ];
 		}
-		$delimiter = ',';
 		$counts = [ ',' => substr_count( $first_line, ',' ), ';' => substr_count( $first_line, ';' ), "\t" => substr_count( $first_line, "\t" ) ];
 		arsort( $counts );
 		$delimiter = (string) array_key_first( $counts );
-
-		// Volver al inicio
 		rewind( $fh );
 		if ( $bom === "\xEF\xBB\xBF" ) fread( $fh, 3 );
-
-		// Headers
 		$headers_raw = fgetcsv( $fh, 0, $delimiter );
 		if ( ! is_array( $headers_raw ) ) {
 			fclose( $fh );
 			return [ 'headers' => [], 'rows' => [], 'error' => 'Headers inválidos.' ];
 		}
-		$headers = array_map( function ( $h ) {
-			return strtolower( trim( (string) $h ) );
-		}, $headers_raw );
-
-		// Validar headers requeridos
-		$missing = array_diff( $schema['required'], $headers );
-		if ( ! empty( $missing ) ) {
-			fclose( $fh );
-			return [ 'headers' => $headers, 'rows' => [], 'error' => 'Faltan columnas requeridas: ' . implode( ', ', $missing ) . '. Headers detectados: ' . implode( ', ', $headers ) ];
-		}
-
-		// Leer filas
+		$headers = array_map( function ( $h ) { return strtolower( trim( (string) $h ) ); }, $headers_raw );
 		$rows = [];
 		$line = 1;
 		while ( ( $data = fgetcsv( $fh, 0, $delimiter ) ) !== false ) {
 			$line++;
-			if ( count( $data ) === 1 && $data[0] === null ) continue; // línea vacía
+			if ( count( $data ) === 1 && $data[0] === null ) continue;
 			$row = [];
 			foreach ( $headers as $i => $h ) {
 				$row[ $h ] = isset( $data[ $i ] ) ? trim( (string) $data[ $i ] ) : '';
 			}
-			// Saltar filas completamente vacías
 			if ( empty( array_filter( $row, function ( $v ) { return $v !== ''; } ) ) ) continue;
 			$row['__line'] = $line;
 			$rows[] = $row;
 		}
 		fclose( $fh );
-
 		return [ 'headers' => $headers, 'rows' => $rows, 'error' => null ];
 	}
 
