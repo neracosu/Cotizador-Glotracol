@@ -63,6 +63,8 @@ class Glotracol_Quote_Importer {
 				'optional'  => [ 'nit', 'identificacion', 'nombre', 'lista', 'precio' ],
 				'plantilla' => [ 'nit', 'nombre', 'lista' ],
 			],
+			// El header `id` debe existir aunque sus celdas vengan vacías: las filas sin
+			// ID (B-nuevos) se resuelven por nombre en import_prices_lista_b().
 			'precios_lista_b' => [
 				'required'  => [ 'id' ],
 				'optional'  => [ 'nombre', 'precio', 'precio normal' ],

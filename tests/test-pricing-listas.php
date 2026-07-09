@@ -34,6 +34,7 @@ chk( 'A precio publico', $ra['price'], 8000 );
 
 // Fallback: cliente B sin precio B para el producto → publico (Lista A).
 glotracol_quote_set_product_price_b( $pid, 0 );
+chk( 'B borrado', glotracol_quote_get_product_price_b( $pid ), null );
 $rf = Glotracol_Quote_Pricing::resolve_by_product_id( $pid, $cid );
 chk( 'fallback B->publico', $rf['source'], 'publico' );
 chk( 'fallback precio A', $rf['price'], 8000 );
