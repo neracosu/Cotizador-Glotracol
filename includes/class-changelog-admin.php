@@ -79,6 +79,16 @@ class Glotracol_Quote_Changelog_Admin {
 	public static function entries() {
 		return [
 			[
+				'date' => '2026-07-08', 'version' => '2.6.0', 'type' => 'feature',
+				'title' => 'Plantillas de carga en Excel',
+				'summary' => 'Ahora puedes descargar la plantilla de cada tipo de carga directamente en Excel (.xlsx), con una hoja de instrucciones que explica cada columna. También sigue disponible en CSV.',
+				'details' => [
+					'La plantilla Excel trae una hoja "Datos" para llenar y una hoja "Instrucciones".',
+					'La hoja de instrucciones lista, por columna, los nombres que el sistema reconoce.',
+					'La plantilla en CSV sigue disponible con el botón alterno.',
+				],
+			],
+			[
 				'date' => '2026-07-08', 'version' => '2.5.0', 'type' => 'feature',
 				'title' => 'Cargas de archivos más flexibles',
 				'summary' => 'Ahora podés subir tus listas en Excel (.xlsx) o CSV aunque las columnas tengan nombres distintos: el sistema reconoce las columnas, corrige los formatos y te muestra qué entendió antes de guardar.',
