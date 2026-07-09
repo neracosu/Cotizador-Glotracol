@@ -2,7 +2,7 @@
 
 Convierte una tienda WooCommerce en un sistema de solicitud de cotización (RFQ) para B2B: catálogo sin checkout ni pago, donde el cliente arma su lista de productos y pide que le coticen.
 
-![Versión](https://img.shields.io/badge/versión-2.1.0-0a4d3a) ![Licencia](https://img.shields.io/badge/licencia-GPL--3.0-blue) ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759b) ![WooCommerce](https://img.shields.io/badge/WooCommerce-8.0%2B-96588a) ![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4)
+![Versión](https://img.shields.io/badge/versión-2.8.1-0a4d3a) ![Licencia](https://img.shields.io/badge/licencia-GPL--3.0-blue) ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759b) ![WooCommerce](https://img.shields.io/badge/WooCommerce-8.0%2B-96588a) ![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4)
 
 ## Qué resuelve
 
@@ -16,9 +16,10 @@ Cuando todos los productos de una solicitud ya tienen precio registrado, el plug
 |---|---|
 | Flujo RFQ | Reemplaza "Añadir al carrito" por "Añadir a mi cotización" y el checkout por un formulario de solicitud. Oculta precios en catálogo, producto, carrito y emails. |
 | CRM de clientes B2B | CPT propio de clientes con NIT, razón social, contacto y precios negociados. Índice por NIT para búsqueda directa. |
-| Precios público + B2B | Lista de precios pública y precios negociados por cliente. El precio B2B tiene prioridad cuando el NIT coincide. |
-| Auto-cotización | Distingue entre cotización y pedido. Si todos los SKU tienen precio, calcula el total y envía la cotización formal de forma automática. |
-| Importador CSV | Carga masiva en cuatro hojas: clientes, precios públicos, precios B2B y presentaciones. Plantillas descargables, vista previa y reporte de filas insertadas, actualizadas y omitidas. |
+| Precios en niveles (A/B + B2B) | Precio individual negociado por cliente, **Lista B** (mayoreo) y **Lista A** (pública). Cada cliente puede asignarse a la Lista B; si un producto no tiene precio B, ese cliente cae automáticamente a la Lista A. Cascada del resolver: individual → Lista B → Lista A → pendiente. |
+| Auto-cotización | Distingue entre cotización y pedido. Si todos los productos tienen precio, calcula el total y envía la cotización formal de forma automática. |
+| Importador tolerante | Acepta **Excel (.xlsx) y CSV** aunque las columnas tengan otros nombres: los reconoce por sinónimos, detecta el tipo de hoja, corrige formatos (precio, peso, NIT) y muestra una vista previa de qué entendió antes de guardar. Cuando un producto no coincide por ID o nombre, sugiere candidatos para resolverlo a mano; nada se escribe sin confirmar. Plantillas descargables en **Excel** (con hoja de instrucciones) y CSV. |
+| Guía interactiva | Recorrido guiado paso a paso en el panel (Inicio, Precios e Importar) que resalta y explica cada sección, construido sobre driver.js. |
 | Presentaciones de producto | Variantes por producto (etiqueta, SKU, peso, precio) con selector en la ficha y soporte en el carrito como líneas separadas. |
 | Carrito flotante | Burbuja persistente visible en todo el sitio con lo añadido a la cotización, panel con edición de cantidades y bottom-sheet en móvil. |
 | Semáforo por peso | Clasificación por peso total de la solicitud: pequeño (verde), grande (amarillo) y toneladas (rojo), con umbrales configurables. |
@@ -153,6 +154,8 @@ Las plantillas se pueden sobrescribir desde el tema colocando el archivo corresp
 ## Licencia
 
 Distribuido bajo licencia GPL-3.0 (ver [LICENSE](LICENSE)).
+
+Incluye [driver.js](https://driverjs.com/) (licencia MIT) empaquetado localmente para la guía interactiva del panel; el resto del plugin no usa librerías externas.
 
 Plugin desarrollado por [Neracosu](https://neracosu.com/) para [eagencia](https://www.eagencia.co/).
 Cliente final: Glotracol — Global Trading de Colombia.
