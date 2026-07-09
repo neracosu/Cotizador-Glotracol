@@ -328,6 +328,22 @@ class Glotracol_Quote_Importer_Admin {
 			'no_id_count'    => $no_id_count,
 		] );
 
+		// Calcular filas sin match (solo tipos por-ID de producto).
+		$resolvable = in_array( $type, [ 'precios_catalogo', 'precios_lista_b' ], true );
+		$unmatched = [];
+		if ( $resolvable ) {
+			foreach ( $read['rows'] as $r ) {
+				$pid = (int) ( $r['id'] ?? 0 );
+				$name = (string) ( $r['nombre'] ?? '' );
+				if ( $pid > 0 ) continue;
+				if ( $name === '' ) continue;
+				// ¿ya casa por nombre normalizado? entonces el importador lo resolverá solo → no lo mostramos.
+				if ( Glotracol_Quote_Import_Reader::find_by_name( $name, 'product' ) > 0 ) continue;
+				$cands = Glotracol_Quote_Import_Reader::suggest_candidates( $name, 'product', 3 );
+				$unmatched[] = [ 'line' => $r['__line'] ?? '?', 'name' => $name, 'cands' => $cands ];
+			}
+		}
+
 		// Barrera de ambigüedad: bloquear confirmar si el tipo no está claro y no se forzó.
 		if ( $read['type_ambiguous'] && ! $forced ) {
 			echo '<p><em>Elige el tipo arriba para habilitar la importación.</em></p>';
@@ -343,6 +359,23 @@ class Glotracol_Quote_Importer_Admin {
 			echo '<input type="hidden" name="gloq_sync_stock" value="' . (int) $sync_stock . '">';
 			echo '<input type="hidden" name="gloq_create_missing" value="' . (int) $create_missing . '">';
 			wp_nonce_field( self::NONCE_ACTION );
+			// Bloque de filas sin coincidencia (dentro del form para que los <select> viajen en el POST).
+			if ( ! empty( $unmatched ) ) {
+				echo '<div class="notice notice-warning inline" style="margin-top:16px"><p><strong>' . count( $unmatched ) . ' fila(s) sin coincidencia por ID/nombre.</strong> Elige a qué producto corresponde cada una (o déjalas para ignorar). Esta elección es solo para esta carga; no se guarda.</p></div>';
+				echo '<table class="wp-list-table widefat striped"><thead><tr><th>Fila</th><th>Nombre en el archivo</th><th>¿A qué producto corresponde?</th></tr></thead><tbody>';
+				foreach ( $unmatched as $u ) {
+					echo '<tr><td>' . esc_html( $u['line'] ) . '</td><td>' . esc_html( $u['name'] ) . '</td><td>';
+					$field = 'gloq_resolve[' . esc_attr( $u['line'] ) . ']';
+					echo '<select name="' . $field . '">';
+					echo '<option value="">— Ignorar esta fila —</option>';
+					foreach ( $u['cands'] as $c ) {
+						echo '<option value="' . (int) $c['id'] . '">' . esc_html( $c['label'] ) . ' (' . (int) $c['score'] . '%)</option>';
+					}
+					echo '</select>';
+					echo '</td></tr>';
+				}
+				echo '</tbody></table>';
+			}
 			if ( ! ( $type === 'precios_catalogo' && $mode === 'b2b' && $client_id <= 0 ) ) {
 				echo '<p class="submit">';
 				echo '<input type="submit" class="button button-primary button-large" value="Confirmar e importar ' . (int) $total . ' filas">';
@@ -499,9 +532,22 @@ class Glotracol_Quote_Importer_Admin {
 		if ( ! file_exists( $file ) ) {
 			$this->redirect_back( 'Archivo no encontrado o expirado.' );
 		}
-		$parse = Glotracol_Quote_Importer::parse_csv( $file, $type );
-		if ( $parse['error'] ) {
-			$this->redirect_back( $parse['error'] );
+		// Releer con el reader (respeta tipo forzado del POST).
+		$forced = ( isset( $_POST['gloq_type'] ) && $_POST['gloq_type'] !== '' ) ? sanitize_key( $_POST['gloq_type'] ) : null;
+		$read = Glotracol_Quote_Import_Reader::read( $file, $forced );
+		if ( $read['error'] && empty( $read['rows'] ) ) { $this->redirect_back( $read['error'] ); }
+		$type = $read['chosen_type'];
+		$rows = $read['rows'];
+		// Resolutor en-sesión: mapear fila(__line) → product_id elegido.
+		$resolve = ( isset( $_POST['gloq_resolve'] ) && is_array( $_POST['gloq_resolve'] ) ) ? wp_unslash( $_POST['gloq_resolve'] ) : [];
+		if ( ! empty( $resolve ) ) {
+			foreach ( $rows as &$r ) {
+				$line = (string) ( $r['__line'] ?? '' );
+				if ( isset( $resolve[ $line ] ) && (int) $resolve[ $line ] > 0 ) {
+					$r['id'] = (int) $resolve[ $line ]; // el importador escribirá por este ID
+				}
+			}
+			unset( $r );
 		}
 		$opts = [];
 		if ( $type === 'precios_catalogo' ) {
@@ -512,7 +558,7 @@ class Glotracol_Quote_Importer_Admin {
 				'create_missing' => ! empty( $_POST['gloq_create_missing'] ),
 			];
 		}
-		$report = Glotracol_Quote_Importer::import( $type, $parse['rows'], $opts );
+		$report = Glotracol_Quote_Importer::import( $type, $rows, $opts );
 		$report['type'] = $type;
 		$report['imported_at'] = current_time( 'mysql' );
 		set_transient( 'gloq_import_last_report', $report, HOUR_IN_SECONDS );
