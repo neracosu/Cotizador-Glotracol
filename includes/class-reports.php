@@ -196,7 +196,7 @@ class Glotracol_Quote_Reports {
 		$query = new WP_Query( $args );
 
 		?>
-		<div class="wrap gloq-reports">
+		<div class="wrap gloq-reports gloq-admin">
 			<h1>Reportes</h1>
 			<p>Análisis y exportación de cotizaciones y pedidos.</p>
 

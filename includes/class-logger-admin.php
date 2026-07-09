@@ -36,7 +36,7 @@ class Glotracol_Quote_Logger_Admin {
 		$cats    = Glotracol_Quote_Logger::categories();
 		$flash   = isset( $_GET['gloq_log_msg'] ) ? sanitize_text_field( wp_unslash( $_GET['gloq_log_msg'] ) ) : '';
 		?>
-		<div class="wrap gloq-logs">
+		<div class="wrap gloq-logs gloq-admin">
 			<h1>Logs del cotizador</h1>
 			<p>Eventos registrados por el plugin: importaciones, emails, webhooks, errores de compatibilidad, etc. Útil para diagnosticar problemas. Las entradas más recientes aparecen primero. Se conservan las últimas <?php echo (int) Glotracol_Quote_Logger::MAX_ENTRIES; ?> entradas (las anteriores se descartan automáticamente).</p>
 

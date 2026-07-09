@@ -40,7 +40,7 @@ class Glotracol_Quote_Importer_Admin {
 
 		$step = isset( $_GET['step'] ) ? sanitize_key( $_GET['step'] ) : 'upload';
 		?>
-		<div class="wrap">
+		<div class="wrap gloq-admin">
 			<h1>Importar datos</h1>
 			<p>Sube los datos del cotizador en formato CSV. Cada hoja tiene su propia plantilla descargable. La importación es <strong>aditiva</strong>: actualiza filas existentes (por NIT o SKU) y crea las nuevas. Las filas con error se reportan al final pero no detienen el resto.</p>
 

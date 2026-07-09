@@ -100,7 +100,7 @@ class Glotracol_Quote_Pricing_Admin {
 
 		$flash = isset( $_GET['gloq_pricing_msg'] ) ? sanitize_text_field( wp_unslash( $_GET['gloq_pricing_msg'] ) ) : '';
 		?>
-		<div class="wrap">
+		<div class="wrap gloq-admin">
 			<h1>Lista publica de precios</h1>
 			<p>Precios publicos (COP) asignados por producto. Se aplican cuando el cliente no tiene tarifa negociada para ese producto. Puedes editar manualmente o usar el <a href="<?php echo esc_url( admin_url( 'edit.php?post_type=glo_quote&page=glotracol-quote-import' ) ); ?>">importador CSV</a>.</p>
 

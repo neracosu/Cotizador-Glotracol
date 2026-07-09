@@ -84,7 +84,7 @@ class Glotracol_Quote_Admin_Settings {
 		$tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 		$base_url = admin_url( 'edit.php?post_type=glo_quote&page=' . self::PAGE_SLUG );
 		?>
-		<div class="wrap">
+		<div class="wrap gloq-admin">
 			<h1>Configuración del cotizador</h1>
 			<h2 class="nav-tab-wrapper">
 				<a class="nav-tab <?php echo $tab === 'general' ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url( $base_url . '&tab=general' ); ?>">General</a>

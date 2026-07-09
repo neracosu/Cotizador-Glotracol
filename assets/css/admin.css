@@ -1,4 +1,16 @@
 /* Glotracol Cotizador — Admin Dashboard styles */
+:root {
+	--gloq-brand: #0a4d3a; --gloq-brand-2: #13855e;
+	--gloq-ink: #1a202c; --gloq-muted: #5a6470;
+	--gloq-line: #e2e8f0; --gloq-bg-soft: #f1f5f9; --gloq-surface: #fff;
+	--gloq-ok: #28a745; --gloq-ok-bg: #d4edda; --gloq-ok-ink: #155724;
+	--gloq-warn: #f7b500; --gloq-warn-bg: #fff3cd; --gloq-warn-ink: #856404;
+	--gloq-err: #dc3545; --gloq-err-bg: #fdecea; --gloq-err-ink: #7a1d12;
+	--gloq-info: #17a2b8;
+	--gloq-radius: 8px; --gloq-radius-sm: 4px;
+	--gloq-shadow: 0 1px 3px rgba(0,0,0,.08);
+	--gloq-s1: 4px; --gloq-s2: 8px; --gloq-s3: 16px; --gloq-s4: 24px;
+}
 .gloq-dashboard{margin:20px 20px 40px 0;max-width:1200px}
 .gloq-dashboard h1,.gloq-dashboard h2,.gloq-dashboard h3{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 
@@ -309,3 +321,19 @@ button[disabled] .gloq-spinner{margin-right:6px}
 .gloq-convert-modal-inner h2{margin:0 0 8px;color:#0a4d3a}
 .gloq-convert-close{position:absolute;top:10px;right:14px;background:transparent;border:0;font-size:26px;cursor:pointer;color:#94a3b8;width:36px;height:36px;border-radius:6px}
 .gloq-convert-close:hover{background:#f1f5f9;color:#1a202c}
+
+/* Encabezado de página de marca (aplica al <h1> de las pantallas del plugin). */
+.wrap.gloq-admin > h1 {
+	margin: 0 0 var(--gloq-s4);
+	padding: var(--gloq-s3) var(--gloq-s4);
+	background: var(--gloq-surface);
+	border: 1px solid var(--gloq-line);
+	border-left: 4px solid var(--gloq-brand);
+	border-radius: var(--gloq-radius);
+	box-shadow: var(--gloq-shadow);
+	font-size: 1.4rem;
+	line-height: 1.2;
+	color: var(--gloq-ink);
+}
+.gloq-mt-3 { margin-top: var(--gloq-s3) !important; }
+.gloq-mt-4 { margin-top: var(--gloq-s4) !important; }
