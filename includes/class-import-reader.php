@@ -298,6 +298,73 @@ class Glotracol_Quote_Import_Reader {
 		return [ 'type' => $best, 'confidence' => round( $confidence, 2 ), 'ambiguous' => $ambiguous, 'scores' => $scores ];
 	}
 
+	/** Normaliza un nombre para comparar: sin acentos, espacios colapsados, mayúsculas. */
+	public static function normalize_name( $s ) {
+		$s = (string) $s;
+		if ( function_exists( 'remove_accents' ) ) $s = remove_accents( $s );
+		$s = preg_replace( '/\s+/u', ' ', $s );
+		return strtoupper( trim( $s ) );
+	}
+
+	/**
+	 * ¿Existe una entidad con ese nombre normalizado exacto? Devuelve su id o 0.
+	 * Misma normalización que usa el importador (import_prices_lista_b) para que
+	 * preview e importación coincidan (evita marcar "sin match" algo que el
+	 * importador sí resolvería por nombre). No usa get_page_by_title (deprecado).
+	 */
+	public static function find_by_name( $name, $kind ) {
+		$key = self::normalize_name( $name );
+		if ( $key === '' ) return 0;
+		foreach ( self::candidate_index( $kind ) as $id => $title ) {
+			if ( self::normalize_name( $title ) === $key ) return (int) $id;
+		}
+		return 0;
+	}
+
+	/** Tokens ≥3 chars del nombre normalizado. */
+	private static function tokens( $s ) {
+		return array_values( array_filter( explode( ' ', self::normalize_name( $s ) ), function ( $t ) { return strlen( $t ) >= 3; } ) );
+	}
+
+	/**
+	 * Sugiere entidades existentes parecidas a $name.
+	 * @param string $kind 'product'|'client'
+	 * @return array<array{id:int,label:string,score:int}>
+	 */
+	public static function suggest_candidates( $name, $kind, $limit = 3 ) {
+		$name = (string) $name;
+		if ( self::normalize_name( $name ) === '' ) return [];
+		$targets = self::candidate_index( $kind ); // [id => title]
+		$nt = self::tokens( $name );
+		$nn = self::normalize_name( $name );
+		$scored = [];
+		foreach ( $targets as $id => $title ) {
+			$ct = self::tokens( $title );
+			$inter = count( array_intersect( $nt, $ct ) );
+			if ( $inter < 1 ) continue;
+			$pct = 0.0; similar_text( $nn, self::normalize_name( $title ), $pct );
+			// score compuesto: prioriza tokens compartidos, desempata por similitud textual.
+			$score = (int) round( min( 100, $inter * 25 + $pct * 0.5 ) );
+			$scored[] = [ 'id' => (int) $id, 'label' => $title, 'score' => $score, '_i' => $inter ];
+		}
+		usort( $scored, function ( $a, $b ) { return $b['score'] <=> $a['score']; } );
+		return array_map( function ( $c ) { return [ 'id' => $c['id'], 'label' => $c['label'], 'score' => $c['score'] ]; }, array_slice( $scored, 0, $limit ) );
+	}
+
+	/** Índice id => título para productos o clientes. Construido perezosamente. */
+	/** Caché por-request del índice (el preview llama suggest_candidates/find_by_name una vez por fila). */
+	private static $index_cache = [];
+
+	private static function candidate_index( $kind ) {
+		$kind = ( $kind === 'client' ) ? 'client' : 'product';
+		if ( isset( self::$index_cache[ $kind ] ) ) return self::$index_cache[ $kind ];
+		$post_type = ( $kind === 'client' ) ? Glotracol_Quote_Client_CPT::POST_TYPE : 'product';
+		$ids = get_posts( [ 'post_type' => $post_type, 'post_status' => 'any', 'numberposts' => -1, 'fields' => 'ids' ] );
+		$out = [];
+		foreach ( (array) $ids as $id ) $out[ (int) $id ] = get_the_title( $id );
+		return self::$index_cache[ $kind ] = $out;
+	}
+
 	/**
 	 * Mapea headers crudos a las columnas del schema por sinónimos.
 	 * @return array{ map: array<string,string>, unmapped: string[] }
