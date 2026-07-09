@@ -81,21 +81,21 @@ class Glotracol_Quote_Admin_Dashboard {
 
 			<!-- Accesos rápidos a las pantallas v2.0 -->
 			<div class="gloq-quick-grid">
-				<a href="<?php echo esc_url( $clients_url ); ?>" class="gloq-quick-card">
+				<a href="<?php echo esc_url( $clients_url ); ?>" class="gloq-quick-card" data-tour="inicio-clientes">
 					<div class="gloq-quick-icon"><span class="dashicons dashicons-groups"></span></div>
 					<div class="gloq-quick-body">
 						<strong>Clientes B2B</strong>
 						<span><?php echo (int) $stats['client_count']; ?> en CRM</span>
 					</div>
 				</a>
-				<a href="<?php echo esc_url( $pricing_url ); ?>" class="gloq-quick-card">
+				<a href="<?php echo esc_url( $pricing_url ); ?>" class="gloq-quick-card" data-tour="inicio-precios">
 					<div class="gloq-quick-icon"><span class="dashicons dashicons-money-alt"></span></div>
 					<div class="gloq-quick-body">
 						<strong>Lista de precios</strong>
 						<span><?php echo (int) $stats['public_skus']; ?> productos con precio</span>
 					</div>
 				</a>
-				<a href="<?php echo esc_url( $import_url ); ?>" class="gloq-quick-card">
+				<a href="<?php echo esc_url( $import_url ); ?>" class="gloq-quick-card" data-tour="inicio-importar">
 					<div class="gloq-quick-icon"><span class="dashicons dashicons-download"></span></div>
 					<div class="gloq-quick-body">
 						<strong>Importar CSV</strong>

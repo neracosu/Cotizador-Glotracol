@@ -61,7 +61,7 @@ class Glotracol_Quote_Importer_Admin {
 		?>
 		<div class="gloq-importer-card">
 			<h2>1. Elige el tipo de hoja</h2>
-			<div class="gloq-importer-types">
+			<div class="gloq-importer-types" data-tour="import-tipo">
 				<?php foreach ( $types as $key => $label ) :
 					$desc = $this->describe_type( $key );
 					$is_selected = $key === $selected_type;
@@ -77,7 +77,7 @@ class Glotracol_Quote_Importer_Admin {
 			</div>
 
 			<h2 style="margin-top:24px">2. Descarga la plantilla</h2>
-			<p>
+			<p data-tour="import-plantilla">
 				<a class="button button-primary" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=gloq_import_template&format=xlsx&type=' . $selected_type ), self::NONCE_ACTION ) ); ?>">Descargar plantilla Excel (.xlsx)</a>
 				<a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=gloq_import_template&format=csv&type=' . $selected_type ), self::NONCE_ACTION ) ); ?>">o en CSV</a>
 			</p>
@@ -90,7 +90,7 @@ class Glotracol_Quote_Importer_Admin {
 				<?php wp_nonce_field( self::NONCE_ACTION ); ?>
 				<table class="form-table">
 					<tr><th><label>Archivo CSV o Excel (.xlsx)</label></th>
-						<td><input type="file" name="gloq_csv" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
+						<td><input type="file" name="gloq_csv" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required data-tour="import-archivo">
 						<p class="description">Tamaño máximo: <?php echo size_format( wp_max_upload_size() ); ?>. Puedes subir el Excel (.xlsx) directamente o un CSV (UTF-8). El sistema reconoce las columnas aunque tengan nombres distintos.</p></td></tr>
 				</table>
 				<?php if ( $selected_type === 'precios_catalogo' ) :

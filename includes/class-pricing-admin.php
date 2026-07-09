@@ -138,8 +138,8 @@ class Glotracol_Quote_Pricing_Admin {
 						<tr>
 							<th style="width:8%">ID</th>
 							<th style="width:44%">Nombre del producto</th>
-							<th style="width:20%">Precio A — Lista pública (COP)</th>
-							<th style="width:20%">Precio B — Mayorista (COP)</th>
+							<th style="width:20%" data-tour="precios-a">Precio A — Lista pública (COP)</th>
+							<th style="width:20%" data-tour="precios-b">Precio B — Mayorista (COP)</th>
 							<th style="width:8%">Borrar</th>
 						</tr>
 					</thead>
@@ -189,7 +189,7 @@ class Glotracol_Quote_Pricing_Admin {
 				</table>
 
 				<p class="submit">
-					<input type="submit" class="button button-primary" value="Guardar cambios">
+					<input type="submit" class="button button-primary" value="Guardar cambios" data-tour="precios-guardar">
 				</p>
 			</form>
 

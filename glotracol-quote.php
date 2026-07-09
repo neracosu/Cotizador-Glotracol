@@ -52,6 +52,7 @@ require_once GLOTRACOL_QUOTE_PATH . 'includes/class-admin-settings.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-admin-dashboard.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-changelog-admin.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-updater.php';
+require_once GLOTRACOL_QUOTE_PATH . 'includes/class-tour.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-plugin.php';
 
 register_activation_hook( __FILE__, [ 'Glotracol_Quote_Activator', 'activate' ] );
