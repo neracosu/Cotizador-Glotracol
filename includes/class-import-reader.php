@@ -60,6 +60,111 @@ class Glotracol_Quote_Import_Reader {
 		'precio_publico' => [ 'precio_publico', 'precio público', 'precio publico' ],
 	];
 
+	/**
+	 * Lee la PRIMERA hoja de un .xlsx (ZipArchive+XML). Acotado (barrera 6):
+	 * celdas por referencia (A2/B2) para no desalinear; strings compartidos/inline/
+	 * fórmula cacheada; números directos. Sin fechas/fórmulas complejas/multi-hoja.
+	 */
+	public static function read_xlsx( $file_path ) {
+		if ( ! class_exists( 'ZipArchive' ) ) {
+			return [ 'headers' => [], 'rows' => [], 'error' => 'El servidor no puede leer Excel (falta ZipArchive). Exporta el archivo como CSV.' ];
+		}
+		$zip = new ZipArchive();
+		if ( $zip->open( $file_path ) !== true ) {
+			return [ 'headers' => [], 'rows' => [], 'error' => 'No se pudo abrir el archivo Excel. Exporta como CSV.' ];
+		}
+		// Strings compartidos (opcional).
+		$shared = [];
+		$ss = $zip->getFromName( 'xl/sharedStrings.xml' );
+		if ( $ss !== false ) {
+			$sx = @simplexml_load_string( $ss );
+			if ( $sx !== false ) {
+				foreach ( $sx->si as $si ) {
+					// Concatenar todos los <t> (maneja runs de texto enriquecido).
+					$text = '';
+					foreach ( $si->xpath( './/*[local-name()="t"]' ) as $t ) $text .= (string) $t;
+					$shared[] = $text;
+				}
+			}
+		}
+		// Primera hoja según el ZIP (sheet1.xml es el nombre estándar).
+		$sheet_xml = $zip->getFromName( 'xl/worksheets/sheet1.xml' );
+		if ( $sheet_xml === false ) {
+			// Buscar la primera worksheet disponible.
+			for ( $i = 0; $i < $zip->numFiles; $i++ ) {
+				$name = $zip->getNameIndex( $i );
+				if ( strpos( $name, 'xl/worksheets/sheet' ) === 0 && substr( $name, -4 ) === '.xml' ) {
+					$sheet_xml = $zip->getFromName( $name ); break;
+				}
+			}
+		}
+		$zip->close();
+		if ( $sheet_xml === false || $sheet_xml === null ) {
+			return [ 'headers' => [], 'rows' => [], 'error' => 'No encontré datos en el Excel. Exporta como CSV.' ];
+		}
+		$sx = @simplexml_load_string( $sheet_xml );
+		if ( $sx === false || ! isset( $sx->sheetData ) ) {
+			return [ 'headers' => [], 'rows' => [], 'error' => 'No pude leer la hoja del Excel. Exporta como CSV.' ];
+		}
+		// Construir matriz por referencia de celda.
+		$matrix = []; // [rowIndex1based][colIndex0based] = value
+		foreach ( $sx->sheetData->row as $row ) {
+			foreach ( $row->c as $c ) {
+				$ref = (string) $c['r'];              // p.ej. "B2"
+				if ( ! preg_match( '/^([A-Z]+)(\d+)$/', $ref, $mm ) ) continue;
+				$col = self::col_to_index( $mm[1] );  // 0-based
+				$rowi = (int) $mm[2];
+				$type = (string) $c['t'];
+				$val = '';
+				if ( $type === 's' ) {
+					$idx = (int) ( (string) $c->v );
+					$val = $shared[ $idx ] ?? '';
+				} elseif ( $type === 'inlineStr' ) {
+					foreach ( $c->xpath( './/*[local-name()="t"]' ) as $t ) $val .= (string) $t;
+				} else { // número o fórmula cacheada (t="str")
+					$val = isset( $c->v ) ? (string) $c->v : '';
+				}
+				$matrix[ $rowi ][ $col ] = trim( $val );
+			}
+		}
+		if ( empty( $matrix ) ) return [ 'headers' => [], 'rows' => [], 'error' => 'El Excel está vacío.' ];
+		ksort( $matrix );
+		$row_indices = array_keys( $matrix );
+		$header_row = array_shift( $row_indices );
+		$max_col = 0;
+		foreach ( $matrix as $cells ) { if ( ! empty( $cells ) ) $max_col = max( $max_col, max( array_keys( $cells ) ) ); }
+		$headers = [];
+		for ( $i = 0; $i <= $max_col; $i++ ) {
+			$headers[ $i ] = mb_strtolower( trim( (string) ( $matrix[ $header_row ][ $i ] ?? '' ) ), 'UTF-8' );
+		}
+		$rows = [];
+		foreach ( $row_indices as $ri ) {
+			$assoc = [];
+			$has = false;
+			for ( $i = 0; $i <= $max_col; $i++ ) {
+				$h = $headers[ $i ];
+				if ( $h === '' ) continue;
+				$v = trim( (string) ( $matrix[ $ri ][ $i ] ?? '' ) );
+				$assoc[ $h ] = $v;
+				if ( $v !== '' ) $has = true;
+			}
+			if ( ! $has ) continue;
+			$assoc['__line'] = $ri;
+			$rows[] = $assoc;
+		}
+		// Filtrar headers vacíos de la lista pública.
+		$clean_headers = array_values( array_filter( $headers, function ( $h ) { return $h !== ''; } ) );
+		return [ 'headers' => $clean_headers, 'rows' => $rows, 'error' => null ];
+	}
+
+	/** "A"->0, "B"->1, ... "AA"->26. */
+	private static function col_to_index( $letters ) {
+		$n = 0;
+		$len = strlen( $letters );
+		for ( $i = 0; $i < $len; $i++ ) $n = $n * 26 + ( ord( $letters[ $i ] ) - 64 );
+		return $n - 1;
+	}
+
 	/** Columnas conocidas de un schema (required + optional + plantilla), únicas, minúscula. */
 	public static function schema_columns( $schema ) {
 		$cols = array_merge( $schema['required'] ?? [], $schema['optional'] ?? [], $schema['plantilla'] ?? [] );

@@ -125,7 +125,9 @@ class Glotracol_Quote_Importer {
 			fclose( $fh );
 			return [ 'headers' => [], 'rows' => [], 'error' => 'Headers inválidos.' ];
 		}
-		$headers = array_map( function ( $h ) { return strtolower( trim( (string) $h ) ); }, $headers_raw );
+		// mb_strtolower para que headers con multibyte (p. ej. la Ñ de "COMPAÑIA") se
+		// minusculicen igual que en read_xlsx() — mismo archivo, mismos headers en CSV y xlsx.
+		$headers = array_map( function ( $h ) { return mb_strtolower( trim( (string) $h ), 'UTF-8' ); }, $headers_raw );
 		$rows = [];
 		$line = 1;
 		while ( ( $data = fgetcsv( $fh, 0, $delimiter ) ) !== false ) {

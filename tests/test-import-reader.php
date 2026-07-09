@@ -69,4 +69,23 @@ chk( 'detecta clientes_lista', $d4['type'], 'clientes_lista' );
 // La ambigüedad catalogo/lista_b tiene a AMBOS como candidatos con score.
 chk( 'ambos schemas puntúan', isset( $d['scores']['precios_catalogo'] ) && isset( $d['scores']['precios_lista_b'] ), true );
 
-echo $GLOBALS['gloq_fail'] === 0 ? "\nTASK4 PASS\n" : "\n{$GLOBALS['gloq_fail']} FAILED\n";
+// --- Task 5: lector xlsx ---
+$xlsx = GLOTRACOL_QUOTE_PATH . '../glotracol-quote/docs/CLIENTES FACTURA PRECIO DIFERENTE.xlsx';
+if ( file_exists( $xlsx ) ) {
+	$x = Glotracol_Quote_Import_Reader::read_xlsx( $xlsx );
+	chk( 'xlsx sin error', $x['error'], null );
+	chk( 'xlsx headers', $x['headers'], [ 'identificacion', 'nombre de la compañia', 'precio' ] );
+	chk( 'xlsx ≥ 40 filas', count( $x['rows'] ) >= 40, true );
+	chk( 'xlsx celda por referencia', $x['rows'][0]['identificacion'], '901882915' );
+} else {
+	echo "[SKIP] xlsx real no encontrado en $xlsx\n";
+}
+
+// Consistencia CSV/xlsx: un header con Ñ se minusculiza IGUAL en ambos lectores.
+$tmpn = wp_tempnam( 'gloq-n' ) . '.csv';
+file_put_contents( $tmpn, "NOMBRE DE LA COMPAÑIA,precio\nACME,100\n" );
+$rn = Glotracol_Quote_Importer::read_delimited( $tmpn );
+chk( 'CSV header Ñ -> ñ minúscula (consistente con xlsx)', $rn['headers'][0], 'nombre de la compañia' );
+@unlink( $tmpn );
+
+echo $GLOBALS['gloq_fail'] === 0 ? "\nTASK5 PASS\n" : "\n{$GLOBALS['gloq_fail']} FAILED\n";
