@@ -24,4 +24,12 @@ $p2 = Glotracol_Quote_Importer::parse_csv( $tmp, 'precios_publicos' ); // faltan
 chk( 'parse_csv detecta headers faltantes', ( strpos( (string) $p2['error'], 'Faltan columnas' ) !== false ), true );
 
 @unlink( $tmp ); @unlink( $tmp2 );
-echo $fail === 0 ? "\nTASK1 PASS\n" : "\n$fail FAILED\n";
+
+// --- Task 2: normalizadores ---
+chk( 'norm_price $', Glotracol_Quote_Import_Reader::norm_price( '$ 805.392 COP' ), 805392 );
+chk( 'norm_price vacío', Glotracol_Quote_Import_Reader::norm_price( '' ), 0 );
+chk( 'norm_weight coma', Glotracol_Quote_Import_Reader::norm_weight( '22,68' ), '22.68' );
+chk( 'norm_weight vacío', Glotracol_Quote_Import_Reader::norm_weight( '' ), '' );
+chk( 'norm_text espacios', Glotracol_Quote_Import_Reader::norm_text( "  ARROZ   BLANCO \n" ), 'ARROZ BLANCO' );
+
+echo $fail === 0 ? "\nTASK2 PASS\n" : "\n$fail FAILED\n";

@@ -39,6 +39,7 @@ require_once GLOTRACOL_QUOTE_PATH . 'includes/class-client-admin.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-pricing.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-pricing-admin.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-importer.php';
+require_once GLOTRACOL_QUOTE_PATH . 'includes/class-import-reader.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-importer-admin.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-presentations-admin.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-reports.php';
