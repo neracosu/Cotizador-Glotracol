@@ -1,0 +1,22 @@
+/* Tour guiado — usa los tokens --gloq-* del admin.css. z-index por debajo del modal convertir (99999). */
+.gloq-tour-btn { margin-left: 16px; vertical-align: middle; }
+.gloq-hero .gloq-tour-btn { margin-left: 16px; }
+.gloq-tour-overlay { position: fixed; inset: 0; z-index: 9000; background: transparent; }
+.gloq-tour-overlay.gloq-tour-dim { background: rgba(0,0,0,.55); }
+.gloq-tour-target {
+	position: relative; z-index: 9001;
+	border-radius: var(--gloq-radius-sm, 4px);
+	box-shadow: 0 0 0 3px var(--gloq-brand-2, #13855e), 0 0 0 9999px rgba(0,0,0,.55);
+}
+.gloq-tour-bubble {
+	position: absolute; z-index: 9002; max-width: 340px;
+	background: #fff; border: 1px solid var(--gloq-line, #e2e8f0);
+	border-top: 4px solid var(--gloq-brand, #0a4d3a);
+	border-radius: var(--gloq-radius, 8px);
+	box-shadow: 0 8px 30px rgba(0,0,0,.25);
+	padding: 16px 18px;
+}
+.gloq-tour-h { margin: 0 0 6px; font-size: 15px; color: var(--gloq-ink, #1a202c); }
+.gloq-tour-p { margin: 0 0 14px; color: var(--gloq-muted, #5a6470); font-size: 13px; line-height: 1.5; }
+.gloq-tour-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.gloq-tour-count { color: var(--gloq-muted, #5a6470); font-size: 12px; }
