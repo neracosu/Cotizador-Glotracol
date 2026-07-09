@@ -78,8 +78,10 @@ class Glotracol_Quote_Importer_Admin {
 
 			<h2 style="margin-top:24px">2. Descarga la plantilla</h2>
 			<p>
-				<a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=gloq_import_template&type=' . $selected_type ), self::NONCE_ACTION ) ); ?>">Descargar plantilla <code><?php echo esc_html( $selected_type ); ?>.csv</code></a>
+				<a class="button button-primary" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=gloq_import_template&format=xlsx&type=' . $selected_type ), self::NONCE_ACTION ) ); ?>">Descargar plantilla Excel (.xlsx)</a>
+				<a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=gloq_import_template&format=csv&type=' . $selected_type ), self::NONCE_ACTION ) ); ?>">o en CSV</a>
 			</p>
+			<p class="description">La plantilla Excel trae una hoja <strong>Datos</strong> (donde escribes) y otra <strong>Instrucciones</strong> con los nombres de columna que el sistema reconoce. Puedes cambiar los encabezados por sinónimos: el sistema los entiende igual.</p>
 
 			<h2 style="margin-top:24px">3. Sube el archivo CSV</h2>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" enctype="multipart/form-data">
@@ -445,13 +447,29 @@ class Glotracol_Quote_Importer_Admin {
 		if ( ! current_user_can( 'manage_options' ) ) wp_die( 'Sin permisos' );
 		check_admin_referer( self::NONCE_ACTION );
 		$type = isset( $_GET['type'] ) ? sanitize_key( $_GET['type'] ) : '';
-		$path = GLOTRACOL_QUOTE_PATH . 'templates/csv/' . $type . '.csv';
-		if ( ! file_exists( $path ) ) wp_die( 'Plantilla no encontrada.' );
-		header( 'Content-Type: text/csv; charset=utf-8' );
-		header( 'Content-Disposition: attachment; filename="glotracol-' . $type . '.csv"' );
+		if ( ! isset( Glotracol_Quote_Importer::TYPES[ $type ] ) ) wp_die( 'Tipo de hoja inválido.' );
+		$format = ( isset( $_GET['format'] ) && $_GET['format'] === 'csv' ) ? 'csv' : 'xlsx';
+
+		if ( $format === 'csv' ) {
+			$path = GLOTRACOL_QUOTE_PATH . 'templates/csv/' . $type . '.csv';
+			if ( ! file_exists( $path ) ) wp_die( 'Plantilla no encontrada.' );
+			header( 'Content-Type: text/csv; charset=utf-8' );
+			header( 'Content-Disposition: attachment; filename="glotracol-' . $type . '.csv"' );
+			header( 'Pragma: no-cache' );
+			header( 'Expires: 0' );
+			readfile( $path );
+			exit;
+		}
+
+		// Excel (.xlsx) generado al vuelo desde los schemas.
+		$bytes = Glotracol_Quote_Import_Reader::build_xlsx( Glotracol_Quote_Import_Reader::template_sheets( $type ) );
+		if ( $bytes === '' ) wp_die( 'No se pudo generar el Excel. Prueba la plantilla en CSV.' );
+		header( 'Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' );
+		header( 'Content-Disposition: attachment; filename="glotracol-' . $type . '.xlsx"' );
 		header( 'Pragma: no-cache' );
 		header( 'Expires: 0' );
-		readfile( $path );
+		header( 'Content-Length: ' . strlen( $bytes ) );
+		echo $bytes;
 		exit;
 	}
 
