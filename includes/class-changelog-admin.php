@@ -79,6 +79,12 @@ class Glotracol_Quote_Changelog_Admin {
 	public static function entries() {
 		return [
 			[
+				'date' => '2026-07-08', 'version' => '2.7.0', 'type' => 'improvement',
+				'title' => 'Panel más consistente',
+				'summary' => 'Las pantallas del panel ahora tienen un encabezado con la identidad de Glotracol y una apariencia más uniforme, sin cambiar cómo funcionan.',
+				'details' => [],
+			],
+			[
 				'date' => '2026-07-08', 'version' => '2.6.0', 'type' => 'feature',
 				'title' => 'Plantillas de carga en Excel',
 				'summary' => 'Ahora puedes descargar la plantilla de cada tipo de carga directamente en Excel (.xlsx), con una hoja de instrucciones que explica cada columna. También sigue disponible en CSV.',
