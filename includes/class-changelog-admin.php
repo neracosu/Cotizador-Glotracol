@@ -79,7 +79,7 @@ class Glotracol_Quote_Changelog_Admin {
 	public static function entries() {
 		return [
 			[
-				'date' => '2026-07-08', 'version' => '2.8.0', 'type' => 'feature',
+				'date' => '2026-07-08', 'version' => '2.8.1', 'type' => 'feature',
 				'title' => 'Guía interactiva en el panel',
 				'summary' => 'Un botón de guía en Inicio, Precios e Importar muestra un recorrido paso a paso que explica cómo usar cada sección. Además se corrigió un problema por el que el panel de Inicio a veces se veía sin estilos.',
 				'details' => [

@@ -23,10 +23,10 @@ class Glotracol_Quote_Tour {
 	public function enqueue() {
 		$tour = $this->current_tour();
 		if ( $tour === '' ) return;
-		// Sin dependencia de admin.css: tour.css usa los tokens con fallback, así el tour
-		// funciona aunque admin.css no cargue (robustez).
-		wp_enqueue_style( 'glotracol-quote-tour', GLOTRACOL_QUOTE_URL . 'assets/css/tour.css', [], GLOTRACOL_QUOTE_VERSION );
-		wp_enqueue_script( 'glotracol-quote-tour', GLOTRACOL_QUOTE_URL . 'assets/js/tour.js', [], GLOTRACOL_QUOTE_VERSION, true );
+		// Librería driver.js (bundleada local, MIT) + init propio que la alimenta con los pasos.
+		wp_enqueue_style( 'glotracol-driver', GLOTRACOL_QUOTE_URL . 'assets/css/driver.css', [], '1.3.6' );
+		wp_enqueue_script( 'glotracol-driver', GLOTRACOL_QUOTE_URL . 'assets/js/driver.js.iife.js', [], '1.3.6', true );
+		wp_enqueue_script( 'glotracol-quote-tour', GLOTRACOL_QUOTE_URL . 'assets/js/tour.js', [ 'glotracol-driver' ], GLOTRACOL_QUOTE_VERSION, true );
 		wp_localize_script( 'glotracol-quote-tour', 'GloqTour', [
 			'label' => $tour === 'inicio' ? 'Primeros pasos' : 'Guía',
 			'steps' => self::steps_for( $tour ),
