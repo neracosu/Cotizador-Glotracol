@@ -23,7 +23,9 @@ class Glotracol_Quote_Tour {
 	public function enqueue() {
 		$tour = $this->current_tour();
 		if ( $tour === '' ) return;
-		wp_enqueue_style( 'glotracol-quote-tour', GLOTRACOL_QUOTE_URL . 'assets/css/tour.css', [ 'glotracol-quote-admin' ], GLOTRACOL_QUOTE_VERSION );
+		// Sin dependencia de admin.css: tour.css usa los tokens con fallback, así el tour
+		// funciona aunque admin.css no cargue (robustez).
+		wp_enqueue_style( 'glotracol-quote-tour', GLOTRACOL_QUOTE_URL . 'assets/css/tour.css', [], GLOTRACOL_QUOTE_VERSION );
 		wp_enqueue_script( 'glotracol-quote-tour', GLOTRACOL_QUOTE_URL . 'assets/js/tour.js', [], GLOTRACOL_QUOTE_VERSION, true );
 		wp_localize_script( 'glotracol-quote-tour', 'GloqTour', [
 			'label' => $tour === 'inicio' ? 'Primeros pasos' : 'Guía',

@@ -70,6 +70,14 @@ class Glotracol_Quote_Plugin {
 	 * en su WP_Screen, así que basta con mirar el post_type del screen.
 	 */
 	private function is_plugin_admin_screen() {
+		// Páginas propias del plugin (submenús): su slug empieza por 'glotracol-quote-'.
+		// Se detecta por el slug ANTES que por post_type porque en algunas cargas de
+		// esos submenús (p. ej. el dashboard) el post_type del WP_Screen viene vacío,
+		// y entonces admin.css no se encolaba en la primera carga.
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+		if ( strpos( $page, 'glotracol-quote-' ) === 0 ) {
+			return true;
+		}
 		if ( ! function_exists( 'get_current_screen' ) ) {
 			return false;
 		}
