@@ -87,9 +87,9 @@ class Glotracol_Quote_Importer_Admin {
 				<input type="hidden" name="gloq_type" value="<?php echo esc_attr( $selected_type ); ?>">
 				<?php wp_nonce_field( self::NONCE_ACTION ); ?>
 				<table class="form-table">
-					<tr><th><label>Archivo CSV (UTF-8)</label></th>
-						<td><input type="file" name="gloq_csv" accept=".csv,text/csv" required>
-						<p class="description">Tamaño máximo: <?php echo size_format( wp_max_upload_size() ); ?>. Si el archivo viene de Excel, exporta como "CSV (delimitado por comas)" o "CSV UTF-8".</p></td></tr>
+					<tr><th><label>Archivo CSV o Excel (.xlsx)</label></th>
+						<td><input type="file" name="gloq_csv" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
+						<p class="description">Tamaño máximo: <?php echo size_format( wp_max_upload_size() ); ?>. Puedes subir el Excel (.xlsx) directamente o un CSV (UTF-8). El sistema reconoce las columnas aunque tengan nombres distintos.</p></td></tr>
 				</table>
 				<?php if ( $selected_type === 'precios_catalogo' ) :
 					$clients = get_posts( [ 'post_type' => Glotracol_Quote_Client_CPT::POST_TYPE, 'post_status' => 'publish', 'numberposts' => -1, 'orderby' => 'title', 'order' => 'ASC' ] );
@@ -211,111 +211,149 @@ class Glotracol_Quote_Importer_Admin {
 
 	private function render_preview() {
 		$token = isset( $_GET['token'] ) ? sanitize_key( $_GET['token'] ) : '';
-		$type = isset( $_GET['type'] ) ? sanitize_key( $_GET['type'] ) : '';
-		$mode       = isset( $_GET['mode'] ) && $_GET['mode'] === 'b2b' ? 'b2b' : 'publico';
-		$client_id  = isset( $_GET['client_id'] ) ? (int) $_GET['client_id'] : 0;
-		$sync_stock = ! empty( $_GET['sync_stock'] ) ? 1 : 0;
+		$mode           = isset( $_GET['mode'] ) && $_GET['mode'] === 'b2b' ? 'b2b' : 'publico';
+		$client_id      = isset( $_GET['client_id'] ) ? (int) $_GET['client_id'] : 0;
+		$sync_stock     = ! empty( $_GET['sync_stock'] ) ? 1 : 0;
 		$create_missing = ! empty( $_GET['create_missing'] ) ? 1 : 0;
-		if ( ! $token || ! $type ) {
+		$ext            = ( isset( $_GET['ext'] ) && $_GET['ext'] === 'xlsx' ) ? 'xlsx' : 'csv';
+		if ( ! $token ) {
 			if ( class_exists( 'Glotracol_Quote_Logger' ) ) {
-				Glotracol_Quote_Logger::warn( 'import', 'render_preview: token o type vacíos en query', [
-					'token' => $token, 'type' => $type, 'query' => $_GET,
+				Glotracol_Quote_Logger::warn( 'import', 'render_preview: token vacío en query', [
+					'token' => $token, 'query' => $_GET,
 				] );
 			}
 			echo '<div class="notice notice-error"><p>Sesión inválida.</p></div>';
 			return;
 		}
-		$file = $this->get_temp_file_path( $token );
+		$file = $this->get_temp_file_path( $token, $ext );
 		if ( ! file_exists( $file ) ) {
 			if ( class_exists( 'Glotracol_Quote_Logger' ) ) {
 				$dir = $this->get_temp_dir();
 				$existing_files = $dir && is_dir( $dir ) ? array_diff( scandir( $dir ), [ '.', '..', '.htaccess', 'index.php' ] ) : [];
 				Glotracol_Quote_Logger::error( 'import', 'render_preview: archivo no encontrado', [
-					'token'         => $token,
-					'expected_path' => $file,
-					'temp_dir'      => $dir,
+					'token'          => $token,
+					'ext'            => $ext,
+					'expected_path'  => $file,
+					'temp_dir'       => $dir,
 					'existing_files' => array_values( $existing_files ),
 				] );
 			}
 			echo '<div class="notice notice-error"><p>Archivo no encontrado o expirado.</p></div>';
 			return;
 		}
-		$parse = Glotracol_Quote_Importer::parse_csv( $file, $type );
-		if ( $parse['error'] ) {
-			echo '<div class="notice notice-error"><p>' . esc_html( $parse['error'] ) . '</p></div>';
+		$forced = isset( $_GET['type'] ) && $_GET['type'] !== '' ? sanitize_key( $_GET['type'] ) : null;
+		$read = Glotracol_Quote_Import_Reader::read( $file, $forced );
+		if ( $read['error'] && empty( $read['rows'] ) ) {
+			echo '<div class="notice notice-error"><p>' . esc_html( $read['error'] ) . '</p></div>';
 			echo '<p><a href="' . esc_url( admin_url( 'edit.php?post_type=glo_quote&page=' . self::PAGE_SLUG ) ) . '" class="button">← Volver</a></p>';
 			return;
 		}
-		$total = count( $parse['rows'] );
-		$preview = array_slice( $parse['rows'], 0, 20 );
-		?>
-		<div class="gloq-importer-card">
-			<h2>Previsualización — <?php echo esc_html( Glotracol_Quote_Importer::TYPES[ $type ] ?? $type ); ?></h2>
-			<p>El archivo contiene <strong><?php echo (int) $total; ?> filas</strong> válidas. Mostrando las primeras <?php echo min( 20, $total ); ?>:</p>
-
-			<table class="wp-list-table widefat striped">
-				<thead><tr>
-					<?php foreach ( $parse['headers'] as $h ) echo '<th>' . esc_html( $h ) . '</th>'; ?>
-				</tr></thead>
-				<tbody>
-				<?php foreach ( $preview as $row ) : ?>
-					<tr>
-					<?php foreach ( $parse['headers'] as $h ) {
-						echo '<td>' . esc_html( $row[ $h ] ?? '' ) . '</td>';
-					} ?>
-					</tr>
-				<?php endforeach; ?>
-				</tbody>
-			</table>
-
-			<?php
-			$client_label = '';
-			if ( $type === 'precios_catalogo' && $mode === 'b2b' && $client_id > 0 ) {
-				$cp = get_post( $client_id );
-				$client_label = $cp ? $cp->post_title : '';
+		$type  = $read['chosen_type'];
+		$total = count( $read['rows'] );
+		echo '<div class="gloq-importer-card">';
+		echo '<h2>Previsualización</h2>';
+		// Tipo detectado (barrera 2)
+		echo '<p><strong>Tipo detectado:</strong> ' . esc_html( Glotracol_Quote_Importer::TYPES[ $type ] ?? $type );
+		echo ' <span class="description">(confianza ' . esc_html( (int) round( $read['type_confidence'] * 100 ) ) . '%)</span></p>';
+		if ( $read['type_ambiguous'] && ! $forced ) {
+			echo '<div class="notice notice-warning inline"><p><strong>El tipo no es claro</strong> (dos formatos coinciden). Elige el tipo correcto antes de continuar:</p><p>';
+			foreach ( Glotracol_Quote_Importer::TYPES as $k => $label ) {
+				$url = add_query_arg( 'type', $k );
+				echo '<a class="button" style="margin:2px" href="' . esc_url( $url ) . '">' . esc_html( $label ) . '</a> ';
 			}
-			// Filas sin ID (relevante solo para "crear faltantes").
-			$no_id_count = 0;
-			foreach ( $parse['rows'] as $r ) {
-				if ( (int) ( $r['id'] ?? 0 ) <= 0 ) $no_id_count++;
+			echo '</p></div>';
+		}
+		// Columnas entendidas
+		echo '<p><strong>Columnas que entendí:</strong> ';
+		$pairs = [];
+		foreach ( $read['mapping'] as $canonical => $raw_h ) {
+			$pairs[] = esc_html( $raw_h ) . ' → <code>' . esc_html( $canonical ) . '</code>';
+		}
+		echo $pairs ? implode( ', ', $pairs ) : '—';
+		echo '</p>';
+		if ( ! empty( $read['unmapped'] ) ) {
+			echo '<p class="description">Columnas ignoradas (no reconocidas): ' . esc_html( implode( ', ', $read['unmapped'] ) ) . '</p>';
+		}
+		if ( ! empty( $read['corrections'] ) ) {
+			echo '<details style="margin:8px 0"><summary style="cursor:pointer"><strong>Valores que corregí (' . count( $read['corrections'] ) . ')</strong></summary><ul style="margin:6px 0 0 18px;list-style:disc">';
+			foreach ( $read['corrections'] as $c ) {
+				echo '<li>' . esc_html( $c ) . '</li>';
 			}
-			if ( $type === 'precios_catalogo' ) : ?>
-			<p><strong>Modo:</strong> <?php echo $mode === 'b2b' ? 'Tarifa B2B' . ( $client_label ? ' — ' . esc_html( $client_label ) : '' ) : 'Lista pública'; ?> · <strong>Sincronizar stock:</strong> <?php echo $sync_stock ? 'sí' : 'no'; ?><?php if ( $mode === 'publico' ) : ?> · <strong>Crear faltantes:</strong> <?php echo $create_missing ? 'sí' : 'no'; ?><?php endif; ?></p>
-			<?php if ( $mode === 'b2b' && $client_id <= 0 ) : ?>
-				<div class="notice notice-error inline"><p>Elegiste tarifa B2B pero no seleccionaste un cliente. Vuelve atrás y elige el cliente.</p></div>
-			<?php endif; ?>
-			<?php endif; ?>
+			echo '</ul></details>';
+		}
+		echo '<p>Filas válidas: <strong>' . (int) $total . '</strong>. Muestra de las primeras ' . min( 20, $total ) . ':</p>';
+		// Tabla de muestra
+		$cols = $read['headers'];
+		echo '<table class="wp-list-table widefat striped"><thead><tr>';
+		foreach ( $cols as $h ) {
+			echo '<th>' . esc_html( $h ) . '</th>';
+		}
+		echo '</tr></thead><tbody>';
+		foreach ( array_slice( $read['rows'], 0, 20 ) as $r ) {
+			echo '<tr>';
+			foreach ( $cols as $h ) {
+				echo '<td>' . esc_html( $r[ $h ] ?? '' ) . '</td>';
+			}
+			echo '</tr>';
+		}
+		echo '</tbody></table>';
 
-			<?php
-			// Aviso de impacto: qué va a escribir/sobrescribir esta importación, antes de confirmar.
-			echo $this->preview_impact_notice( $type, [
-				'mode'           => $mode,
-				'client_label'   => $client_label,
-				'create_missing' => $create_missing,
-				'no_id_count'    => $no_id_count,
-			] );
-			?>
+		// Info extra para precios_catalogo
+		$client_label = '';
+		if ( $type === 'precios_catalogo' && $mode === 'b2b' && $client_id > 0 ) {
+			$cp = get_post( $client_id );
+			$client_label = $cp ? $cp->post_title : '';
+		}
+		// Filas sin ID (relevante solo para "crear faltantes").
+		$no_id_count = 0;
+		foreach ( $read['rows'] as $r ) {
+			if ( (int) ( $r['id'] ?? 0 ) <= 0 ) $no_id_count++;
+		}
+		if ( $type === 'precios_catalogo' ) {
+			echo '<p><strong>Modo:</strong> ' . ( $mode === 'b2b' ? 'Tarifa B2B' . ( $client_label ? ' — ' . esc_html( $client_label ) : '' ) : 'Lista pública' ) . ' · <strong>Sincronizar stock:</strong> ' . ( $sync_stock ? 'sí' : 'no' );
+			if ( $mode === 'publico' ) {
+				echo ' · <strong>Crear faltantes:</strong> ' . ( $create_missing ? 'sí' : 'no' );
+			}
+			echo '</p>';
+			if ( $mode === 'b2b' && $client_id <= 0 ) {
+				echo '<div class="notice notice-error inline"><p>Elegiste tarifa B2B pero no seleccionaste un cliente. Vuelve atrás y elige el cliente.</p></div>';
+			}
+		}
 
-			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-top:20px">
-				<input type="hidden" name="action" value="gloq_import_run">
-				<input type="hidden" name="token" value="<?php echo esc_attr( $token ); ?>">
-				<input type="hidden" name="gloq_type" value="<?php echo esc_attr( $type ); ?>">
-				<input type="hidden" name="gloq_mode" value="<?php echo esc_attr( $mode ); ?>">
-				<input type="hidden" name="gloq_client_id" value="<?php echo (int) $client_id; ?>">
-				<input type="hidden" name="gloq_sync_stock" value="<?php echo (int) $sync_stock; ?>">
-				<input type="hidden" name="gloq_create_missing" value="<?php echo (int) $create_missing; ?>">
-				<?php wp_nonce_field( self::NONCE_ACTION ); ?>
-				<?php if ( ! ( $type === 'precios_catalogo' && $mode === 'b2b' && $client_id <= 0 ) ) : ?>
-				<p class="submit">
-					<input type="submit" class="button button-primary button-large" value="Confirmar e importar <?php echo (int) $total; ?> filas">
-					<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=glo_quote&page=' . self::PAGE_SLUG . '&type=' . $type ) ); ?>" class="button">Cancelar</a>
-				</p>
-				<?php else : ?>
-				<p><a href="<?php echo esc_url( admin_url( 'edit.php?post_type=glo_quote&page=' . self::PAGE_SLUG . '&type=' . $type ) ); ?>" class="button">← Volver y elegir cliente</a></p>
-				<?php endif; ?>
-			</form>
-		</div>
-		<?php
+		// Aviso de impacto: qué va a escribir/sobrescribir esta importación, antes de confirmar.
+		echo $this->preview_impact_notice( $type, [
+			'mode'           => $mode,
+			'client_label'   => $client_label,
+			'create_missing' => $create_missing,
+			'no_id_count'    => $no_id_count,
+		] );
+
+		// Barrera de ambigüedad: bloquear confirmar si el tipo no está claro y no se forzó.
+		if ( $read['type_ambiguous'] && ! $forced ) {
+			echo '<p><em>Elige el tipo arriba para habilitar la importación.</em></p>';
+		} else {
+			$back_url = esc_url( admin_url( 'edit.php?post_type=glo_quote&page=' . self::PAGE_SLUG . '&type=' . $type ) );
+			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="margin-top:20px">';
+			echo '<input type="hidden" name="action" value="gloq_import_run">';
+			echo '<input type="hidden" name="token" value="' . esc_attr( $token ) . '">';
+			echo '<input type="hidden" name="ext" value="' . esc_attr( $ext ) . '">';
+			echo '<input type="hidden" name="gloq_type" value="' . esc_attr( $type ) . '">';
+			echo '<input type="hidden" name="gloq_mode" value="' . esc_attr( $mode ) . '">';
+			echo '<input type="hidden" name="gloq_client_id" value="' . (int) $client_id . '">';
+			echo '<input type="hidden" name="gloq_sync_stock" value="' . (int) $sync_stock . '">';
+			echo '<input type="hidden" name="gloq_create_missing" value="' . (int) $create_missing . '">';
+			wp_nonce_field( self::NONCE_ACTION );
+			if ( ! ( $type === 'precios_catalogo' && $mode === 'b2b' && $client_id <= 0 ) ) {
+				echo '<p class="submit">';
+				echo '<input type="submit" class="button button-primary button-large" value="Confirmar e importar ' . (int) $total . ' filas">';
+				echo ' <a href="' . $back_url . '" class="button">Cancelar</a>';
+				echo '</p>';
+			} else {
+				echo '<p><a href="' . $back_url . '" class="button">← Volver y elegir cliente</a></p>';
+			}
+			echo '</form>';
+		}
+		echo '</div>';
 	}
 
 	private function render_report() {
@@ -390,7 +428,7 @@ class Glotracol_Quote_Importer_Admin {
 		}
 		$tmp = $_FILES['gloq_csv']['tmp_name'];
 		// Validar mime (lenient, fgetcsv tolera más que mime)
-		$ok_mimes = [ 'text/csv', 'text/plain', 'application/csv', 'application/vnd.ms-excel', 'application/octet-stream' ];
+		$ok_mimes = [ 'text/csv', 'text/plain', 'application/csv', 'application/vnd.ms-excel', 'application/octet-stream', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/zip' ];
 		$mime = $_FILES['gloq_csv']['type'] ?? '';
 		if ( $mime && ! in_array( $mime, $ok_mimes, true ) ) {
 			// permitir igual, solo log
@@ -402,12 +440,14 @@ class Glotracol_Quote_Importer_Admin {
 		// Mover a directorio temporal del plugin.
 		// Token solo lowercase hex para que sanitize_key() (que lowercasea)
 		// no genere mismatch entre el path guardado y el lookup posterior.
-		$token = bin2hex( random_bytes( 8 ) ); // 16 chars hex, siempre lowercase
+		// La extensión viaja como parámetro aparte (no dentro del token).
+		$ext = ( strtolower( pathinfo( (string) ( $_FILES['gloq_csv']['name'] ?? '' ), PATHINFO_EXTENSION ) ) === 'xlsx' ) ? 'xlsx' : 'csv';
+		$token = bin2hex( random_bytes( 8 ) ); // hex puro, siempre lowercase
 		$dest_dir = $this->get_temp_dir();
 		if ( ! $dest_dir ) {
 			$this->redirect_back( 'No se pudo crear directorio temporal.' );
 		}
-		$dest = $dest_dir . '/' . $token . '.csv';
+		$dest = $dest_dir . '/' . $token . '.' . $ext;
 		if ( ! move_uploaded_file( $tmp, $dest ) ) {
 			if ( class_exists( 'Glotracol_Quote_Logger' ) ) {
 				Glotracol_Quote_Logger::error( 'import', 'move_uploaded_file falló', [
@@ -426,9 +466,9 @@ class Glotracol_Quote_Importer_Admin {
 		}
 
 		// Programar limpieza en 1h
-		wp_schedule_single_event( time() + HOUR_IN_SECONDS, 'gloq_importer_cleanup', [ $token ] );
+		wp_schedule_single_event( time() + HOUR_IN_SECONDS, 'gloq_importer_cleanup', [ $token, $ext ] );
 
-		$extra = [];
+		$extra = [ 'ext' => $ext ];
 		if ( $type === 'precios_catalogo' ) {
 			$extra['mode']       = ( ( $_POST['gloq_mode'] ?? 'publico' ) === 'b2b' ) ? 'b2b' : 'publico';
 			$extra['client_id']  = (int) ( $_POST['gloq_client_id'] ?? 0 );
@@ -450,11 +490,12 @@ class Glotracol_Quote_Importer_Admin {
 		if ( ! current_user_can( 'manage_options' ) ) wp_die( 'Sin permisos' );
 		check_admin_referer( self::NONCE_ACTION );
 		$token = isset( $_POST['token'] ) ? sanitize_key( $_POST['token'] ) : '';
-		$type = isset( $_POST['gloq_type'] ) ? sanitize_key( $_POST['gloq_type'] ) : '';
+		$type  = isset( $_POST['gloq_type'] ) ? sanitize_key( $_POST['gloq_type'] ) : '';
+		$ext   = ( isset( $_POST['ext'] ) && $_POST['ext'] === 'xlsx' ) ? 'xlsx' : 'csv';
 		if ( ! $token || ! $type ) {
 			$this->redirect_back( 'Sesión inválida.' );
 		}
-		$file = $this->get_temp_file_path( $token );
+		$file = $this->get_temp_file_path( $token, $ext );
 		if ( ! file_exists( $file ) ) {
 			$this->redirect_back( 'Archivo no encontrado o expirado.' );
 		}
@@ -528,17 +569,21 @@ class Glotracol_Quote_Importer_Admin {
 		return $dir;
 	}
 
-	private function get_temp_file_path( $token ) {
+	private function get_temp_file_path( $token, $ext = 'csv' ) {
 		$dir = $this->get_temp_dir();
 		if ( ! $dir ) return '';
-		return $dir . '/' . preg_replace( '/[^a-zA-Z0-9]/', '', (string) $token ) . '.csv';
+		$safe = preg_replace( '/[^a-zA-Z0-9]/', '', (string) $token ); // token sigue siendo hex puro
+		$ext  = ( $ext === 'xlsx' ) ? 'xlsx' : 'csv';
+		return $dir . '/' . $safe . '.' . $ext;
 	}
 }
 
 // Cleanup hook
-add_action( 'gloq_importer_cleanup', function ( $token ) {
+add_action( 'gloq_importer_cleanup', function ( $token, $ext = 'csv' ) {
 	$uploads = wp_upload_dir();
 	if ( empty( $uploads['basedir'] ) ) return;
-	$file = $uploads['basedir'] . '/glotracol-import/' . preg_replace( '/[^a-zA-Z0-9]/', '', (string) $token ) . '.csv';
+	$safe = preg_replace( '/[^a-zA-Z0-9]/', '', (string) $token );
+	$ext  = ( $ext === 'xlsx' ) ? 'xlsx' : 'csv';
+	$file = $uploads['basedir'] . '/glotracol-import/' . $safe . '.' . $ext;
 	if ( file_exists( $file ) ) @unlink( $file );
-}, 10, 1 );
+}, 10, 2 );
