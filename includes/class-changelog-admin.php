@@ -79,6 +79,17 @@ class Glotracol_Quote_Changelog_Admin {
 	public static function entries() {
 		return [
 			[
+				'date' => '2026-07-08', 'version' => '2.5.0', 'type' => 'feature',
+				'title' => 'Cargas de archivos más flexibles',
+				'summary' => 'Ahora podés subir tus listas en Excel (.xlsx) o CSV aunque las columnas tengan nombres distintos: el sistema reconoce las columnas, corrige los formatos y te muestra qué entendió antes de guardar.',
+				'details' => [
+					'Acepta archivos Excel (.xlsx) directamente, además de CSV.',
+					'Reconoce columnas por su significado (por ejemplo "Valor" o "Precio normal" como el precio).',
+					'Detecta el tipo de lista y te pide confirmar si no es claro.',
+					'Cuando un producto no coincide, te sugiere a cuál corresponde para que elijas; nada se guarda sin tu confirmación.',
+				],
+			],
+			[
 				'date' => '2026-07-08', 'version' => '2.4.0', 'type' => 'feature',
 				'title' => 'Precios diferenciados: Lista A y Lista B',
 				'summary' => 'Ahora se puede manejar una segunda lista de precios (Lista B, mayoreo) además de la lista regular. Cada cliente puede quedar asignado a la Lista B y recibir esos precios automáticamente al cotizar.',
