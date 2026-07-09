@@ -106,4 +106,24 @@ $hit = false; foreach ( $labels as $l ) { if ( stripos( $l, 'MANI CON PIEL 70/80
 chk( 'top candidato es MANI CON PIEL 70/80', $hit, true );
 chk( 'score entre 0 y 100', ( $cands[0]['score'] >= 0 && $cands[0]['score'] <= 100 ), true );
 
+// --- v2.6.0 Task 1: build_xlsx round-trip ---
+$bytes = Glotracol_Quote_Import_Reader::build_xlsx( [
+	'Datos'         => [ [ 'ID', 'Nombre', 'Precio normal' ], [ '652', 'ACEITE DE COCO', '590240' ] ],
+	'Instrucciones' => [ [ 'Columna', 'Requerida' ], [ 'id', 'Sí' ] ],
+] );
+chk( 'build_xlsx no vacío', strlen( $bytes ) > 100, true );
+$rt = wp_tempnam( 'gloq-rt' ) . '.xlsx';
+file_put_contents( $rt, $bytes );
+$back = Glotracol_Quote_Import_Reader::read_xlsx( $rt );
+chk( 'round-trip sin error', $back['error'], null );
+chk( 'round-trip headers (sheet1=Datos)', $back['headers'], [ 'id', 'nombre', 'precio normal' ] );
+chk( 'round-trip fila', $back['rows'][0]['nombre'], 'ACEITE DE COCO' );
+chk( 'round-trip celda con &', ( function() {
+	$b = Glotracol_Quote_Import_Reader::build_xlsx( [ 'Datos' => [ [ 'A' ], [ 'x & y < z' ] ] ] );
+	$p = wp_tempnam( 'gloq-rt2' ) . '.xlsx'; file_put_contents( $p, $b );
+	$r = Glotracol_Quote_Import_Reader::read_xlsx( $p ); @unlink( $p );
+	return $r['rows'][0]['a'] ?? '';
+} )(), 'x & y < z' );
+@unlink( $rt );
+
 echo $GLOBALS['gloq_fail'] === 0 ? "\nALL PASS\n" : "\n{$GLOBALS['gloq_fail']} FAILED\n";

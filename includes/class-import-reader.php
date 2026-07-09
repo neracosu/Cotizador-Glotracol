@@ -236,6 +236,96 @@ class Glotracol_Quote_Import_Reader {
 		return $n - 1;
 	}
 
+	/** Índice 0-based → letras de columna Excel. 0->"A", 25->"Z", 26->"AA". */
+	private static function index_to_col( $i ) {
+		$s = '';
+		$i = (int) $i;
+		do { $s = chr( 65 + ( $i % 26 ) ) . $s; $i = intdiv( $i, 26 ) - 1; } while ( $i >= 0 );
+		return $s;
+	}
+
+	/** Escapa texto para XML. */
+	private static function xml_escape( $s ) {
+		return str_replace( [ '&', '<', '>', '"' ], [ '&amp;', '&lt;', '&gt;', '&quot;' ], (string) $s );
+	}
+
+	/** Nombre de hoja válido para Excel (<=31 chars, sin []:*?/\). */
+	private static function xlsx_sheet_name( $name ) {
+		$name = preg_replace( '/[\[\]:\*\?\/\\\\]/', ' ', (string) $name );
+		return mb_substr( trim( $name ), 0, 31 );
+	}
+
+	/**
+	 * Construye un .xlsx en memoria a partir de hojas. Espejo de read_xlsx (solo texto
+	 * inline, sin fórmulas/estilos). $sheets = [ 'NombreHoja' => [ [celda,...], ... ] ].
+	 * La PRIMERA hoja es sheet1 (la que lee read_xlsx). Devuelve bytes o '' si falla.
+	 */
+	public static function build_xlsx( array $sheets ) {
+		if ( ! class_exists( 'ZipArchive' ) ) return '';
+		if ( empty( $sheets ) ) $sheets = [ 'Datos' => [] ];
+		$tmp = wp_tempnam( 'gloq-xlsx' );
+		$zip = new ZipArchive();
+		if ( $zip->open( $tmp, ZipArchive::CREATE | ZipArchive::OVERWRITE ) !== true ) { @unlink( $tmp ); return ''; }
+		$names = array_keys( $sheets );
+		$n = count( $names );
+
+		$ct  = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+		$ct .= '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">';
+		$ct .= '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>';
+		$ct .= '<Default Extension="xml" ContentType="application/xml"/>';
+		$ct .= '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>';
+		for ( $i = 1; $i <= $n; $i++ ) {
+			$ct .= '<Override PartName="/xl/worksheets/sheet' . $i . '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';
+		}
+		$ct .= '</Types>';
+		$zip->addFromString( '[Content_Types].xml', $ct );
+
+		$zip->addFromString( '_rels/.rels',
+			'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+			. '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+			. '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+			. '</Relationships>' );
+
+		$wb   = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+		$wb  .= '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>';
+		$rels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">';
+		$i = 1;
+		foreach ( $names as $name ) {
+			$wb   .= '<sheet name="' . self::xml_escape( self::xlsx_sheet_name( $name ) ) . '" sheetId="' . $i . '" r:id="rId' . $i . '"/>';
+			$rels .= '<Relationship Id="rId' . $i . '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet' . $i . '.xml"/>';
+			$i++;
+		}
+		$wb   .= '</sheets></workbook>';
+		$rels .= '</Relationships>';
+		$zip->addFromString( 'xl/workbook.xml', $wb );
+		$zip->addFromString( 'xl/_rels/workbook.xml.rels', $rels );
+
+		$i = 1;
+		foreach ( $names as $name ) {
+			$xml  = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+			$xml .= '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>';
+			$r = 1;
+			foreach ( (array) $sheets[ $name ] as $cells ) {
+				$xml .= '<row r="' . $r . '">';
+				$c = 0;
+				foreach ( (array) $cells as $val ) {
+					$ref = self::index_to_col( $c ) . $r;
+					$xml .= '<c r="' . $ref . '" t="inlineStr"><is><t xml:space="preserve">' . self::xml_escape( (string) $val ) . '</t></is></c>';
+					$c++;
+				}
+				$xml .= '</row>';
+				$r++;
+			}
+			$xml .= '</sheetData></worksheet>';
+			$zip->addFromString( 'xl/worksheets/sheet' . $i . '.xml', $xml );
+			$i++;
+		}
+		$zip->close();
+		$bytes = (string) file_get_contents( $tmp );
+		@unlink( $tmp );
+		return $bytes;
+	}
+
 	/** Columnas conocidas de un schema (required + optional + plantilla), únicas, minúscula. */
 	public static function schema_columns( $schema ) {
 		$cols = array_merge( $schema['required'] ?? [], $schema['optional'] ?? [], $schema['plantilla'] ?? [] );
