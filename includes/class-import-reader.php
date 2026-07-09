@@ -74,6 +74,54 @@ class Glotracol_Quote_Import_Reader {
 		return $syn;
 	}
 
+	/** Puntúa un schema contra headers crudos. required faltante => -1. */
+	private static function score_schema( $raw_headers_lower, $schema ) {
+		$req = array_map( 'strtolower', $schema['required'] ?? [] );
+		$opt = array_map( 'strtolower', $schema['optional'] ?? [] );
+		$matched_req = 0;
+		foreach ( $req as $c ) {
+			foreach ( $raw_headers_lower as $h ) { if ( in_array( $h, self::synonyms_of( $c ), true ) ) { $matched_req++; break; } }
+		}
+		if ( $matched_req < count( $req ) ) return -1.0;
+		$matched_opt = 0;
+		foreach ( $opt as $c ) {
+			foreach ( $raw_headers_lower as $h ) { if ( in_array( $h, self::synonyms_of( $c ), true ) ) { $matched_opt++; break; } }
+		}
+		return (float) ( $matched_req * 2 + $matched_opt );
+	}
+
+	/**
+	 * Detecta el tipo de hoja por sus headers. Barrera 2: la UI debe confirmar/elegir.
+	 * @return array{ type: string|null, confidence: float, ambiguous: bool, scores: array<string,float> }
+	 */
+	public static function detect_type( $raw_headers_lower ) {
+		$schemas = Glotracol_Quote_Importer::get_schemas();
+		$scores = [];
+		foreach ( $schemas as $type => $schema ) {
+			$s = self::score_schema( $raw_headers_lower, $schema );
+			if ( $s > 0 ) $scores[ $type ] = $s;
+		}
+		if ( empty( $scores ) ) return [ 'type' => null, 'confidence' => 0.0, 'ambiguous' => false, 'scores' => [] ];
+		arsort( $scores );
+		$types = array_keys( $scores );
+		$best = $types[0];
+		$best_score = $scores[ $best ];
+		// confianza = score / máximo posible del schema ganador
+		$sw = $schemas[ $best ];
+		$max = ( count( $sw['required'] ?? [] ) * 2 ) + count( $sw['optional'] ?? [] );
+		$confidence = $max > 0 ? min( 1.0, $best_score / $max ) : 0.0;
+		// ambigüedad: comparar confianzas normalizadas de los dos mejores candidatos
+		$ambiguous = false;
+		if ( count( $types ) > 1 ) {
+			$s2_type = $types[1];
+			$s2 = $schemas[ $s2_type ];
+			$max2 = ( count( $s2['required'] ?? [] ) * 2 ) + count( $s2['optional'] ?? [] );
+			$conf2 = $max2 > 0 ? min( 1.0, $scores[ $s2_type ] / $max2 ) : 0.0;
+			if ( $confidence > 0 && $conf2 >= 0.9 * $confidence ) $ambiguous = true;
+		}
+		return [ 'type' => $best, 'confidence' => round( $confidence, 2 ), 'ambiguous' => $ambiguous, 'scores' => $scores ];
+	}
+
 	/**
 	 * Mapea headers crudos a las columnas del schema por sinónimos.
 	 * @return array{ map: array<string,string>, unmapped: string[] }

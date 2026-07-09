@@ -55,4 +55,18 @@ $mc = Glotracol_Quote_Import_Reader::map_headers_to_schema( [ 'identificacion', 
 chk( 'mapea compañia->razon_social', $mc['map']['razon_social'] ?? null, 'nombre de la compañia' );
 chk( 'mapea identificacion->nit (clientes)', $mc['map']['nit'] ?? null, 'identificacion' );
 
-echo $GLOBALS['gloq_fail'] === 0 ? "\nTASK3 PASS\n" : "\n{$GLOBALS['gloq_fail']} FAILED\n";
+// --- Task 4: auto-detección de tipo ---
+$d = Glotracol_Quote_Import_Reader::detect_type( [ 'id', 'nombre', 'inventario', 'peso (kg)', 'precio normal', 'imágenes' ] );
+chk( 'detecta precios_catalogo o lista_b', in_array( $d['type'], [ 'precios_catalogo', 'precios_lista_b' ], true ), true );
+chk( 'catalogo vs lista_b es ambiguo', $d['ambiguous'], true ); // comparten id+precio
+$d2 = Glotracol_Quote_Import_Reader::detect_type( [ 'nit', 'razon_social', 'email' ] );
+chk( 'detecta clientes', $d2['type'], 'clientes' );
+$d3 = Glotracol_Quote_Import_Reader::detect_type( [ 'foo', 'bar' ] );
+chk( 'sin match => null', $d3['type'], null );
+// El umbral >0 NO debe romper el caso real clientes_lista (required vacío).
+$d4 = Glotracol_Quote_Import_Reader::detect_type( [ 'nit', 'lista' ] );
+chk( 'detecta clientes_lista', $d4['type'], 'clientes_lista' );
+// La ambigüedad catalogo/lista_b tiene a AMBOS como candidatos con score.
+chk( 'ambos schemas puntúan', isset( $d['scores']['precios_catalogo'] ) && isset( $d['scores']['precios_lista_b'] ), true );
+
+echo $GLOBALS['gloq_fail'] === 0 ? "\nTASK4 PASS\n" : "\n{$GLOBALS['gloq_fail']} FAILED\n";
