@@ -170,6 +170,12 @@ class Glotracol_Quote_Importer_Admin {
 			case 'clientes':
 				$lines[] = 'Crea o actualiza <strong>clientes B2B</strong> por NIT. Un NIT existente actualiza sus datos con los del archivo.';
 				break;
+			case 'clientes_lista':
+				$lines[] = 'Marca clientes en la <strong>Lista B</strong> (mayoreo) por NIT/identificación. Un cliente existente se actualiza; un NIT nuevo marcado B <strong>crea una ficha mínima</strong> etiquetada B. Los marcados A que no existan se omiten (A es el valor por defecto).';
+				break;
+			case 'precios_lista_b':
+				$lines[] = 'Escribe el <strong>precio de Lista B</strong> (mayoreo) por <strong>ID de producto</strong>, sin tocar la Lista A. Las filas sin ID se resuelven por nombre a un producto existente (o por tu elección arriba); las que no casen se omiten.';
+				break;
 			default:
 				return '';
 		}
