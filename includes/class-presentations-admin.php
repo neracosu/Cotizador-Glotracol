@@ -54,6 +54,13 @@ class Glotracol_Quote_Presentations_Admin {
 
 				<?php wp_nonce_field( self::NONCE_ACTION, self::NONCE_FIELD ); ?>
 
+				<?php $pres_texto = get_post_meta( $post->ID, '_glo_presentacion_texto', true ); ?>
+				<p class="form-field" style="padding:0 12px">
+					<label for="glo_presentacion_texto"><strong>Presentación (texto visible)</strong></label><br>
+					<input type="text" id="glo_presentacion_texto" name="glo_presentacion_texto" value="<?php echo esc_attr( $pres_texto ); ?>" placeholder="Saco 25 kg" style="width:60%">
+					<span class="description" style="display:block;color:#666">Texto que se muestra en el cuadro de cotización (ej. "Saco 25 kg", "Caja x 12 kg"). Si se deja vacío, se usa el peso del producto.</span>
+				</p>
+
 				<div id="glo-presentaciones-wrap" style="padding:0 12px 12px">
 					<table class="widefat striped" id="glo-presentaciones-table" style="margin-top:8px">
 						<thead>
@@ -111,6 +118,10 @@ class Glotracol_Quote_Presentations_Admin {
 	public function save_panel( $product ) {
 		if ( ! isset( $_POST[ self::NONCE_FIELD ] ) ) return;
 		if ( ! wp_verify_nonce( wp_unslash( $_POST[ self::NONCE_FIELD ] ), self::NONCE_ACTION ) ) return;
+
+		if ( isset( $_POST['glo_presentacion_texto'] ) ) {
+			$product->update_meta_data( '_glo_presentacion_texto', sanitize_text_field( wp_unslash( $_POST['glo_presentacion_texto'] ) ) );
+		}
 
 		$rows = $_POST['glo_pres'] ?? [];
 		$presentaciones = [];
