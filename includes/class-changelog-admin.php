@@ -79,6 +79,35 @@ class Glotracol_Quote_Changelog_Admin {
 	public static function entries() {
 		return [
 			[
+				'date' => '2026-07-10', 'version' => '2.9.2', 'type' => 'feature',
+				'title' => 'Tipo de empaque y ajuste rápido de cantidad',
+				'summary' => 'El cuadro de cotización ahora muestra una columna "Tipo de empaque" (Saco, Caja, Bolsa…) y botones − / + para subir o bajar la cantidad de cada producto más rápido.',
+				'details' => [
+					'Nueva columna "Tipo de empaque"; se llena en la ficha del producto o en la columna "Empaque" de la carga de catálogo. Si no hay dato, muestra "—".',
+					'Botones − / + junto a la cantidad, además del campo para escribirla.',
+					'Nota bajo el Total: los valores pueden variar según volumen y condiciones comerciales.',
+				],
+			],
+			[
+				'date' => '2026-07-10', 'version' => '2.9.1', 'type' => 'fix',
+				'title' => 'Corrección en el cálculo del cuadro',
+				'summary' => 'El Valor y el Total ahora se actualizan también al cambiar la cantidad (antes solo se refrescaban al escribir el NIT).',
+				'details' => [
+					'Al subir o bajar la cantidad, el Valor y el Total se recalculan al instante.',
+					'Ajuste de texto: los productos sin precio muestran "A cotizar".',
+				],
+			],
+			[
+				'date' => '2026-07-10', 'version' => '2.9.0', 'type' => 'feature',
+				'title' => 'Cuadro de cotización con presentación y precio',
+				'summary' => 'El cuadro ahora muestra Producto, Presentación, Cantidad y Valor, con el Total de la solicitud. Al escribir su NIT, los clientes con precios negociados (Lista B) ven sus precios automáticamente.',
+				'details' => [
+					'Columnas Producto, Presentación, Cantidad y Valor, con el Total.',
+					'Precio en vivo por NIT: el cliente de Lista B ve sus precios (sello "Precio B2B aplicado"); el público general ve la lista regular.',
+					'Nuevo texto de "Presentación" por producto (ej. "Saco 25 kg"), editable en la ficha o cargable en la columna "presentacion" del catálogo. Si va vacío, usa el peso del producto.',
+				],
+			],
+			[
 				'date' => '2026-07-08', 'version' => '2.8.1', 'type' => 'feature',
 				'title' => 'Guía interactiva en el panel',
 				'summary' => 'Un botón de guía en Inicio, Precios e Importar muestra un recorrido paso a paso que explica cómo usar cada sección. Además se corrigió un problema por el que el panel de Inicio a veces se veía sin estilos.',
