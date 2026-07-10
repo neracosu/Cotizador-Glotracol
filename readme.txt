@@ -5,7 +5,7 @@ Tags: woocommerce, quote, request-a-quote, b2b
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.9.3
+Stable tag: 2.10.0
 WC requires at least: 8.0
 
 Convierte WooCommerce en un sistema de solicitud de cotizaciones (RFQ) sin checkout ni pago.
@@ -29,6 +29,10 @@ Plugin propio para Glotracol (Global Trading de Colombia). Reemplaza el flujo de
 * Templates sobreescribibles desde el tema en `glotracol-quote/`.
 
 == Changelog ==
+
+= 2.10.0 =
+* Apariencia: el color de marca del plugin ahora puede heredar cualquier color global de Elementor (del sistema o personalizado, elegible por nombre en Ajustes → Apariencia), amarrado por ID y con fallback al verde Glotracol. Se actualiza en vivo si el color cambia en Elementor.
+* Importador Lista B: la plantilla incluye columnas de referencia (Nombre, Presentación, Empaque, Peso) con el mismo layout que el catálogo. Solo se importan ID y Precio; las demás son de referencia (marcadas como "solo referencia" en la hoja de Instrucciones).
 
 = 2.9.3 =
 * La sección "Novedades" del panel ahora incluye las versiones 2.9.0, 2.9.1 y 2.9.2 (el historial interno se había quedado en 2.8.1).

@@ -79,6 +79,16 @@ class Glotracol_Quote_Changelog_Admin {
 	public static function entries() {
 		return [
 			[
+				'date' => '2026-07-10', 'version' => '2.10.0', 'type' => 'feature',
+				'title' => 'Color de marca desde Elementor y plantilla de Lista B más clara',
+				'summary' => 'El cotizador puede tomar el color de la marca directamente de los colores globales de Elementor y seguirlo en vivo: si lo cambias en Elementor, el cotizador cambia solo, sin volver a configurarlo. Además, la plantilla de carga de Lista B ahora muestra las mismas columnas que el catálogo, como referencia.',
+				'details' => [
+					'En Ajustes → Apariencia puedes elegir cualquier color global de Elementor (incluidos los personalizados, por su nombre) como color de marca del plugin.',
+					'Se hereda en vivo: al cambiar ese color en Elementor, el cotizador se actualiza solo. Si el color se elimina, vuelve al verde Glotracol.',
+					'La plantilla de Lista B trae Nombre, Presentación, Empaque y Peso como referencia; solo se importan ID y Precio (el producto ya se describe en el catálogo).',
+				],
+			],
+			[
 				'date' => '2026-07-10', 'version' => '2.9.2', 'type' => 'feature',
 				'title' => 'Tipo de empaque y ajuste rápido de cantidad',
 				'summary' => 'El cuadro de cotización ahora muestra una columna "Tipo de empaque" (Saco, Caja, Bolsa…) y botones − / + para subir o bajar la cantidad de cada producto más rápido.',
