@@ -397,3 +397,40 @@ function glotracol_quote_get_client_price_list( $client_id ) {
 	$v = get_post_meta( $client_id, '_glo_price_list', true );
 	return ( $v === 'B' ) ? 'B' : 'A';
 }
+
+/**
+ * Texto visible de "Presentación" para el cuadro de cotización.
+ * Cascada: etiqueta de presentación múltiple → texto curado (_glo_presentacion_texto)
+ * → peso del producto formateado → vacío.
+ *
+ * @param WC_Product|object $product Producto (debe exponer get_id() y get_weight()).
+ * @param string            $pres_label Etiqueta de la capa múltiple si el item la trae.
+ * @return string
+ */
+function glotracol_quote_presentacion_display( $product, $pres_label = '' ) {
+	$pres_label = is_string( $pres_label ) ? trim( $pres_label ) : '';
+	if ( $pres_label !== '' ) {
+		return $pres_label;
+	}
+	if ( $product && method_exists( $product, 'get_id' ) ) {
+		$curado = get_post_meta( $product->get_id(), '_glo_presentacion_texto', true );
+		$curado = is_string( $curado ) ? trim( $curado ) : '';
+		if ( $curado !== '' ) {
+			return $curado;
+		}
+	}
+	if ( $product && method_exists( $product, 'get_weight' ) ) {
+		$w = $product->get_weight();
+		if ( $w !== '' && $w !== null && is_numeric( $w ) ) {
+			$w = (float) $w;
+			if ( $w > 0 && $w < 1 ) {
+				return number_format( $w * 1000, 0, ',', '.' ) . ' g';
+			}
+			if ( $w > 0 ) {
+				$is_int = ( floor( $w ) == $w );
+				return ( $is_int ? number_format( $w, 0, ',', '.' ) : rtrim( rtrim( number_format( $w, 2, ',', '.' ), '0' ), ',' ) ) . ' kg';
+			}
+		}
+	}
+	return '';
+}
