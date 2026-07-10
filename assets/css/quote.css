@@ -276,3 +276,15 @@
 @media(max-width:600px){
   .gloq-fab-panel{left:0!important;right:0!important;bottom:0!important;top:auto!important;width:100%;max-width:100%;max-height:85vh;border-radius:14px 14px 0 0}
 }
+
+/* ============================================
+   CUADRO DE COTIZACIÓN — columna Valor y total
+   ============================================ */
+.gloq-col-valor{text-align:right;white-space:nowrap}
+.gloq-valor-sub{display:block;font-weight:600}
+.gloq-valor-unit{display:block;font-size:.8em;color:#666}
+.gloq-total-row td{border-top:2px solid #0a4d3a;padding-top:10px;font-size:1.05em}
+.gloq-total-value{color:#0a4d3a;font-weight:700}
+.gloq-cotiza-hint,.gloq-valor-nota{font-size:.9em;color:#555;margin:8px 0}
+.gloq-b2b-badge{color:#0a4d3a;font-weight:600;background:#e8f5ee;padding:6px 10px;border-radius:6px;display:inline-block}
+.glotracol-quote-items.gloq-repricing{opacity:.6;transition:opacity .15s}

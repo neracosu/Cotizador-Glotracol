@@ -187,6 +187,46 @@
 			});
 		}
 
+		// Recálculo de valor por NIT (Lista A → Lista B)
+		var $nit = $('input[name="gloq_nit"]');
+		var $itemsTable = $('#gloq-items-table');
+		var repriceNonce = $itemsTable.data('reprice-nonce');
+		var repriceUrl = (window.GloqAjax && GloqAjax.url) || (GLOQ && GLOQ.ajaxUrl) || '/wp-admin/admin-ajax.php';
+		var repriceTimer = null;
+
+		function applyReprice(resp) {
+			if (!resp || !resp.success || !resp.data) return;
+			var d = resp.data;
+			$.each(d.items || {}, function (key, v) {
+				var $cell = $('td.gloq-col-valor[data-cart-key="' + key + '"]');
+				if (!$cell.length) return;
+				$cell.find('.gloq-valor-sub').text(v.sub_fmt);
+				$cell.find('.gloq-valor-unit').text(v.unit_fmt);
+			});
+			var $totalRow = $('.gloq-total-row');
+			if (d.total_fmt) { $('.gloq-total-value').text(d.total_fmt); $totalRow.removeAttr('hidden'); }
+			else { $totalRow.attr('hidden', 'hidden'); }
+			// Sello B2B
+			$('#gloq-b2b-badge').remove();
+			if (d.es_b2b) {
+				$('#gloq-valor-nota').after('<p id="gloq-b2b-badge" class="gloq-b2b-badge">✓ Precio B2B (Lista B) aplicado para tu NIT.</p>');
+			}
+		}
+
+		function doReprice() {
+			if (!repriceNonce) return;
+			var nit = $.trim($nit.val() || '');
+			$itemsTable.addClass('gloq-repricing');
+			$.post(repriceUrl, { action: 'gloq_reprice_by_nit', _wpnonce: repriceNonce, nit: nit })
+				.done(applyReprice)
+				.always(function () { $itemsTable.removeClass('gloq-repricing'); });
+		}
+
+		if ($nit.length && $itemsTable.length) {
+			$nit.on('blur change', doReprice);
+			$nit.on('input', function () { clearTimeout(repriceTimer); repriceTimer = setTimeout(doReprice, 700); });
+		}
+
 		function updateQty(key, qty, $context) {
 			$context.addClass('gloq-loading');
 			$.post(GloqAjax.url, {
