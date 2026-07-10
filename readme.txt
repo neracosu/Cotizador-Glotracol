@@ -5,7 +5,7 @@ Tags: woocommerce, quote, request-a-quote, b2b
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.8.1
+Stable tag: 2.9.0
 WC requires at least: 8.0
 
 Convierte WooCommerce en un sistema de solicitud de cotizaciones (RFQ) sin checkout ni pago.
@@ -29,6 +29,11 @@ Plugin propio para Glotracol (Global Trading de Colombia). Reemplaza el flujo de
 * Templates sobreescribibles desde el tema en `glotracol-quote/`.
 
 == Changelog ==
+
+= 2.9.0 =
+* El cuadro de cotización ahora muestra columnas Producto, Presentación, Cantidad y Valor, con el Total de la solicitud.
+* Precio en vivo por NIT: al escribir su NIT, los clientes de Lista B ven automáticamente sus precios negociados (sello "Precio B2B aplicado"); el público general ve la Lista A.
+* Nuevo texto de "Presentación" por producto (ej. "Saco 25 kg"): editable en la ficha del producto (pestaña Presentaciones) o cargable masivamente en la misma hoja del importador de catálogo mediante la columna "presentacion". Si se deja vacío, se muestra el peso del producto.
 
 = 2.4.0 =
 Precios diferenciados Lista A / Lista B: precio B por producto, asignación de clientes a Lista B, dos importadores nuevos y columna Precio B en el panel.
