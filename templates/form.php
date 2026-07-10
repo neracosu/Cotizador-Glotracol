@@ -13,9 +13,11 @@
 		<a href="<?php echo esc_url( $shop_url ); ?>" class="glotracol-quote-add-more">+ Añadir más productos</a>
 	</div>
 
-	<table class="glotracol-quote-items">
+	<p class="gloq-cotiza-hint"><span class="dashicons-info"></span> Al enviar podrás elegir si es una <strong>cotización</strong> o un <strong>pedido en firme</strong>.</p>
+
+	<table class="glotracol-quote-items" id="gloq-items-table" data-reprice-nonce="<?php echo esc_attr( $reprice_nonce ?? '' ); ?>">
 		<thead>
-			<tr><th>Producto</th><th>SKU</th><th>Cantidad</th><th></th></tr>
+			<tr><th>Producto</th><th>Presentación</th><th>Cantidad</th><th class="gloq-col-valor">Valor</th><th></th></tr>
 		</thead>
 		<tbody>
 		<?php foreach ( $cart_items as $item ) : ?>
@@ -23,11 +25,8 @@
 				<td>
 					<?php echo $item['image']; // image markup from WC ?>
 					<a href="<?php echo esc_url( $item['permalink'] ); ?>"><?php echo esc_html( $item['name'] ); ?></a>
-					<?php if ( ! empty( $item['presentacion_label'] ) ) : ?>
-						<span class="gloq-form-presentacion">— <?php echo esc_html( $item['presentacion_label'] ); ?></span>
-					<?php endif; ?>
 				</td>
-				<td><?php echo esc_html( $item['sku'] ?: '—' ); ?></td>
+				<td class="gloq-col-presentacion"><?php echo esc_html( $item['presentacion'] ?: '—' ); ?></td>
 				<td>
 					<div class="gloq-qty-cell">
 						<input type="number"
@@ -39,13 +38,25 @@
 							aria-label="Cantidad de <?php echo esc_attr( $item['name'] ); ?>">
 					</div>
 				</td>
+				<td class="gloq-col-valor" data-cart-key="<?php echo esc_attr( $item['key'] ); ?>">
+					<span class="gloq-valor-sub"><?php echo esc_html( $item['valor_sub_fmt'] ); ?></span>
+					<span class="gloq-valor-unit"><?php echo esc_html( $item['valor_unit_fmt'] ); ?> c/u</span>
+				</td>
 				<td>
 					<button type="button" class="gloq-remove-item" data-cart-key="<?php echo esc_attr( $item['key'] ); ?>" title="Quitar de la cotización" aria-label="Quitar producto">×</button>
 				</td>
 			</tr>
 		<?php endforeach; ?>
 		</tbody>
+		<tfoot>
+			<tr class="gloq-total-row"<?php echo empty( $cart_total_fmt ) ? ' hidden' : ''; ?>>
+				<td colspan="3"></td>
+				<td class="gloq-col-valor"><strong>Total:</strong> <span class="gloq-total-value"><?php echo esc_html( $cart_total_fmt ); ?></span></td>
+				<td></td>
+			</tr>
+		</tfoot>
 	</table>
+	<p class="gloq-valor-nota" id="gloq-valor-nota">Los precios mostrados son de lista pública. Si tu empresa tiene precios negociados, escribe tu <strong>NIT</strong> abajo y se actualizarán automáticamente.</p>
 	<p class="gloq-helper-text"><span class="dashicons-info"></span> Las cantidades se guardan automáticamente al cambiarlas. Puedes seguir agregando productos desde el catálogo.</p>
 
 	<form method="post" action="<?php echo esc_url( $action_url ); ?>" class="glotracol-quote-form" id="gloq-form">

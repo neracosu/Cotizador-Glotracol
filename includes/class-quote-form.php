@@ -115,6 +115,33 @@ class Glotracol_Quote_Form {
 	}
 
 	/**
+	 * Arma los items desde WC()->cart con los campos que usan render, AJAX y submit.
+	 * @return array<int,array>
+	 */
+	private function collect_cart_items() {
+		$items = [];
+		if ( ! function_exists( 'WC' ) || ! WC()->cart ) return $items;
+		foreach ( WC()->cart->get_cart() as $key => $item ) {
+			$product = isset( $item['data'] ) ? $item['data'] : null;
+			if ( ! $product ) continue;
+			$pres = $item['gloq_presentacion'] ?? null;
+			$items[] = [
+				'key'                => $key,
+				'product_id'         => $product->get_id(),
+				'name'               => $product->get_name(),
+				'sku'                => $pres && ! empty( $pres['sku'] ) ? $pres['sku'] : $product->get_sku(),
+				'quantity'           => (int) $item['quantity'],
+				'permalink'          => get_permalink( $product->get_id() ),
+				'image'              => $product->get_image( [ 60, 60 ] ),
+				'presentacion_label' => $pres['label'] ?? '',
+				'presentacion_idx'   => isset( $pres['idx'] ) ? (int) $pres['idx'] : null,
+				'_product'           => $product,
+			];
+		}
+		return $items;
+	}
+
+	/**
 	 * Registra un fallo en la carga manual de WC frontend. Se persiste en una
 	 * option transient que el dashboard puede consultar para mostrar admin notice.
 	 *
@@ -151,23 +178,31 @@ class Glotracol_Quote_Form {
 		$old   = isset( $_GET['gloq_old'] ) ? (array) json_decode( base64_decode( wp_unslash( $_GET['gloq_old'] ) ), true ) : [];
 		if ( ! is_array( $old ) ) $old = [];
 
+		$raw_items = $this->collect_cart_items();
+		// Precio Lista A (público) al render — client_id = 0
+		$priced = class_exists( 'Glotracol_Quote_Pricing' )
+			? Glotracol_Quote_Pricing::resolve_items( $raw_items, 0 )
+			: [ 'items' => $raw_items, 'total' => 0 ];
 		$cart_items = [];
-		foreach ( WC()->cart->get_cart() as $key => $item ) {
-			$product = isset( $item['data'] ) ? $item['data'] : null;
-			if ( ! $product ) continue;
-			$pres = $item['gloq_presentacion'] ?? null;
+		foreach ( $priced['items'] as $it ) {
+			$product = $it['_product'] ?? null;
+			$unit = isset( $it['precio_unitario'] ) ? $it['precio_unitario'] : null;
+			$sub  = isset( $it['precio_subtotal'] ) ? $it['precio_subtotal'] : null;
 			$cart_items[] = [
-				'key'        => $key,
-				'product_id' => $product->get_id(),
-				'name'       => $product->get_name(),
-				'sku'        => $pres && ! empty( $pres['sku'] ) ? $pres['sku'] : $product->get_sku(),
-				'quantity'   => (int) $item['quantity'],
-				'permalink'  => get_permalink( $product->get_id() ),
-				'image'      => $product->get_image( [ 60, 60 ] ),
-				'presentacion_label' => $pres['label'] ?? '',
-				'presentacion_idx'   => isset( $pres['idx'] ) ? (int) $pres['idx'] : null,
+				'key'          => $it['key'],
+				'product_id'   => $it['product_id'],
+				'name'         => $it['name'],
+				'quantity'     => $it['quantity'],
+				'permalink'    => $it['permalink'],
+				'image'        => $it['image'],
+				'presentacion' => glotracol_quote_presentacion_display( $product, $it['presentacion_label'] ),
+				'valor_unit'   => $unit,
+				'valor_unit_fmt' => $unit !== null ? glotracol_quote_format_price( (int) $unit ) : 'A cotizar',
+				'valor_sub'    => $sub,
+				'valor_sub_fmt'=> $sub !== null ? glotracol_quote_format_price( (int) $sub ) : '—',
 			];
 		}
+		$total_fmt = ( isset( $priced['total'] ) && (int) $priced['total'] > 0 ) ? glotracol_quote_format_price( (int) $priced['total'] ) : '';
 
 		return glotracol_quote_load_template( 'form.php', [
 			'cart_items'  => $cart_items,
@@ -180,6 +215,8 @@ class Glotracol_Quote_Form {
 			'form_intro'  => glotracol_quote_get_setting( 'form_intro' ),
 			'terms_text'  => glotracol_quote_get_setting( 'terms_text' ),
 			'shop_url'    => function_exists( 'wc_get_page_id' ) && wc_get_page_id( 'shop' ) > 0 ? get_permalink( wc_get_page_id( 'shop' ) ) : home_url( '/' ),
+			'cart_total_fmt' => $total_fmt,
+			'reprice_nonce'  => wp_create_nonce( 'gloq_reprice_by_nit' ),
 		] );
 	}
 
