@@ -3,7 +3,7 @@
  * Plugin Name: Glotracol Cotizador
  * Plugin URI: https://neracosu.com/
  * Description: Convierte WooCommerce en un sistema de solicitud de cotizaciones (RFQ): reemplaza el checkout por un formulario que envía la lista de productos al equipo de Glotracol y al cliente.
- * Version: 2.9.1
+ * Version: 2.9.2
  * Author: Neracosu
  * Author URI: https://neracosu.com/
  * Text Domain: glotracol-quote
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GLOTRACOL_QUOTE_VERSION', '2.9.1' );
+define( 'GLOTRACOL_QUOTE_VERSION', '2.9.2' );
 define( 'GLOTRACOL_QUOTE_FILE', __FILE__ );
 define( 'GLOTRACOL_QUOTE_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GLOTRACOL_QUOTE_URL', plugin_dir_url( __FILE__ ) );
