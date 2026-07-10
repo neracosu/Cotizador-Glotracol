@@ -170,6 +170,13 @@
 .gloq-remove-item{background:transparent;border:0;color:#c0392b;cursor:pointer;font-size:20px;line-height:1;padding:4px 8px;border-radius:4px;transition:background 0.15s}
 .gloq-remove-item:hover{background:#fdecea}
 
+.gloq-col-empaque{white-space:nowrap}
+.gloq-stepper{display:inline-flex;align-items:center;gap:4px}
+.gloq-qty-btn{width:30px;height:34px;border:1px solid #cfdad5;background:#f4f9f6;color:#0a4d3a;font-size:18px;line-height:1;border-radius:8px;cursor:pointer}
+.gloq-qty-btn:hover{background:#e8f5ee}
+.gloq-stepper .gloq-qty-input{width:56px;text-align:center}
+.gloq-total-nota{font-size:.85em;color:#5b6b64;margin:4px 0 0}
+
 .glotracol-quote-edit-cart{font-size:13px;margin:0 0 24px}
 .glotracol-quote-items-header{display:flex;justify-content:space-between;align-items:center;margin:0 0 12px;flex-wrap:wrap;gap:10px}
 .glotracol-quote-items-header h3{margin:0;font-size:18px;color:var(--gloq-brand)}

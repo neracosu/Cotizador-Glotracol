@@ -234,6 +234,7 @@ class Glotracol_Quote_Form {
 				'permalink'    => $it['permalink'],
 				'image'        => $it['image'],
 				'presentacion' => glotracol_quote_presentacion_display( $product, $it['presentacion_label'] ),
+				'empaque'      => (string) get_post_meta( $it['product_id'], '_glo_empaque_texto', true ),
 				'valor_unit'   => $unit,
 				'valor_unit_fmt' => $unit !== null ? glotracol_quote_format_price( (int) $unit ) . ' c/u' : 'A cotizar',
 				'valor_sub'    => $sub,

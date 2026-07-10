@@ -187,6 +187,16 @@
 			});
 		}
 
+		// Stepper − / + de cantidad: ajusta el input y dispara el flujo existente de guardado
+		$(document.body).on('click', '.gloq-qty-btn', function () {
+			var $btn = $(this);
+			var $input = $btn.siblings('.gloq-qty-input');
+			if (!$input.length) return;
+			var v = parseInt($input.val(), 10); if (isNaN(v) || v < 1) v = 1;
+			v = $btn.hasClass('gloq-qty-plus') ? v + 1 : Math.max(1, v - 1);
+			$input.val(v).trigger('change');
+		});
+
 		// Recálculo de valor por NIT (Lista A → Lista B)
 		var $nit = $('input[name="gloq_nit"]');
 		var $itemsTable = $('#gloq-items-table');

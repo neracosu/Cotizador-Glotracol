@@ -17,7 +17,7 @@
 
 	<table class="glotracol-quote-items" id="gloq-items-table" data-reprice-nonce="<?php echo esc_attr( $reprice_nonce ?? '' ); ?>">
 		<thead>
-			<tr><th>Producto</th><th>Presentación</th><th>Cantidad</th><th class="gloq-col-valor">Valor</th><th></th></tr>
+			<tr><th>Producto</th><th>Presentación</th><th>Tipo de empaque</th><th>Cantidad</th><th class="gloq-col-valor">Valor</th><th></th></tr>
 		</thead>
 		<tbody>
 		<?php foreach ( $cart_items as $item ) : ?>
@@ -27,8 +27,10 @@
 					<a href="<?php echo esc_url( $item['permalink'] ); ?>"><?php echo esc_html( $item['name'] ); ?></a>
 				</td>
 				<td class="gloq-col-presentacion"><?php echo esc_html( $item['presentacion'] ?: '—' ); ?></td>
+				<td class="gloq-col-empaque"><?php echo esc_html( $item['empaque'] ?: '—' ); ?></td>
 				<td>
-					<div class="gloq-qty-cell">
+					<div class="gloq-qty-cell gloq-stepper">
+						<button type="button" class="gloq-qty-btn gloq-qty-minus" aria-label="Disminuir cantidad" tabindex="-1">−</button>
 						<input type="number"
 							class="gloq-qty-input"
 							data-cart-key="<?php echo esc_attr( $item['key'] ); ?>"
@@ -36,6 +38,7 @@
 							min="1"
 							step="1"
 							aria-label="Cantidad de <?php echo esc_attr( $item['name'] ); ?>">
+						<button type="button" class="gloq-qty-btn gloq-qty-plus" aria-label="Aumentar cantidad" tabindex="-1">+</button>
 					</div>
 				</td>
 				<td class="gloq-col-valor" data-cart-key="<?php echo esc_attr( $item['key'] ); ?>">
@@ -50,12 +53,13 @@
 		</tbody>
 		<tfoot>
 			<tr class="gloq-total-row"<?php echo empty( $cart_total_fmt ) ? ' hidden' : ''; ?>>
-				<td colspan="3"></td>
+				<td colspan="4"></td>
 				<td class="gloq-col-valor"><strong>Total:</strong> <span class="gloq-total-value"><?php echo esc_html( $cart_total_fmt ); ?></span></td>
 				<td></td>
 			</tr>
 		</tfoot>
 	</table>
+	<p class="gloq-total-nota">Los valores pueden variar según volumen y condiciones comerciales.</p>
 	<p class="gloq-valor-nota" id="gloq-valor-nota">Los precios mostrados son de lista pública. Si tu empresa tiene precios negociados, escribe tu <strong>NIT</strong> abajo y se actualizarán automáticamente.</p>
 	<p class="gloq-helper-text"><span class="dashicons-info"></span> Las cantidades se guardan automáticamente al cambiarlas. Puedes seguir agregando productos desde el catálogo.</p>
 
