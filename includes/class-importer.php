@@ -68,7 +68,7 @@ class Glotracol_Quote_Importer {
 			'precios_lista_b' => [
 				'required'  => [ 'id' ],
 				'optional'  => [ 'nombre', 'precio', 'precio normal' ],
-				'plantilla' => [ 'id', 'nombre', 'precio' ],
+				'plantilla' => [ 'id', 'nombre', 'presentacion', 'empaque', 'peso (kg)', 'precio' ],
 			],
 		];
 	}

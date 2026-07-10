@@ -352,11 +352,17 @@ class Glotracol_Quote_Import_Reader {
 		if ( empty( $datos ) ) $datos = [ $cols ];
 
 		// Instrucciones: por columna canónica → requerida + sinónimos aceptados.
-		$req = $schema['required'];
+		// Las columnas de la plantilla que el importador NO lee (no están en required ni
+		// optional) se marcan "No — solo referencia": aparecen para dar contexto visual
+		// pero su valor no se importa (ej. Presentacion/Empaque/Peso en la Lista B, que
+		// ya se describen en el catálogo).
+		$req  = $schema['required'];
+		$read = array_merge( $schema['required'], $schema['optional'] );
 		$instr = [ [ 'Columna', 'Requerida', 'Nombres aceptados (el sistema los reconoce igual)' ] ];
 		foreach ( $cols as $c ) {
-			$syn = self::SYNONYMS[ $c ] ?? [ $c ];
-			$instr[] = [ $c, in_array( $c, $req, true ) ? 'Sí' : 'No', implode( ', ', $syn ) ];
+			$syn   = self::SYNONYMS[ $c ] ?? [ $c ];
+			$estado = in_array( $c, $req, true ) ? 'Sí' : ( in_array( $c, $read, true ) ? 'No' : 'No — solo referencia' );
+			$instr[] = [ $c, $estado, implode( ', ', $syn ) ];
 		}
 		return [ 'Datos' => $datos, 'Instrucciones' => $instr ];
 	}
