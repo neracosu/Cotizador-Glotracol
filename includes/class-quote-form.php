@@ -16,6 +16,10 @@ class Glotracol_Quote_Form {
 		// AJAX para editar cantidades inline en /solicitar-cotizacion
 		add_action( 'wp_ajax_gloq_update_qty', [ $this, 'ajax_update_qty' ] );
 		add_action( 'wp_ajax_nopriv_gloq_update_qty', [ $this, 'ajax_update_qty' ] );
+
+		// AJAX para recalcular precios a Lista B según el NIT ingresado
+		add_action( 'wp_ajax_gloq_reprice_by_nit', [ $this, 'ajax_reprice_by_nit' ] );
+		add_action( 'wp_ajax_nopriv_gloq_reprice_by_nit', [ $this, 'ajax_reprice_by_nit' ] );
 	}
 
 	public function ajax_update_qty() {
@@ -40,6 +44,40 @@ class Glotracol_Quote_Form {
 		wp_send_json_success( [
 			'count' => WC()->cart->get_cart_contents_count(),
 			'empty' => WC()->cart->is_empty(),
+		] );
+	}
+
+	public function ajax_reprice_by_nit() {
+		check_ajax_referer( 'gloq_reprice_by_nit', '_wpnonce' );
+		$this->ensure_wc_cart_loaded();
+
+		$nit = isset( $_POST['nit'] ) ? sanitize_text_field( wp_unslash( $_POST['nit'] ) ) : '';
+		$client_id = ( $nit !== '' && function_exists( 'glotracol_quote_find_client_by_nit' ) )
+			? (int) glotracol_quote_find_client_by_nit( $nit ) : 0;
+
+		$items = $this->collect_cart_items();
+		$priced = Glotracol_Quote_Pricing::resolve_items( $items, $client_id );
+
+		$out = [];
+		foreach ( $priced['items'] as $it ) {
+			$unit = isset( $it['precio_unitario'] ) ? $it['precio_unitario'] : null;
+			$sub  = isset( $it['precio_subtotal'] ) ? $it['precio_subtotal'] : null;
+			$out[ $it['key'] ] = [
+				'unit'     => $unit,
+				'unit_fmt' => $unit !== null ? glotracol_quote_format_price( (int) $unit ) . ' c/u' : 'A cotizar',
+				'sub'      => $sub,
+				'sub_fmt'  => $sub !== null ? glotracol_quote_format_price( (int) $sub ) : '—',
+			];
+		}
+		$lista = ( $client_id && function_exists( 'glotracol_quote_get_client_price_list' ) )
+			? glotracol_quote_get_client_price_list( $client_id ) : 'A';
+		$total = (int) ( $priced['total'] ?? 0 );
+		wp_send_json_success( [
+			'items'     => $out,
+			'total'     => $total,
+			'total_fmt' => $total > 0 ? glotracol_quote_format_price( $total ) : '',
+			'es_b2b'    => (bool) ( $client_id && $lista === 'B' ),
+			'lista'     => $lista,
 		] );
 	}
 
