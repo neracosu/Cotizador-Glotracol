@@ -434,3 +434,39 @@ function glotracol_quote_presentacion_display( $product, $pres_label = '' ) {
 	}
 	return '';
 }
+
+/**
+ * Colores globales del kit activo de Elementor (sistema + personalizados).
+ * Devuelve [ [ 'id' => …, 'title' => …, 'color' => …, 'group' => 'system'|'custom' ], … ]
+ * o [] si Elementor / el kit no están disponibles. El 'id' es el que Elementor expone
+ * como variable CSS --e-global-color-<id> (slug del sistema o hash del personalizado).
+ */
+function glotracol_quote_elementor_global_colors() {
+	$kit_id = (int) get_option( 'elementor_active_kit' );
+	if ( ! $kit_id ) {
+		return [];
+	}
+	$settings = get_post_meta( $kit_id, '_elementor_page_settings', true );
+	if ( ! is_array( $settings ) ) {
+		return [];
+	}
+	$out = [];
+	foreach ( [ 'system_colors' => 'system', 'custom_colors' => 'custom' ] as $key => $group ) {
+		if ( empty( $settings[ $key ] ) || ! is_array( $settings[ $key ] ) ) {
+			continue;
+		}
+		foreach ( $settings[ $key ] as $c ) {
+			$id = isset( $c['_id'] ) ? (string) $c['_id'] : '';
+			if ( $id === '' ) {
+				continue;
+			}
+			$out[] = [
+				'id'    => $id,
+				'title' => ( isset( $c['title'] ) && $c['title'] !== '' ) ? (string) $c['title'] : $id,
+				'color' => isset( $c['color'] ) ? (string) $c['color'] : '',
+				'group' => $group,
+			];
+		}
+	}
+	return $out;
+}

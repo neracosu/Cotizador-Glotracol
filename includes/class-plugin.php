@@ -168,7 +168,12 @@ class Glotracol_Quote_Plugin {
 			return;
 		}
 		$slot = glotracol_quote_get_setting( 'appearance_elementor_slot', 'primary' );
-		$slot = in_array( $slot, [ 'primary', 'secondary', 'accent' ], true ) ? $slot : 'primary';
+		// Acepta slots de sistema (primary/secondary/accent/text) o IDs de colores
+		// personalizados (hash). Sanitiza a un token seguro para evitar inyección en CSS.
+		$slot = preg_replace( '/[^a-z0-9_-]/i', '', (string) $slot );
+		if ( $slot === '' ) {
+			$slot = 'primary';
+		}
 		$var  = '--e-global-color-' . $slot;
 		echo "<style id='gloq-appearance'>:root{--gloq-brand:var($var,#0a4d3a);--gloq-brand-dark:color-mix(in srgb,var($var,#0a4d3a) 85%,#000);--gloq-brand-tint:color-mix(in srgb,var($var,#0a4d3a) 8%,#fff);}</style>\n";
 	}

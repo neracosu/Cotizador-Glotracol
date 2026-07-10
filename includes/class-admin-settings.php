@@ -57,8 +57,9 @@ class Glotracol_Quote_Admin_Settings {
 		$out['large_alert_email']           = is_email( $input['large_alert_email'] ?? '' ) ? sanitize_email( $input['large_alert_email'] ) : '';
 		$out['auto_respond_enabled']        = ! empty( $input['auto_respond_enabled'] ) ? 'yes' : 'no';
 		$out['appearance_inherit_elementor'] = ! empty( $input['appearance_inherit_elementor'] ) ? 'yes' : 'no';
-		$slot = sanitize_key( $input['appearance_elementor_slot'] ?? 'primary' );
-		$out['appearance_elementor_slot'] = in_array( $slot, [ 'primary', 'secondary', 'accent' ], true ) ? $slot : 'primary';
+		$slot    = preg_replace( '/[^a-z0-9_-]/i', '', (string) ( $input['appearance_elementor_slot'] ?? 'primary' ) );
+		$allowed = array_merge( [ 'primary', 'secondary', 'accent', 'text' ], wp_list_pluck( glotracol_quote_elementor_global_colors(), 'id' ) );
+		$out['appearance_elementor_slot'] = ( $slot !== '' && in_array( $slot, $allowed, true ) ) ? $slot : 'primary';
 		$out['mini_cart_enabled'] = ! empty( $input['mini_cart_enabled'] ) ? 'yes' : 'no';
 		$mcp = sanitize_key( $input['mini_cart_position'] ?? 'bottom-left' );
 		$out['mini_cart_position'] = in_array( $mcp, [ 'bottom-left', 'bottom-right', 'top-left', 'top-right' ], true ) ? $mcp : 'bottom-left';
@@ -292,14 +293,35 @@ class Glotracol_Quote_Admin_Settings {
 				<table class="form-table" role="presentation">
 					<tr><th scope="row">Heredar color de Elementor</th>
 						<td><label><input type="checkbox" name="<?php echo $opt; ?>[appearance_inherit_elementor]" value="yes" <?php checked( $s['appearance_inherit_elementor'] ?? 'no', 'yes' ); ?>> Usar el color global de Elementor como color de marca del plugin</label></td></tr>
-					<tr><th scope="row">Slot de color de Elementor</th>
+					<tr><th scope="row">Color de la marca (global de Elementor)</th>
 						<td>
+						<?php
+						$globals = glotracol_quote_elementor_global_colors();
+						$current = $s['appearance_elementor_slot'] ?? 'primary';
+						if ( empty( $globals ) ) :
+							?>
+							<p class="description">No se detectaron colores globales de Elementor (¿está activo Elementor?). Mientras tanto, el plugin usa el verde Glotracol.</p>
+							<input type="hidden" name="<?php echo $opt; ?>[appearance_elementor_slot]" value="<?php echo esc_attr( $current ); ?>">
+						<?php else : ?>
 							<select name="<?php echo $opt; ?>[appearance_elementor_slot]">
-								<option value="primary" <?php selected( $s['appearance_elementor_slot'] ?? 'primary', 'primary' ); ?>>Primary</option>
-								<option value="secondary" <?php selected( $s['appearance_elementor_slot'] ?? 'primary', 'secondary' ); ?>>Secondary</option>
-								<option value="accent" <?php selected( $s['appearance_elementor_slot'] ?? 'primary', 'accent' ); ?>>Accent</option>
+								<?php
+								foreach ( [ 'system' => 'Colores del sistema', 'custom' => 'Colores personalizados' ] as $grp => $grp_label ) :
+									$items = array_filter( $globals, function ( $g ) use ( $grp ) { return $g['group'] === $grp; } );
+									if ( ! $items ) {
+										continue;
+									}
+									?>
+									<optgroup label="<?php echo esc_attr( $grp_label ); ?>">
+										<?php foreach ( $items as $g ) : ?>
+											<option value="<?php echo esc_attr( $g['id'] ); ?>" <?php selected( $current, $g['id'] ); ?>>
+												<?php echo esc_html( $g['title'] . ( $g['color'] !== '' ? ' — ' . $g['color'] : '' ) ); ?>
+											</option>
+										<?php endforeach; ?>
+									</optgroup>
+								<?php endforeach; ?>
 							</select>
-							<p class="description">Qué color global de Elementor usar. Si el slot está vacío, cae al verde Glotracol.</p>
+							<p class="description">Elige cuál color global de Elementor es el de la marca. El plugin lo hereda <strong>en vivo</strong>: si lo cambias en Elementor, el plugin cambia solo — sin volver a configurarlo. Si ese color se elimina, cae al verde Glotracol.</p>
+						<?php endif; ?>
 						</td></tr>
 				</table>
 				<h2>Carrito flotante</h2>
