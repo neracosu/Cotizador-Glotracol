@@ -248,6 +248,8 @@
 					} else {
 						$context.removeClass('gloq-loading').addClass('gloq-saved');
 						setTimeout(function () { $context.removeClass('gloq-saved'); }, 1200);
+						// Refrescar Valor/Total tras cambiar la cantidad (recomputa desde el carrito con el NIT actual)
+						doReprice();
 					}
 				} else {
 					alert((resp && resp.data && resp.data.message) || 'No pudimos actualizar la cantidad. Recarga la página.');

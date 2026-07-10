@@ -40,7 +40,7 @@
 				</td>
 				<td class="gloq-col-valor" data-cart-key="<?php echo esc_attr( $item['key'] ); ?>">
 					<span class="gloq-valor-sub"><?php echo esc_html( $item['valor_sub_fmt'] ); ?></span>
-					<span class="gloq-valor-unit"><?php echo esc_html( $item['valor_unit_fmt'] ); ?> c/u</span>
+					<span class="gloq-valor-unit"><?php echo esc_html( $item['valor_unit_fmt'] ); ?></span>
 				</td>
 				<td>
 					<button type="button" class="gloq-remove-item" data-cart-key="<?php echo esc_attr( $item['key'] ); ?>" title="Quitar de la cotización" aria-label="Quitar producto">×</button>

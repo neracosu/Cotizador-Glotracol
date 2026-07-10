@@ -235,7 +235,7 @@ class Glotracol_Quote_Form {
 				'image'        => $it['image'],
 				'presentacion' => glotracol_quote_presentacion_display( $product, $it['presentacion_label'] ),
 				'valor_unit'   => $unit,
-				'valor_unit_fmt' => $unit !== null ? glotracol_quote_format_price( (int) $unit ) : 'A cotizar',
+				'valor_unit_fmt' => $unit !== null ? glotracol_quote_format_price( (int) $unit ) . ' c/u' : 'A cotizar',
 				'valor_sub'    => $sub,
 				'valor_sub_fmt'=> $sub !== null ? glotracol_quote_format_price( (int) $sub ) : '—',
 			];
