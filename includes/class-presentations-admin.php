@@ -61,6 +61,13 @@ class Glotracol_Quote_Presentations_Admin {
 					<span class="description" style="display:block;color:#666">Texto que se muestra en el cuadro de cotización (ej. "Saco 25 kg", "Caja x 12 kg"). Si se deja vacío, se usa el peso del producto.</span>
 				</p>
 
+				<?php $emp_texto = get_post_meta( $post->ID, '_glo_empaque_texto', true ); ?>
+				<p class="form-field" style="padding:0 12px">
+					<label for="glo_empaque_texto"><strong>Tipo de empaque</strong></label><br>
+					<input type="text" id="glo_empaque_texto" name="glo_empaque_texto" value="<?php echo esc_attr( $emp_texto ); ?>" placeholder="Saco" style="width:60%">
+					<span class="description" style="display:block;color:#666">Saco / Caja / Bolsa / Doypack. Si se deja vacío, la columna muestra “—”.</span>
+				</p>
+
 				<div id="glo-presentaciones-wrap" style="padding:0 12px 12px">
 					<table class="widefat striped" id="glo-presentaciones-table" style="margin-top:8px">
 						<thead>
@@ -121,6 +128,10 @@ class Glotracol_Quote_Presentations_Admin {
 
 		if ( isset( $_POST['glo_presentacion_texto'] ) ) {
 			$product->update_meta_data( '_glo_presentacion_texto', sanitize_text_field( wp_unslash( $_POST['glo_presentacion_texto'] ) ) );
+		}
+
+		if ( isset( $_POST['glo_empaque_texto'] ) ) {
+			$product->update_meta_data( '_glo_empaque_texto', sanitize_text_field( wp_unslash( $_POST['glo_empaque_texto'] ) ) );
 		}
 
 		$rows = $_POST['glo_pres'] ?? [];

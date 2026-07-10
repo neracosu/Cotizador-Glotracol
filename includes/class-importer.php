@@ -55,8 +55,8 @@ class Glotracol_Quote_Importer {
 			],
 			'precios_catalogo' => [
 				'required'  => [ 'id', 'precio normal' ],
-				'optional'  => [ 'nombre', 'peso (kg)', 'disponibilidad', 'inventario', 'precio', 'presentacion' ],
-				'plantilla' => [ 'id', 'nombre', 'presentacion', 'peso (kg)', 'precio normal', 'disponibilidad' ],
+				'optional'  => [ 'nombre', 'peso (kg)', 'disponibilidad', 'inventario', 'precio', 'presentacion', 'empaque' ],
+				'plantilla' => [ 'id', 'nombre', 'presentacion', 'empaque', 'peso (kg)', 'precio normal', 'disponibilidad' ],
 			],
 			'clientes_lista' => [
 				'required'  => [],
@@ -548,12 +548,16 @@ class Glotracol_Quote_Importer {
 						if ( $presentacion !== '' ) {
 							update_post_meta( $existing_id, '_glo_presentacion_texto', sanitize_text_field( $presentacion ) );
 						}
+						$empaque = isset( $row['empaque'] ) ? trim( (string) $row['empaque'] ) : '';
+						if ( $empaque !== '' ) {
+							update_post_meta( $existing_id, '_glo_empaque_texto', sanitize_text_field( $empaque ) );
+						}
 						if ( $weight !== null ) $product->set_weight( $weight );
 						if ( $stock_text !== '' ) $product->set_stock_status( strpos( strtolower( $stock_text ), 'agot' ) !== false ? 'outofstock' : 'instock' );
 						$product->save();
 						$report['updated']++;
 					} else {
-						$new_id = self::create_product( $name, $price, $weight, $stock_text, $row['presentacion'] ?? '' );
+						$new_id = self::create_product( $name, $price, $weight, $stock_text, $row['presentacion'] ?? '', $row['empaque'] ?? '' );
 						if ( ! $new_id ) {
 							$report['skipped']++;
 							$report['errors'][] = "Línea $line: no se pudo crear el producto \"$name\".";
@@ -592,6 +596,10 @@ class Glotracol_Quote_Importer {
 				$presentacion = isset( $row['presentacion'] ) ? trim( (string) $row['presentacion'] ) : '';
 				if ( $presentacion !== '' ) {
 					update_post_meta( $pid, '_glo_presentacion_texto', sanitize_text_field( $presentacion ) );
+				}
+				$empaque = isset( $row['empaque'] ) ? trim( (string) $row['empaque'] ) : '';
+				if ( $empaque !== '' ) {
+					update_post_meta( $pid, '_glo_empaque_texto', sanitize_text_field( $empaque ) );
 				}
 				if ( $had > 0 ) $report['updated']++; else $report['inserted']++;
 				if ( $sync_stock ) {
@@ -660,7 +668,7 @@ class Glotracol_Quote_Importer {
 	}
 
 	/** Crea un producto simple publicado con su precio interno, peso y stock. Devuelve el ID o 0. */
-	private static function create_product( $name, $price, $weight, $stock_text, $presentacion = '' ) {
+	private static function create_product( $name, $price, $weight, $stock_text, $presentacion = '', $empaque = '' ) {
 		if ( ! class_exists( 'WC_Product_Simple' ) ) return 0;
 		$product = new WC_Product_Simple();
 		$product->set_name( $name );
@@ -676,6 +684,10 @@ class Glotracol_Quote_Importer {
 		$presentacion = trim( (string) $presentacion );
 		if ( $presentacion !== '' ) {
 			update_post_meta( $id, '_glo_presentacion_texto', sanitize_text_field( $presentacion ) );
+		}
+		$empaque = trim( (string) $empaque );
+		if ( $empaque !== '' ) {
+			update_post_meta( $id, '_glo_empaque_texto', sanitize_text_field( $empaque ) );
 		}
 		return (int) $id;
 	}
