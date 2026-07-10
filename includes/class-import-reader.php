@@ -55,6 +55,7 @@ class Glotracol_Quote_Import_Reader {
 		'notas'          => [ 'notas', 'observaciones', 'comentarios' ],
 		'sku_producto'   => [ 'sku_producto', 'sku producto' ],
 		'label'          => [ 'label', 'presentacion', 'presentación', 'etiqueta' ],
+		'presentacion'   => [ 'presentacion', 'presentación', 'empaque', 'tipo de empaque', 'presentacion (texto)' ],
 		'sku_variante'   => [ 'sku_variante', 'sku variante', 'variante' ],
 		'peso_g'         => [ 'peso_g', 'peso (g)', 'gramos', 'peso g' ],
 		'precio_publico' => [ 'precio_publico', 'precio público', 'precio publico' ],
