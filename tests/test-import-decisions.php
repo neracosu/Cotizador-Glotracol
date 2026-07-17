@@ -10,7 +10,7 @@ $rows = [
 ];
 $post = [
     'gloq_cotejo'  => '1',
-    'gloq_include' => [ '2'=>'1', '4'=>'1' ],           // la 3 queda excluida
+    'gloq_include' => [ '2'=>'1' ],                      // la 3 queda excluida; la 4 no trae include (unmatched resuelta)
     'gloq_val'     => [ '2'=>[ 'precio'=>'1200' ] ],     // editar precio de la 2
     'gloq_resolve' => [ '4'=>'55' ],                     // asignar producto a la 4
 ];
@@ -18,6 +18,8 @@ $out = Glotracol_Quote_Importer_Admin::apply_row_decisions( $rows, $post );
 chk( 'quedan 2 filas', count( $out ), 2 );
 chk( 'linea 3 excluida', array_column( $out, '__line' ), [ 2, 4 ] );
 chk( 'precio editado 2', $out[0]['precio normal'], '1200' );
+chk( 'precio editado en precio normal', $out[0]['precio normal'], '1200' );
+chk( 'precio editado tambien en precio (Lista B)', $out[0]['precio'], '1200' );
 chk( 'resolve aplicado 4', (int) $out[1]['id'], 55 );
 
 // Sin cotejo (tipo viejo): no filtra nada.

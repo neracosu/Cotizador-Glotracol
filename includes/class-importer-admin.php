@@ -754,11 +754,10 @@ class Glotracol_Quote_Importer_Admin {
 		$include = ( isset( $post['gloq_include'] ) && is_array( $post['gloq_include'] ) ) ? $post['gloq_include'] : [];
 		$vals    = ( isset( $post['gloq_val'] ) && is_array( $post['gloq_val'] ) ) ? $post['gloq_val'] : [];
 		$resolve = ( isset( $post['gloq_resolve'] ) && is_array( $post['gloq_resolve'] ) ) ? $post['gloq_resolve'] : [];
-		$editable_price = [ 'precio', 'precio normal' ];
 		$out = [];
 		foreach ( $rows as $r ) {
 			$line = (string) ( $r['__line'] ?? '' );
-			if ( $cotejo && empty( $include[ $line ] ) ) continue; // no incluida → saltar
+			if ( $cotejo && empty( $include[ $line ] ) && empty( $resolve[ $line ] ) ) continue; // no incluida → saltar (salvo que se haya resuelto a un producto)
 			// resolver producto
 			if ( isset( $resolve[ $line ] ) && (int) $resolve[ $line ] > 0 ) {
 				$r['id'] = (int) $resolve[ $line ];
@@ -767,7 +766,9 @@ class Glotracol_Quote_Importer_Admin {
 			if ( isset( $vals[ $line ] ) && is_array( $vals[ $line ] ) ) {
 				foreach ( $vals[ $line ] as $campo => $v ) {
 					if ( $campo === 'precio' ) {
-						$r['precio normal'] = (string) (int) preg_replace( '/[^0-9]/', '', (string) $v );
+						$p = (string) (int) preg_replace( '/[^0-9]/', '', (string) $v );
+						$r['precio normal'] = $p;
+						$r['precio'] = $p;
 					} else {
 						$r[ $campo ] = sanitize_text_field( (string) $v );
 					}
