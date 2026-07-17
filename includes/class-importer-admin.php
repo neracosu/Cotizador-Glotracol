@@ -260,6 +260,22 @@ class Glotracol_Quote_Importer_Admin {
 		$total = count( $read['rows'] );
 		echo '<div class="gloq-importer-card">';
 		echo '<h2>Previsualización</h2>';
+		$cotejo_types = [ 'precios_catalogo', 'precios_lista_b' ];
+		$use_cotejo = in_array( $type, $cotejo_types, true ) && ! ( $read['type_ambiguous'] && ! $forced );
+		if ( $use_cotejo ) {
+			$diff = Glotracol_Quote_Import_Diff::build( $type, $read['rows'], [
+				'mode'           => $mode,
+				'client_id'      => $client_id,
+				'sync_stock'     => $sync_stock,
+				'create_missing' => $create_missing,
+			] );
+			$this->render_cotejo( $type, $diff, [
+				'token'=>$token, 'ext'=>$ext, 'mode'=>$mode, 'client_id'=>$client_id,
+				'sync_stock'=>$sync_stock, 'create_missing'=>$create_missing, 'total'=>$total,
+			] );
+			echo '</div>'; // cierra gloq-importer-card
+			return;
+		}
 		// Tipo detectado (barrera 2)
 		echo '<p><strong>Tipo detectado:</strong> ' . esc_html( Glotracol_Quote_Importer::TYPES[ $type ] ?? $type );
 		echo ' <span class="description">(confianza ' . esc_html( (int) round( $read['type_confidence'] * 100 ) ) . '%)</span></p>';
@@ -395,6 +411,96 @@ class Glotracol_Quote_Importer_Admin {
 			echo '</form>';
 		}
 		echo '</div>';
+	}
+
+	private function render_cotejo( $type, $diff, $ctx ) {
+		$s = $diff['summary'];
+		$labels = [ 'precio'=>'Precio', 'lista_a'=>'Lista A (ref.)', 'presentacion'=>'Presentación', 'empaque'=>'Empaque', 'disponibilidad'=>'Disponibilidad', 'peso'=>'Peso (ref.)' ];
+		// Banner global
+		if ( in_array( 'mostly_price_drop', $diff['global_alerts'], true ) ) {
+			echo '<div class="notice notice-error inline gloq-cotejo-alert"><p><strong>⚠ La mayoría de los precios BAJAN.</strong> ¿Seguro que este archivo no es la Lista B? Si lo es, cambia el tipo a <strong>“Precios de Lista B”</strong> abajo antes de confirmar.</p></div>';
+		}
+		// Resumen (chips)
+		echo '<div class="gloq-cotejo-summary">';
+		printf( '<button type="button" class="gloq-cotejo-chip is-active" data-filter="all">Todos <b>%d</b></button>', count( $diff['rows'] ) );
+		printf( '<button type="button" class="gloq-cotejo-chip" data-filter="change">Cambian <b>%d</b></button>', $s['change'] );
+		printf( '<button type="button" class="gloq-cotejo-chip" data-filter="new">Nuevos <b>%d</b></button>', $s['new'] );
+		printf( '<button type="button" class="gloq-cotejo-chip" data-filter="same">Iguales <b>%d</b></button>', $s['same'] );
+		printf( '<button type="button" class="gloq-cotejo-chip" data-filter="unmatched">Sin coincidencia <b>%d</b></button>', $s['unmatched'] );
+		printf( '<button type="button" class="gloq-cotejo-chip" data-filter="alert">⚠ Alertas <b>%d</b></button>', $s['alerts'] );
+		echo '</div>';
+		// Cambiar tipo (para corregir Lista A/B sin re-subir)
+		echo '<p class="gloq-cotejo-switch">¿Tipo equivocado? ';
+		foreach ( [ 'precios_catalogo'=>'Es Lista A (catálogo)', 'precios_lista_b'=>'Es Lista B' ] as $k=>$lab ) {
+			if ( $k === $type ) { echo '<strong>'.esc_html( $lab ).'</strong> '; continue; }
+			echo '<a class="button button-small" href="'.esc_url( add_query_arg( 'type', $k ) ).'">Cambiar a: '.esc_html( $lab ).'</a> ';
+		}
+		echo '</p>';
+
+		// Form de confirmar
+		$back_url = esc_url( admin_url( 'edit.php?post_type=glo_quote&page='.self::PAGE_SLUG.'&type='.$type ) );
+		echo '<form method="post" action="'.esc_url( admin_url( 'admin-post.php' ) ).'" class="gloq-cotejo-form">';
+		echo '<input type="hidden" name="action" value="gloq_import_run">';
+		echo '<input type="hidden" name="gloq_cotejo" value="1">';
+		foreach ( [ 'token'=>$ctx['token'], 'ext'=>$ctx['ext'], 'gloq_type'=>$type, 'gloq_mode'=>$ctx['mode'], 'gloq_client_id'=>(int)$ctx['client_id'], 'gloq_sync_stock'=>(int)$ctx['sync_stock'], 'gloq_create_missing'=>(int)$ctx['create_missing'] ] as $k=>$v ) {
+			echo '<input type="hidden" name="'.esc_attr( $k ).'" value="'.esc_attr( $v ).'">';
+		}
+		wp_nonce_field( self::NONCE_ACTION );
+
+		echo '<table class="wp-list-table widefat striped gloq-cotejo-table"><thead><tr><th>Incluir</th><th>Estado</th><th>Producto</th><th>Campos (actual → nuevo)</th></tr></thead><tbody>';
+		foreach ( $diff['rows'] as $r ) {
+			$line = esc_attr( $r['__line'] );
+			$st = $r['status'];
+			$has_alert = ! empty( $r['alerts'] );
+			$chk = in_array( $st, [ 'change', 'new' ], true ) ? 'checked' : ( $st === 'same' ? 'checked' : '' );
+			$tr_class = 'gloq-row-'.$st.( $has_alert ? ' gloq-row-alert' : '' );
+			echo '<tr class="'.$tr_class.'" data-status="'.esc_attr( $st ).'" data-alert="'.( $has_alert ? '1':'0' ).'">';
+			// Incluir
+			if ( $st === 'unmatched' ) {
+				echo '<td>—</td><td><span class="gloq-chip gloq-chip-unmatched">Sin coincidencia</span></td>';
+				echo '<td>'.esc_html( $r['product']['name'] ?? '' ).'</td><td>';
+				$field = 'gloq_resolve['.$line.']';
+				echo '<select name="'.$field.'"><option value="">— Ignorar esta fila —</option>';
+				foreach ( (array) $r['candidates'] as $c ) {
+					echo '<option value="'.(int)$c['id'].'">'.esc_html( $c['label'] ).' ('.(int)$c['score'].'%)</option>';
+				}
+				echo '</select></td></tr>';
+				continue;
+			}
+			echo '<td><input type="checkbox" name="gloq_include['.$line.']" value="1" '.$chk.'></td>';
+			echo '<td><span class="gloq-chip gloq-chip-'.esc_attr( $st ).'">'.esc_html( self::status_label( $st ) ).'</span>';
+			if ( $has_alert ) echo ' <span class="gloq-chip gloq-chip-alert" title="'.esc_attr( implode(', ',$r['alerts']) ).'">⚠</span>';
+			echo '</td>';
+			echo '<td>'.esc_html( $r['product']['name'] ?? '' ).' <span class="description">#'.(int)($r['product']['id']??0).'</span></td>';
+			echo '<td class="gloq-cotejo-fields">';
+			foreach ( $r['fields'] as $key=>$f ) {
+				$lab = $labels[ $key ] ?? $key;
+				echo '<div class="gloq-field gloq-field-'.esc_attr( $f['state'] ).'"><span class="gloq-field-lbl">'.esc_html( $lab ).':</span> ';
+				if ( $f['state'] === 'ref' ) {
+					echo '<span class="gloq-field-cur">'.esc_html( $f['current'] !== '' ? $f['current'] : '—' ).'</span>';
+				} elseif ( $f['state'] === 'skip' ) {
+					echo '<span class="gloq-field-cur">'.esc_html( $f['current'] !== '' ? $f['current'] : '—' ).'</span> <em>(no se toca)</em>';
+				} else {
+					echo '<span class="gloq-field-cur">'.esc_html( $f['current'] !== '' ? $f['current'] : '—' ).'</span> → ';
+					if ( ! empty( $f['editable'] ) && $key === 'precio' ) {
+						echo '<input type="text" class="gloq-field-edit" name="gloq_val['.$line.'][precio]" value="'.esc_attr( $f['incoming'] ).'" size="8">';
+					} elseif ( ! empty( $f['editable'] ) ) {
+						echo '<input type="text" class="gloq-field-edit" name="gloq_val['.$line.']['.esc_attr( $key ).']" value="'.esc_attr( $f['incoming'] ).'" size="14">';
+					} else {
+						echo '<span class="gloq-field-new">'.esc_html( $f['incoming'] ).'</span>';
+					}
+				}
+				echo '</div>';
+			}
+			echo '</td></tr>';
+		}
+		echo '</tbody></table>';
+		echo '<p class="submit"><input type="submit" class="button button-primary button-large" value="Confirmar e importar"> <a href="'.$back_url.'" class="button">Cancelar</a></p>';
+		echo '</form>';
+	}
+
+	private static function status_label( $st ) {
+		return [ 'change'=>'Cambia', 'new'=>'Nuevo', 'same'=>'Igual', 'unmatched'=>'Sin coincidencia' ][ $st ] ?? $st;
 	}
 
 	private function render_report() {
