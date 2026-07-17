@@ -562,17 +562,8 @@ class Glotracol_Quote_Importer_Admin {
 		if ( $read['error'] && empty( $read['rows'] ) ) { $this->redirect_back( $read['error'] ); }
 		$type = $read['chosen_type'];
 		$rows = $read['rows'];
-		// Resolutor en-sesión: mapear fila(__line) → product_id elegido.
-		$resolve = ( isset( $_POST['gloq_resolve'] ) && is_array( $_POST['gloq_resolve'] ) ) ? wp_unslash( $_POST['gloq_resolve'] ) : [];
-		if ( ! empty( $resolve ) ) {
-			foreach ( $rows as &$r ) {
-				$line = (string) ( $r['__line'] ?? '' );
-				if ( isset( $resolve[ $line ] ) && (int) $resolve[ $line ] > 0 ) {
-					$r['id'] = (int) $resolve[ $line ]; // el importador escribirá por este ID
-				}
-			}
-			unset( $r );
-		}
+		// Aplicar decisiones del cotejo (incluir/editar/resolver) o, en tipos legados, solo resolver.
+		$rows = self::apply_row_decisions( $rows, wp_unslash( $_POST ) );
 		$opts = [];
 		if ( $type === 'precios_catalogo' ) {
 			$opts = [
