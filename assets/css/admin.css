@@ -337,3 +337,24 @@ button[disabled] .gloq-spinner{margin-right:6px}
 }
 .gloq-mt-3 { margin-top: var(--gloq-s3) !important; }
 .gloq-mt-4 { margin-top: var(--gloq-s4) !important; }
+
+/* ---- Cotejo de importación ---- */
+.gloq-cotejo-alert p { font-size: 14px; }
+.gloq-cotejo-summary { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0; }
+.gloq-cotejo-chip { background: #f0f3f2; border: 1px solid #cfdad6; border-radius: 20px; padding: 5px 14px; cursor: pointer; font-size: 13px; }
+.gloq-cotejo-chip.is-active { background: #0a4d3a; color: #fff; border-color: #0a4d3a; }
+.gloq-cotejo-chip b { margin-left: 4px; }
+.gloq-cotejo-switch { margin: 6px 0 14px; }
+.gloq-cotejo-table td { vertical-align: top; }
+.gloq-chip { display: inline-block; padding: 1px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+.gloq-chip-change { background: #fff2d8; color: #8a5a00; }
+.gloq-chip-new { background: #dceeff; color: #0b5cad; }
+.gloq-chip-same { background: #eef1f0; color: #6b7a74; }
+.gloq-chip-unmatched { background: #fde2e0; color: #a11; }
+.gloq-chip-alert { background: #ffe0e0; color: #a11; }
+.gloq-cotejo-fields .gloq-field { padding: 1px 0; font-size: 13px; }
+.gloq-field-lbl { color: #6b7a74; }
+.gloq-field-same, .gloq-field-ref, .gloq-field-skip { color: #8a988f; }
+.gloq-field-change .gloq-field-new, .gloq-field-fill .gloq-field-new { background: #fff2d8; font-weight: 600; padding: 0 4px; border-radius: 3px; }
+.gloq-field-edit { padding: 1px 4px; }
+.gloq-row-alert { box-shadow: inset 3px 0 0 #e0a800; }

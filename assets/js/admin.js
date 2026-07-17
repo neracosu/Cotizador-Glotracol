@@ -148,4 +148,26 @@
 		} );
 	} );
 
+	/* ---------------------------------------------------------------
+	 * Cotejo de importación: filtros por estado y plegado de "iguales".
+	 * ------------------------------------------------------------- */
+	$( function () {
+		var $cotejo = $( '.gloq-cotejo-table' );
+		if ( $cotejo.length ) {
+			$( '.gloq-cotejo-chip' ).on( 'click', function () {
+				var f = $( this ).data( 'filter' );
+				$( '.gloq-cotejo-chip' ).removeClass( 'is-active' );
+				$( this ).addClass( 'is-active' );
+				$cotejo.find( 'tbody tr' ).each( function () {
+					var $tr = $( this );
+					var show = ( f === 'all' ) ||
+						( f === 'alert' ? $tr.data( 'alert' ) == 1 : $tr.data( 'status' ) === f );
+					$tr.toggle( !! show );
+				} );
+			} );
+			// Iguales plegados por defecto.
+			$cotejo.find( 'tbody tr[data-status="same"]' ).hide();
+		}
+	} );
+
 } )( jQuery );
