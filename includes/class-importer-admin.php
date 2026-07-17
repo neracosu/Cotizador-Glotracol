@@ -646,6 +646,40 @@ class Glotracol_Quote_Importer_Admin {
 		$ext  = ( $ext === 'xlsx' ) ? 'xlsx' : 'csv';
 		return $dir . '/' . $safe . '.' . $ext;
 	}
+
+	/**
+	 * Aplica las decisiones del cotejo a las filas releídas.
+	 * $post: gloq_cotejo (bandera), gloq_include[line], gloq_val[line][campo], gloq_resolve[line].
+	 * Si gloq_cotejo no está activo, solo aplica gloq_resolve (comportamiento legado).
+	 */
+	public static function apply_row_decisions( $rows, $post ) {
+		$cotejo  = ! empty( $post['gloq_cotejo'] );
+		$include = ( isset( $post['gloq_include'] ) && is_array( $post['gloq_include'] ) ) ? $post['gloq_include'] : [];
+		$vals    = ( isset( $post['gloq_val'] ) && is_array( $post['gloq_val'] ) ) ? $post['gloq_val'] : [];
+		$resolve = ( isset( $post['gloq_resolve'] ) && is_array( $post['gloq_resolve'] ) ) ? $post['gloq_resolve'] : [];
+		$editable_price = [ 'precio', 'precio normal' ];
+		$out = [];
+		foreach ( $rows as $r ) {
+			$line = (string) ( $r['__line'] ?? '' );
+			if ( $cotejo && empty( $include[ $line ] ) ) continue; // no incluida → saltar
+			// resolver producto
+			if ( isset( $resolve[ $line ] ) && (int) $resolve[ $line ] > 0 ) {
+				$r['id'] = (int) $resolve[ $line ];
+			}
+			// valores editados
+			if ( isset( $vals[ $line ] ) && is_array( $vals[ $line ] ) ) {
+				foreach ( $vals[ $line ] as $campo => $v ) {
+					if ( $campo === 'precio' ) {
+						$r['precio normal'] = (string) (int) preg_replace( '/[^0-9]/', '', (string) $v );
+					} else {
+						$r[ $campo ] = sanitize_text_field( (string) $v );
+					}
+				}
+			}
+			$out[] = $r;
+		}
+		return $out;
+	}
 }
 
 // Cleanup hook
