@@ -64,28 +64,33 @@ class Glotracol_Quote_Import_Diff {
 
     private static function fields_for( $type, $product, $pid, $row, $opts ) {
         $in_price = (int) preg_replace( '/[^0-9]/', '', (string) ( $row['precio normal'] ?? ( $row['precio'] ?? '' ) ) );
-        $cur_price = (int) get_post_meta( $pid, '_glo_price', true );
+        $in_price_s = $in_price > 0 ? (string) $in_price : '';
         $fields = [];
-        // precio (escrito en publico)
-        $fields['precio'] = self::num_field( (string) $cur_price, $in_price > 0 ? (string) $in_price : '', true );
-        // presentacion / empaque (escritos si vienen)
-        $fields['presentacion'] = self::text_field(
-            (string) get_post_meta( $pid, '_glo_presentacion_texto', true ),
-            trim( (string) ( $row['presentacion'] ?? '' ) ), true );
-        $fields['empaque'] = self::text_field(
-            (string) get_post_meta( $pid, '_glo_empaque_texto', true ),
-            trim( (string) ( $row['empaque'] ?? '' ) ), true );
-        // disponibilidad: escrita solo si sync_stock
+
+        if ( $type === 'precios_lista_b' ) {
+            $cur_b = (int) get_post_meta( $pid, '_glo_price_b', true );
+            $fields['precio']  = self::num_field( (string) $cur_b, $in_price_s, true );
+            $fields['lista_a'] = self::ref_field( (string) (int) get_post_meta( $pid, '_glo_price', true ), '' );
+            return $fields;
+        }
+
+        if ( $type === 'precios_catalogo' && ( $opts['mode'] ?? 'publico' ) === 'b2b' ) {
+            $cp = get_post_meta( (int) ( $opts['client_id'] ?? 0 ), '_glo_client_pricing', true );
+            $cur = is_array( $cp ) ? (int) ( $cp[ $pid ] ?? 0 ) : 0;
+            $fields['precio'] = self::num_field( (string) $cur, $in_price_s, true );
+            return $fields;
+        }
+
+        // catálogo publico
+        $fields['precio'] = self::num_field( (string) (int) get_post_meta( $pid, '_glo_price', true ), $in_price_s, true );
+        $fields['presentacion'] = self::text_field( (string) get_post_meta( $pid, '_glo_presentacion_texto', true ), trim( (string) ( $row['presentacion'] ?? '' ) ), true );
+        $fields['empaque'] = self::text_field( (string) get_post_meta( $pid, '_glo_empaque_texto', true ), trim( (string) ( $row['empaque'] ?? '' ) ), true );
         $sync = ! empty( $opts['sync_stock'] );
         $cur_disp = ( $product->get_stock_status() === 'outofstock' ) ? 'AGOTADO' : 'DISPONIBLE';
         $in_disp_raw = trim( (string) ( $row['disponibilidad'] ?? ( $row['inventario'] ?? '' ) ) );
         $in_disp = $in_disp_raw === '' ? '' : ( stripos( $in_disp_raw, 'agot' ) !== false ? 'AGOTADO' : 'DISPONIBLE' );
-        $fields['disponibilidad'] = $sync
-            ? self::text_field( $cur_disp, $in_disp, true )
-            : self::ref_field( $cur_disp, $in_disp );
-        // peso: siempre referencia (no se escribe por ID)
-        $in_weight = trim( (string) ( $row['peso (kg)'] ?? '' ) );
-        $fields['peso'] = self::ref_field( (string) $product->get_weight(), $in_weight );
+        $fields['disponibilidad'] = $sync ? self::text_field( $cur_disp, $in_disp, true ) : self::ref_field( $cur_disp, $in_disp );
+        $fields['peso'] = self::ref_field( (string) $product->get_weight(), trim( (string) ( $row['peso (kg)'] ?? '' ) ) );
         return $fields;
     }
 
