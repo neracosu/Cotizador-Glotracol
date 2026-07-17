@@ -79,6 +79,17 @@ class Glotracol_Quote_Changelog_Admin {
 	public static function entries() {
 		return [
 			[
+				'date' => '2026-07-17', 'version' => '2.11.0', 'type' => 'feature',
+				'title' => 'Cotejo de importación: ves el cambio antes de confirmarlo',
+				'summary' => 'Al subir precios de catálogo o de Lista B, la previsualización ahora muestra el valor actual → nuevo de cada producto, con un resumen (cambian / nuevos / iguales / sin coincidencia), filtros para revisarlos y control por fila para incluir, saltar o editar antes de importar.',
+				'details' => [
+					'Cada fila muestra el valor actual y el nuevo lado a lado, con el nuevo resaltado cuando cambia.',
+					'Resumen con chips filtrables: cuántos productos cambian, cuáles son nuevos, cuáles quedan igual y cuáles no encontraron coincidencia.',
+					'Control por fila: puedes incluir, saltar o editar el valor antes de confirmar la carga.',
+					'Alerta cuando la mayoría de los precios bajan, por si se cargó la Lista B en el lugar del catálogo por error.',
+				],
+			],
+			[
 				'date' => '2026-07-10', 'version' => '2.10.0', 'type' => 'feature',
 				'title' => 'Color de marca desde Elementor y plantilla de Lista B más clara',
 				'summary' => 'El cotizador puede tomar el color de la marca directamente de los colores globales de Elementor y seguirlo en vivo: si lo cambias en Elementor, el cotizador cambia solo, sin volver a configurarlo. Además, la plantilla de carga de Lista B ahora muestra las mismas columnas que el catálogo, como referencia.',
