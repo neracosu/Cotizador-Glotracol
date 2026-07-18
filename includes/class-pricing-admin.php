@@ -102,7 +102,7 @@ class Glotracol_Quote_Pricing_Admin {
 		?>
 		<div class="wrap gloq-admin">
 			<h1>Lista publica de precios</h1>
-			<p>Precios publicos (COP) asignados por producto. Se aplican cuando el cliente no tiene tarifa negociada para ese producto. Puedes editar manualmente o usar el <a href="<?php echo esc_url( admin_url( 'edit.php?post_type=glo_quote&page=glotracol-quote-import' ) ); ?>">importador CSV</a>.</p>
+			<p>Precios publicos (COP) asignados por producto (<strong>Lista A</strong> = columna "Precio publico"; <strong>Lista B</strong> = mayoreo). Se aplican cuando el cliente no tiene tarifa negociada para ese producto. Puedes editar manualmente o cargar en lote con el <a href="<?php echo esc_url( admin_url( 'edit.php?post_type=glo_quote&page=glotracol-quote-import' ) ); ?>">importador CSV</a> (usa <em>"Precios Lista A"</em> para esta columna o <em>"Precios de Lista B"</em>).</p>
 
 			<?php if ( $flash === 'saved' ) : ?>
 				<div class="notice notice-success is-dismissible"><p>Precios actualizados correctamente.</p></div>

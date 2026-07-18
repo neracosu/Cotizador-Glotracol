@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  *
  * 4 tipos de hojas soportadas:
  *  - clientes          : NIT/razón social/email/etc → CPT glo_client
- *  - precios_publicos  : SKU/precio → option public_pricing
+ *  - precios_publicos  : ID/SKU + precio → meta _glo_price del producto (Lista A)
  *  - precios_b2b       : NIT/SKU/precio → meta _glo_client_pricing del cliente
  *  - presentaciones    : SKU producto/presentaciones → meta _glo_presentaciones (preparación Fase C)
  *
@@ -17,10 +17,10 @@ class Glotracol_Quote_Importer {
 
 	const TYPES = [
 		'clientes'          => 'Clientes B2B',
-		'precios_publicos'  => 'Lista de precios públicos',
+		'precios_publicos'  => 'Precios Lista A (rápido: ID o SKU + precio)',
 		'precios_b2b'       => 'Precios negociados por cliente',
 		'presentaciones'    => 'Presentaciones por producto',
-		'precios_catalogo'  => 'Precios del catálogo (por ID)',
+		'precios_catalogo'  => 'Catálogo Lista A completo (ID, nombre, stock…)',
 		'clientes_lista'    => 'Asignar clientes a Lista B',
 		'precios_lista_b'   => 'Precios de Lista B',
 	];
@@ -373,14 +373,14 @@ class Glotracol_Quote_Importer {
 
 	public static function import_public_pricing( $rows ) {
 		$report = [ 'inserted' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => [] ];
-		$batch = [];
 		foreach ( (array) $rows as $row ) {
 			$line = $row['__line'] ?? '?';
-			$sku = trim( (string) ( $row['sku'] ?? '' ) );
-			$price = (int) ( $row['precio'] ?? 0 );
-			if ( $sku === '' ) {
+			// La columna se llama `sku` por compatibilidad, pero acepta ID de producto o SKU real.
+			$ref   = trim( (string) ( $row['sku'] ?? $row['id'] ?? '' ) );
+			$price = (int) ( $row['precio'] ?? $row['precio normal'] ?? 0 );
+			if ( $ref === '' ) {
 				$report['skipped']++;
-				$report['errors'][] = "Línea $line: SKU vacío.";
+				$report['errors'][] = "Línea $line: ID/SKU vacío.";
 				continue;
 			}
 			if ( $price <= 0 ) {
@@ -388,14 +388,45 @@ class Glotracol_Quote_Importer {
 				$report['errors'][] = "Línea $line: precio inválido (debe ser > 0).";
 				continue;
 			}
-			$batch[ $sku ] = $price;
-		}
-		if ( ! empty( $batch ) ) {
-			$merge = Glotracol_Quote_Pricing::merge_public_pricing( $batch );
-			$report['inserted'] = $merge['inserted'];
-			$report['updated']  = $merge['updated'];
+			$pid = self::resolve_product_id_by_ref( $ref );
+			if ( $pid <= 0 ) {
+				$report['skipped']++;
+				$report['errors'][] = "Línea $line: no existe producto con ID/SKU \"$ref\".";
+				continue;
+			}
+			// Escribe el precio público real (_glo_price), la fuente que lee la pantalla de Precios
+			// y el resolutor por ID. Ya no usa la opción legacy por SKU.
+			$had = get_post_meta( $pid, '_glo_price', true );
+			update_post_meta( $pid, '_glo_price', $price );
+			if ( $had !== '' && $had !== null && (int) $had > 0 ) $report['updated']++;
+			else $report['inserted']++;
 		}
 		return $report;
+	}
+
+	/**
+	 * Resuelve una referencia (ID de producto o SKU real) a un product_id existente.
+	 *
+	 * Prioriza el ID numérico (caso del export de WooCommerce que usa Diana, donde la
+	 * columna `sku` trae el ID). Si no calza como ID, intenta por SKU real.
+	 *
+	 * @param string $ref
+	 * @return int  product_id > 0, o 0 si no existe.
+	 */
+	public static function resolve_product_id_by_ref( $ref ) {
+		$ref = trim( (string) $ref );
+		if ( $ref === '' ) return 0;
+		// 1) ID numérico de un producto existente.
+		if ( ctype_digit( $ref ) && function_exists( 'wc_get_product' ) ) {
+			$product = wc_get_product( (int) $ref );
+			if ( $product ) return (int) $ref;
+		}
+		// 2) SKU real.
+		if ( function_exists( 'wc_get_product_id_by_sku' ) ) {
+			$by_sku = (int) wc_get_product_id_by_sku( $ref );
+			if ( $by_sku > 0 ) return $by_sku;
+		}
+		return 0;
 	}
 
 	public static function import_b2b_pricing( $rows ) {

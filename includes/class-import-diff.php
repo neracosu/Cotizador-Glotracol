@@ -13,13 +13,14 @@ class Glotracol_Quote_Import_Diff {
 
     public static function build( $type, $rows, $opts = [] ) {
         $out = [ 'rows'=>[], 'summary'=>[ 'change'=>0,'new'=>0,'same'=>0,'unmatched'=>0,'alerts'=>0 ], 'global_alerts'=>[] ];
+        $price_types = [ 'precios_catalogo', 'precios_publicos' ];
         $matched = 0; $dropped = 0;
         foreach ( (array) $rows as $row ) {
             $d = self::diff_row( $type, $row, $opts );
             $out['rows'][] = $d;
             $out['summary'][ $d['status'] ]++;
             if ( ! empty( $d['alerts'] ) ) $out['summary']['alerts']++;
-            if ( $type === 'precios_catalogo' && $d['product'] && isset( $d['fields']['precio'] ) ) {
+            if ( in_array( $type, $price_types, true ) && $d['product'] && isset( $d['fields']['precio'] ) ) {
                 $f = $d['fields']['precio'];
                 if ( $f['incoming'] !== '' && (int) $f['current'] > 0 ) {
                     $matched++;
@@ -27,8 +28,48 @@ class Glotracol_Quote_Import_Diff {
                 }
             }
         }
-        if ( $type === 'precios_catalogo' && $matched > 0 && ( $dropped / $matched ) > self::MOSTLY_DROP_RATIO ) {
+        if ( in_array( $type, $price_types, true ) && $matched > 0 && ( $dropped / $matched ) > self::MOSTLY_DROP_RATIO ) {
             $out['global_alerts'][] = 'mostly_price_drop';
+        }
+
+        // Depurador: detectar corrimiento de fila y referencias duplicadas (imports de precio por ID).
+        if ( in_array( $type, $price_types, true ) ) {
+            $seq = [];   // secuencia ordenada de filas resueltas, para el detector.
+            $refs = [];  // ids resueltos, para duplicados.
+            foreach ( $out['rows'] as $ri => $d ) {
+                if ( ! $d['product'] || empty( $d['product']['id'] ) || ! isset( $d['fields']['precio'] ) ) continue;
+                $refs[] = (string) $d['product']['id'];
+                $seq[] = [
+                    'row'      => $ri,
+                    'line'     => $d['__line'],
+                    'id'       => (int) $d['product']['id'],
+                    'name'     => $d['product']['name'],
+                    'incoming' => (int) $d['fields']['precio']['incoming'],
+                    'current'  => (int) $d['fields']['precio']['current'],
+                ];
+            }
+            $shift = self::detect_shift( $seq, 4 );
+            if ( $shift ) {
+                $realign = self::suggest_realign( $seq, $shift );
+                foreach ( $realign as $k => &$ra ) {
+                    $ra['line'] = $seq[ $k ]['line'] ?? '';
+                    $ra['name'] = $seq[ $k ]['name'] ?? '';
+                    $ra['from'] = $seq[ $k ]['incoming'] ?? '';   // precio tal como vino en el archivo.
+                }
+                unset( $ra );
+                $out['global_alerts'][] = [
+                    'type' => 'shift',
+                    'dir'  => $shift['dir'],
+                    'len'  => $shift['len'],
+                    'from_line' => $seq[ $shift['from'] ]['line'] ?? '?',
+                    'to_line'   => $seq[ $shift['to'] ]['line'] ?? '?',
+                    'realign'   => $realign,
+                ];
+            }
+            $dups = self::detect_duplicates( $refs );
+            if ( $dups ) {
+                $out['global_alerts'][] = [ 'type' => 'duplicates', 'refs' => array_keys( $dups ) ];
+            }
         }
         return $out;
     }
@@ -36,6 +77,12 @@ class Glotracol_Quote_Import_Diff {
     private static function diff_row( $type, $row, $opts ) {
         $line = $row['__line'] ?? '?';
         $pid  = (int) ( $row['id'] ?? 0 );
+        // Lista A "rápida" (precios_publicos): la referencia viene en `sku` (ID o SKU real).
+        if ( $pid <= 0 && isset( $row['sku'] ) && trim( (string) $row['sku'] ) !== '' ) {
+            $ref = trim( (string) $row['sku'] );
+            $pid = (int) Glotracol_Quote_Importer::resolve_product_id_by_ref( $ref );
+            if ( $pid <= 0 ) return self::mk_unmatched( $line, $ref );
+        }
         $name = trim( (string) ( $row['nombre'] ?? '' ) );
         $create_missing = ! empty( $opts['create_missing'] );
 
@@ -55,10 +102,16 @@ class Glotracol_Quote_Import_Diff {
         foreach ( $fields as $f ) {
             if ( in_array( $f['state'], [ 'change', 'fill' ], true ) ) { $status = 'change'; break; }
         }
+        $alerts = self::row_alerts( $fields );
+        // Depurador: si el archivo trae nombre y no coincide con el del catálogo, avisar
+        // (posible ID equivocado o archivo desalineado).
+        if ( $name !== '' && $product && self::norm( $product->get_name() ) !== self::norm( $name ) ) {
+            $alerts[] = 'name_mismatch';
+        }
         return [
             '__line'=>$line, 'status'=>$status,
             'product'=>[ 'id'=>$pid, 'name'=>$product ? $product->get_name() : $name ],
-            'fields'=>$fields, 'alerts'=>self::row_alerts( $fields ), 'candidates'=>[],
+            'fields'=>$fields, 'alerts'=>$alerts, 'candidates'=>[],
         ];
     }
 
@@ -66,6 +119,12 @@ class Glotracol_Quote_Import_Diff {
         $in_price = (int) preg_replace( '/[^0-9]/', '', (string) ( $row['precio normal'] ?? ( $row['precio'] ?? '' ) ) );
         $in_price_s = $in_price > 0 ? (string) $in_price : '';
         $fields = [];
+
+        if ( $type === 'precios_publicos' ) {
+            // Lista A rápida: sólo el precio público (_glo_price).
+            $fields['precio'] = self::num_field( (string) (int) get_post_meta( $pid, '_glo_price', true ), $in_price_s, true );
+            return $fields;
+        }
 
         if ( $type === 'precios_lista_b' ) {
             $cur_b = (int) get_post_meta( $pid, '_glo_price_b', true );
@@ -139,5 +198,92 @@ class Glotracol_Quote_Import_Diff {
     private static function mk_new( $line, $name, $type, $row, $opts ) {
         $fields = [ 'precio'=>self::num_field( '0', (string) (int) preg_replace('/[^0-9]/','',(string)($row['precio normal'] ?? ($row['precio'] ?? ''))), true ) ];
         return [ '__line'=>$line, 'status'=>'new', 'product'=>[ 'id'=>0, 'name'=>$name ], 'fields'=>$fields, 'alerts'=>[], 'candidates'=>[] ];
+    }
+
+    /* -------------------------------------------------------------------------
+     * DEPURADOR: detector de corrimiento, duplicados y realineado.
+     * ---------------------------------------------------------------------- */
+
+    /**
+     * Detecta un corrimiento constante de ±1 fila en una secuencia ordenada.
+     *
+     * Cada elemento: [ 'id'=>int, 'incoming'=>int, 'current'=>int ]. El síntoma de un
+     * archivo corrido es que el precio entrante de una fila coincide con el precio ACTUAL
+     * del producto vecino (i+dir): la celda vacía de una fila empujó todos los precios.
+     *
+     * @param array $seq
+     * @param int   $min_run  corrida mínima consecutiva para declarar corrimiento.
+     * @return array|null  [ 'dir'=>+1|-1, 'from'=>idx, 'to'=>idx, 'len'=>n ] o null.
+     */
+    public static function detect_shift( $seq, $min_run = 4 ) {
+        $seq = array_values( (array) $seq );
+        $n = count( $seq );
+        if ( $n < $min_run + 1 ) return null;
+        foreach ( [ 1, -1 ] as $dir ) {
+            $best = null; $start = null; $len = 0;
+            for ( $i = 0; $i < $n; $i++ ) {
+                $j = $i + $dir;
+                $ok = isset( $seq[ $j ] )
+                    && (int) $seq[ $i ]['incoming'] > 0
+                    && (int) $seq[ $j ]['current'] > 0
+                    && (int) $seq[ $i ]['incoming'] === (int) $seq[ $j ]['current'];
+                if ( $ok ) {
+                    if ( $start === null ) { $start = $i; $len = 1; } else { $len++; }
+                } else {
+                    if ( $len >= $min_run && ( $best === null || $len > $best['len'] ) ) {
+                        $best = [ 'dir'=>$dir, 'from'=>$start, 'to'=>$i - 1, 'len'=>$len ];
+                    }
+                    $start = null; $len = 0;
+                }
+            }
+            if ( $len >= $min_run && ( $best === null || $len > $best['len'] ) ) {
+                $best = [ 'dir'=>$dir, 'from'=>$start, 'to'=>$n - 1, 'len'=>$len ];
+            }
+            if ( $best ) return $best;
+        }
+        return null;
+    }
+
+    /**
+     * Propone el realineado ACOTADO al tramo corrido detectado (nunca toca la cabecera/cola
+     * que ya está alineada). Dentro del tramo reasigna a cada fila el precio de su vecino:
+     * la fila origen queda sin precio (su celda estaba vacía y empujó el resto).
+     *
+     * @param array $seq
+     * @param array $shift  [ 'dir'=>±1, 'from'=>idx, 'to'=>idx ] devuelto por detect_shift().
+     * @return array  lista [ 'id'=>int, 'incoming'=>int|'' ] en el mismo orden que $seq.
+     */
+    public static function suggest_realign( $seq, $shift ) {
+        $seq  = array_values( (array) $seq );
+        $n    = count( $seq );
+        $dir  = (int) ( $shift['dir'] ?? 0 );
+        $from = (int) ( $shift['from'] ?? 0 );
+        $to   = (int) ( $shift['to'] ?? ( $n - 1 ) );
+        $out  = [];
+        for ( $i = 0; $i < $n; $i++ ) {
+            $new = $seq[ $i ]['incoming']; // por defecto, sin cambio (fuera del tramo).
+            if ( $dir === 1 && $i >= $from && $i <= $to + 1 ) {
+                $src = $i - 1;
+                $new = ( $src >= $from && $src <= $to ) ? $seq[ $src ]['incoming'] : '';
+            } elseif ( $dir === -1 && $i >= $from - 1 && $i <= $to ) {
+                $src = $i + 1;
+                $new = ( $src >= $from && $src <= $to ) ? $seq[ $src ]['incoming'] : '';
+            }
+            $out[] = [ 'id' => $seq[ $i ]['id'], 'incoming' => $new ];
+        }
+        return $out;
+    }
+
+    /**
+     * Devuelve las referencias que aparecen más de una vez → [ ref => [posiciones] ].
+     */
+    public static function detect_duplicates( $refs ) {
+        $seen = [];
+        foreach ( (array) $refs as $i => $ref ) {
+            $ref = trim( (string) $ref );
+            if ( $ref === '' ) continue;
+            $seen[ $ref ][] = $i;
+        }
+        return array_filter( $seen, function ( $pos ) { return count( $pos ) > 1; } );
     }
 }

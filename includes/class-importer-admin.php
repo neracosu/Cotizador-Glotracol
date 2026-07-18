@@ -202,7 +202,7 @@ class Glotracol_Quote_Importer_Admin {
 			case 'clientes':
 				return 'Crea o actualiza clientes B2B en el CRM por NIT/Cédula. Columnas: <code>nit, razon_social, email, telefono, contacto, ciudad, activo, notas</code>.';
 			case 'precios_publicos':
-				return 'Carga la lista pública de precios (semanal). Se aplica a clientes sin NIT identificado. Columnas: <code>sku, precio</code>.';
+				return 'Carga rápida de la <strong>Lista A</strong> (precio público) por producto. La columna <code>sku</code> acepta el <strong>ID de producto</strong> o el SKU real. Escribe el precio que se ve en la pantalla <strong>Precios</strong> y que usa el cotizador. Columnas: <code>sku, precio</code>.';
 			case 'precios_b2b':
 				return 'Precios negociados por cliente. Requiere que los NITs ya existan en el CRM. Columnas: <code>nit, sku, precio</code>.';
 			case 'presentaciones':
@@ -260,7 +260,7 @@ class Glotracol_Quote_Importer_Admin {
 		$total = count( $read['rows'] );
 		echo '<div class="gloq-importer-card">';
 		echo '<h2>Previsualización</h2>';
-		$cotejo_types = [ 'precios_catalogo', 'precios_lista_b' ];
+		$cotejo_types = [ 'precios_catalogo', 'precios_lista_b', 'precios_publicos' ];
 		$use_cotejo = in_array( $type, $cotejo_types, true ) && ! ( $read['type_ambiguous'] && ! $forced );
 		if ( $use_cotejo ) {
 			$diff = Glotracol_Quote_Import_Diff::build( $type, $read['rows'], [
@@ -420,6 +420,17 @@ class Glotracol_Quote_Importer_Admin {
 		if ( in_array( 'mostly_price_drop', $diff['global_alerts'], true ) ) {
 			echo '<div class="notice notice-error inline gloq-cotejo-alert"><p><strong>⚠ La mayoría de los precios BAJAN.</strong> ¿Seguro que este archivo no es la Lista B? Si lo es, cambia el tipo a <strong>“Precios de Lista B”</strong> abajo antes de confirmar.</p></div>';
 		}
+		// Depurador: alertas estructuradas (corrimiento de fila, duplicados).
+		foreach ( (array) $diff['global_alerts'] as $ga ) {
+			if ( ! is_array( $ga ) ) continue;
+			if ( ( $ga['type'] ?? '' ) === 'shift' ) {
+				$this->render_shift_alert( $ga );
+			} elseif ( ( $ga['type'] ?? '' ) === 'duplicates' ) {
+				$refs = array_map( 'strval', (array) ( $ga['refs'] ?? [] ) );
+				echo '<div class="notice notice-warning inline gloq-cotejo-alert"><p><strong>⚠ IDs/SKU duplicados en el archivo (' . count( $refs ) . '):</strong> '
+					. esc_html( implode( ', ', array_slice( $refs, 0, 30 ) ) ) . '. La última fila de cada uno manda; revisá que no sea un error.</p></div>';
+			}
+		}
 		// Resumen (chips)
 		echo '<div class="gloq-cotejo-summary">';
 		printf( '<button type="button" class="gloq-cotejo-chip is-active" data-filter="all">Todos <b>%d</b></button>', count( $diff['rows'] ) );
@@ -431,7 +442,7 @@ class Glotracol_Quote_Importer_Admin {
 		echo '</div>';
 		// Cambiar tipo (para corregir Lista A/B sin re-subir)
 		echo '<p class="gloq-cotejo-switch">¿Tipo equivocado? ';
-		foreach ( [ 'precios_catalogo'=>'Es Lista A (catálogo)', 'precios_lista_b'=>'Es Lista B' ] as $k=>$lab ) {
+		foreach ( [ 'precios_publicos'=>'Es Lista A (rápida)', 'precios_catalogo'=>'Es Lista A (catálogo)', 'precios_lista_b'=>'Es Lista B' ] as $k=>$lab ) {
 			if ( $k === $type ) { echo '<strong>'.esc_html( $lab ).'</strong> '; continue; }
 			echo '<a class="button button-small" href="'.esc_url( add_query_arg( 'type', $k ) ).'">Cambiar a: '.esc_html( $lab ).'</a> ';
 		}
@@ -501,6 +512,47 @@ class Glotracol_Quote_Importer_Admin {
 
 	private static function status_label( $st ) {
 		return [ 'change'=>'Cambia', 'new'=>'Nuevo', 'same'=>'Igual', 'unmatched'=>'Sin coincidencia' ][ $st ] ?? $st;
+	}
+
+	/**
+	 * Depurador: banner de corrimiento + vista realineada lado a lado + botón que reescribe
+	 * los precios del cotejo (vía JS) al mapeo corregido, para que el humano confirme igual.
+	 */
+	private function render_shift_alert( $ga ) {
+		$realign = (array) ( $ga['realign'] ?? [] );
+		$len     = (int) ( $ga['len'] ?? 0 );
+		$from_l  = $ga['from_line'] ?? '?';
+		$to_l    = $ga['to_line'] ?? '?';
+		echo '<div class="notice notice-error inline gloq-cotejo-alert"><p><strong>⚠ Posible corrimiento de fila</strong> — detecté ' . (int) $len . ' filas seguidas (líneas ' . esc_html( (string) $from_l ) . '–' . esc_html( (string) $to_l ) . ') donde el precio parece ser el del producto <em>vecino</em>. Suele pasar cuando una celda de precio quedó vacía y empujó el resto. Revisá abajo el realineado propuesto; si es correcto, aplicalo.</p>';
+		echo '<p style="margin:6px 0 0"><strong>Mejor aún:</strong> re-subí el archivo en formato con <strong>nombres</strong> (columnas <code>ID, Nombre, Precio normal</code> — tipo “Catálogo Lista A completo”). Ahí una celda vacía queda visible y <em>no</em> corre las demás. El realineado de abajo es una corrección de emergencia, acotada al tramo detectado; revisá igual el resto de la tabla.</p>';
+
+		// Mapa línea → precio realineado, para el botón JS.
+		$map = [];
+		foreach ( $realign as $ra ) {
+			$line = (string) ( $ra['line'] ?? '' );
+			if ( $line === '' ) continue;
+			$map[ $line ] = (string) ( $ra['incoming'] === '' ? '' : (int) $ra['incoming'] );
+		}
+
+		echo '<details style="margin:8px 0"><summary style="cursor:pointer"><strong>Ver realineado propuesto (' . count( $realign ) . ' filas)</strong></summary>';
+		echo '<table class="wp-list-table widefat striped" style="margin-top:8px"><thead><tr><th>Línea</th><th>Producto</th><th>Precio en archivo</th><th>→ Precio realineado</th></tr></thead><tbody>';
+		foreach ( $realign as $ra ) {
+			$from = ( $ra['from'] ?? '' ) === '' ? '—' : number_format_i18n( (int) $ra['from'] );
+			$to   = ( $ra['incoming'] ?? '' ) === '' ? '<em>(sin precio)</em>' : number_format_i18n( (int) $ra['incoming'] );
+			$chg  = ( (string) ( $ra['from'] ?? '' ) !== (string) ( $ra['incoming'] ?? '' ) );
+			echo '<tr' . ( $chg ? ' style="background:#fff4e5"' : '' ) . '><td>' . esc_html( (string) ( $ra['line'] ?? '' ) ) . '</td>';
+			echo '<td>' . esc_html( (string) ( $ra['name'] ?? '' ) ) . ' <span class="description">#' . (int) ( $ra['id'] ?? 0 ) . '</span></td>';
+			echo '<td>' . esc_html( $from ) . '</td><td>' . wp_kses_post( $to ) . '</td></tr>';
+		}
+		echo '</tbody></table></details>';
+
+		echo '<p><button type="button" class="button button-secondary" id="gloq-apply-realign">Aplicar realineado a los precios de abajo</button> <span id="gloq-realign-done" style="color:#0a7c2f;display:none">✓ Precios realineados — revisá y confirmá.</span></p>';
+		echo '</div>';
+
+		// JS: al hacer clic, reescribe cada input de precio del cotejo con el valor realineado.
+		// Si el realineado deja la fila sin precio, la desmarca (no se importa).
+		$json = wp_json_encode( $map );
+		echo '<script>(function(){var M=' . $json . ';var b=document.getElementById("gloq-apply-realign");if(!b)return;b.addEventListener("click",function(){Object.keys(M).forEach(function(line){var inp=document.querySelector(\'input[name="gloq_val[\'+line+\'][precio]"]\');if(!inp)return;var v=M[line];inp.value=v;var chk=document.querySelector(\'input[name="gloq_include[\'+line+\']"]\');if(chk){chk.checked=(v!=="");}var row=inp.closest("tr");if(row)row.style.background=(v===""?"#f6f7f7":"#eaf7ee");});var d=document.getElementById("gloq-realign-done");if(d)d.style.display="inline";b.disabled=true;});})();</script>';
 	}
 
 	private function render_report() {

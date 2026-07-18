@@ -79,6 +79,18 @@ class Glotracol_Quote_Changelog_Admin {
 	public static function entries() {
 		return [
 			[
+				'date' => '2026-07-17', 'version' => '2.12.0', 'type' => 'fix',
+				'title' => 'Precios públicos que sí se cargan + depurador de archivos corridos',
+				'summary' => 'La carga "Precios Lista A" ahora sí escribe el precio que ves en la pantalla de Precios (antes iba a un registro interno que nadie mostraba). Además, esa carga pasa por la previsualización con el nombre del producto al lado, y un depurador detecta cuando un archivo quedó "corrido" una fila (por una celda de precio vacía) y ofrece realinearlo.',
+				'details' => [
+					'"Precios Lista A" (antes "Lista de precios públicos") ahora escribe el precio real por producto; acepta ID o SKU en la columna.',
+					'Nombres más claros: "Precios Lista A (rápido)" y "Catálogo Lista A completo" para no confundir con la pantalla de Precios.',
+					'La carga rápida de Lista A ahora se previsualiza como el catálogo: ves ID → nombre → precio actual → nuevo antes de confirmar.',
+					'Depurador: detecta corrimiento de fila (cuando el precio de cada fila es el del producto vecino), avisa las líneas afectadas y ofrece un realineado acotado con un clic.',
+					'Avisa IDs/SKU duplicados en el archivo y cuando el nombre del archivo no coincide con el del catálogo.',
+				],
+			],
+			[
 				'date' => '2026-07-17', 'version' => '2.11.0', 'type' => 'feature',
 				'title' => 'Cotejo de importación: ves el cambio antes de confirmarlo',
 				'summary' => 'Al subir precios de catálogo o de Lista B, la previsualización ahora muestra el valor actual → nuevo de cada producto, con un resumen (cambian / nuevos / iguales / sin coincidencia), filtros para revisarlos y control por fila para incluir, saltar o editar antes de importar.',
