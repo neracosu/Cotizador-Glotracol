@@ -470,3 +470,60 @@ function glotracol_quote_elementor_global_colors() {
 	}
 	return $out;
 }
+
+/**
+ * Enriquece los items de una cotización con los campos de presentación que
+ * necesitan los correos y el PDF: empaque, presentación/peso y precios formateados.
+ *
+ * Centraliza la lógica que antes vivía suelta en class-quote-form.php, para que la
+ * tabla de la web, los correos y el PDF no puedan divergir. No escribe nada.
+ *
+ * @param array $items Items tal como los devuelve Glotracol_Quote_Pricing::resolve_items().
+ * @return array Los mismos items con las claves de presentación añadidas.
+ */
+function glotracol_quote_enrich_items( $items ) {
+	$out = [];
+	foreach ( (array) $items as $it ) {
+		$pid = (int) ( $it['product_id'] ?? 0 );
+		// El resolver ya adjunta el objeto en '_product'; se reaprovecha si viene.
+		$product = $it['_product'] ?? null;
+		if ( ! $product && $pid && function_exists( 'wc_get_product' ) ) {
+			$product = wc_get_product( $pid );
+		}
+		if ( ! $product ) $product = null;
+		$qty = (int) ( $it['quantity'] ?? 0 );
+
+		$unit = ( isset( $it['precio_unitario'] ) && $it['precio_unitario'] !== null && $it['precio_unitario'] !== '' )
+			? (int) $it['precio_unitario'] : null;
+		// 'pendiente' es la marca explícita del resolver de precios.
+		if ( ( $it['precio_origen'] ?? '' ) === 'pendiente' ) $unit = null;
+
+		$sub = null;
+		if ( $unit !== null ) {
+			$sub = ( isset( $it['precio_subtotal'] ) && $it['precio_subtotal'] !== null && $it['precio_subtotal'] !== '' )
+				? (int) $it['precio_subtotal'] : $unit * $qty;
+		}
+
+		$empaque = $product ? (string) get_post_meta( $pid, '_glo_empaque_texto', true ) : '';
+		$empaque = trim( $empaque );
+
+		$pres = glotracol_quote_presentacion_display( $product, $it['presentacion_label'] ?? '' );
+		$pres = trim( (string) $pres );
+
+		$peso = null;
+		if ( $product && method_exists( $product, 'get_weight' ) ) {
+			$w = $product->get_weight();
+			if ( $w !== '' && $w !== null && is_numeric( $w ) && (float) $w > 0 ) $peso = (float) $w;
+		}
+
+		$out[] = array_merge( (array) $it, [
+			'empaque'         => $empaque !== '' ? $empaque : '—',
+			'presentacion'    => $pres !== '' ? $pres : '—',
+			'peso_kg'         => $peso,
+			'es_pendiente'    => $unit === null,
+			'precio_unit_fmt' => $unit !== null ? glotracol_quote_format_price( $unit ) : 'A cotizar',
+			'precio_sub_fmt'  => $sub !== null ? glotracol_quote_format_price( $sub ) : '—',
+		] );
+	}
+	return $out;
+}
