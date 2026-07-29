@@ -221,24 +221,25 @@ class Glotracol_Quote_Form {
 		$priced = class_exists( 'Glotracol_Quote_Pricing' )
 			? Glotracol_Quote_Pricing::resolve_items( $raw_items, 0 )
 			: [ 'items' => $raw_items, 'total' => 0 ];
+		// Mismo helper que consumen los correos y el PDF: si la tabla web mantuviera
+		// su propia copia de esta lógica, las tres vistas podrían volver a divergir.
 		$cart_items = [];
-		foreach ( $priced['items'] as $it ) {
-			$product = $it['_product'] ?? null;
-			$unit = isset( $it['precio_unitario'] ) ? $it['precio_unitario'] : null;
-			$sub  = isset( $it['precio_subtotal'] ) ? $it['precio_subtotal'] : null;
+		foreach ( glotracol_quote_enrich_items( $priced['items'] ) as $it ) {
 			$cart_items[] = [
-				'key'          => $it['key'],
-				'product_id'   => $it['product_id'],
-				'name'         => $it['name'],
-				'quantity'     => $it['quantity'],
-				'permalink'    => $it['permalink'],
-				'image'        => $it['image'],
-				'presentacion' => glotracol_quote_presentacion_display( $product, $it['presentacion_label'] ),
-				'empaque'      => (string) get_post_meta( $it['product_id'], '_glo_empaque_texto', true ),
-				'valor_unit'   => $unit,
-				'valor_unit_fmt' => $unit !== null ? glotracol_quote_format_price( (int) $unit ) . ' c/u' : 'A cotizar',
-				'valor_sub'    => $sub,
-				'valor_sub_fmt'=> $sub !== null ? glotracol_quote_format_price( (int) $sub ) : '—',
+				'key'            => $it['key'],
+				'product_id'     => $it['product_id'],
+				'name'           => $it['name'],
+				'quantity'       => $it['quantity'],
+				'permalink'      => $it['permalink'],
+				'image'          => $it['image'],
+				// La plantilla ya trata los vacíos con `?: '—'`; devolver la raya aquí
+				// cambiaría lo que hoy ve el cliente en la página.
+				'presentacion'   => $it['presentacion'] === '—' ? '' : $it['presentacion'],
+				'empaque'        => $it['empaque'] === '—' ? '' : $it['empaque'],
+				'valor_unit'     => $it['es_pendiente'] ? null : (int) $it['precio_unitario'],
+				'valor_unit_fmt' => $it['es_pendiente'] ? 'A cotizar' : $it['precio_unit_fmt'] . ' c/u',
+				'valor_sub'      => $it['es_pendiente'] ? null : (int) $it['precio_subtotal'],
+				'valor_sub_fmt'  => $it['precio_sub_fmt'],
 			];
 		}
 		$total_fmt = ( isset( $priced['total'] ) && (int) $priced['total'] > 0 ) ? glotracol_quote_format_price( (int) $priced['total'] ) : '';
