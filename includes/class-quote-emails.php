@@ -12,6 +12,11 @@ class Glotracol_Quote_Emails {
 		$customer = isset( $payload['customer'] ) ? $payload['customer'] : [];
 		$items    = isset( $payload['items'] ) ? $payload['items'] : [];
 
+		// Empaque, presentación/peso y precios formateados: el mismo helper que usan
+		// la tabla de la web y el PDF, para que las tres vistas no puedan divergir.
+		$items        = glotracol_quote_enrich_items( $items );
+		$weight_total = (float) get_post_meta( $quote_id, '_glo_weight_total_kg', true );
+
 		$placeholders = [
 			'quote_id'         => $quote_id,
 			'customer_name'    => $customer['name'] ?? '',
@@ -79,17 +84,10 @@ class Glotracol_Quote_Emails {
 		if ( $type === 'order' ) $prefix .= '[PEDIDO] ';
 		$admin_subject = $prefix . $admin_subject;
 
-		// Elegir template admin
-		if ( $is_large ) {
-			$admin_template = 'email-admin-large.php';
-			$admin_log_type = 'admin-large';
-		} elseif ( $is_pending ) {
-			$admin_template = 'email-admin-pending-prices.php';
-			$admin_log_type = 'admin-pending';
-		} else {
-			$admin_template = 'email-admin.php';
-			$admin_log_type = 'admin';
-		}
+		// Plantilla única: los casos "grande" y "pendiente de precios" son bloques
+		// condicionales dentro de la propia plantilla, no plantillas separadas.
+		$admin_template = 'email-admin.php';
+		$admin_log_type = $is_large ? 'admin-large' : ( $is_pending ? 'admin-pending' : 'admin' );
 
 		$admin_body = glotracol_quote_load_template( $admin_template, [
 			'quote_id'        => $quote_id,
@@ -107,6 +105,7 @@ class Glotracol_Quote_Emails {
 			'pricing_status'  => $pricing_status,
 			'total'           => $total,
 			'size_tag'        => $size_tag,
+			'weight_total'    => $weight_total,
 		] );
 		$admin_body = apply_filters( 'glotracol_quote_email_admin_body', $admin_body, $quote_id, $payload );
 		$admin_ok = wp_mail( $admin_recipients, $admin_subject, $admin_body, $admin_headers );
@@ -119,20 +118,19 @@ class Glotracol_Quote_Emails {
 
 		// Customer email — branching según pricing
 		if ( is_email( $customer['email'] ?? '' ) ) {
+			// El cliente recibe siempre el detalle completo; las filas sin precio
+			// se muestran como "A cotizar" y el total se marca como parcial.
 			if ( $is_auto_priced ) {
 				$cust_subject = sprintf(
-					'%s #%d — %s%s',
+					'%s #%d — %s',
 					$type === 'order' ? 'Confirmación de pedido' : 'Cotización formal',
 					$quote_id,
-					glotracol_quote_format_price( $total ),
-					$type === 'order' ? '' : ''
+					glotracol_quote_format_price( $total )
 				);
-				$cust_template = 'email-customer-priced.php';
 			} else {
-				// Confirmación simple (cliente no recibe precios cuando hay pendientes)
 				$cust_subject = glotracol_quote_replace_placeholders( $settings['customer_subject'], $placeholders );
-				$cust_template = 'email-customer.php';
 			}
+			$cust_template = 'email-customer.php';
 			$cust_body = glotracol_quote_load_template( $cust_template, [
 				'quote_id'    => $quote_id,
 				'customer'    => $customer,
@@ -141,6 +139,7 @@ class Glotracol_Quote_Emails {
 				'type'        => $type,
 				'total'       => $total,
 				'client_name' => $client_name,
+				'weight_total' => $weight_total,
 			] );
 			$cust_body = apply_filters( 'glotracol_quote_email_customer_body', $cust_body, $quote_id, $payload );
 			$cust_ok = wp_mail( $customer['email'], $cust_subject, $cust_body, $headers );

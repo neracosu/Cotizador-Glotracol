@@ -319,14 +319,15 @@ class Glotracol_Quote_Admin_Meta_Box {
 			$post_id,
 			glotracol_quote_format_price( $total )
 		);
-		$body = glotracol_quote_load_template( 'email-customer-priced.php', [
-			'quote_id'    => $post_id,
-			'customer'    => $customer,
-			'items'       => $payload['items'] ?? [],
-			'intro'       => glotracol_quote_get_setting( 'customer_intro' ),
-			'type'        => $type,
-			'total'       => $total,
-			'client_name' => $client_name,
+		$body = glotracol_quote_load_template( 'email-customer.php', [
+			'quote_id'     => $post_id,
+			'customer'     => $customer,
+			'items'        => glotracol_quote_enrich_items( $payload['items'] ?? [] ),
+			'intro'        => glotracol_quote_get_setting( 'customer_intro' ),
+			'type'         => $type,
+			'total'        => $total,
+			'client_name'  => $client_name,
+			'weight_total' => (float) get_post_meta( $post_id, '_glo_weight_total_kg', true ),
 		] );
 		$ok = wp_mail( $customer['email'], $subject, $body, $headers );
 
