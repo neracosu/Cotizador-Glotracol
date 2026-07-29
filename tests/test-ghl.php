@@ -6,6 +6,10 @@ function chk( $label, $cond ) {
 	if ( ! $cond ) $GLOBALS['gloq_fail']++;
 }
 
+// Este test provoca envíos y fallos a propósito, y el logger escribe en el MISMO registro que ve
+// el dueño en Cotizaciones → Registros. Se guarda para devolverlo intacto al terminar.
+$GLOBALS['gloq_log_orig'] = get_option( 'glotracol_quote_log' );
+
 chk( 'la clase existe', class_exists( 'Glotracol_Quote_GHL' ) );
 
 // --- Arnés: intercepta TODO el HTTP saliente. Nunca se llama a GHL de verdad. ---
@@ -188,7 +192,18 @@ chk( 'sin token devuelve WP_Error', is_wp_error( $r ) );
 chk( 'sin token el error es de configuración', is_wp_error( $r ) && $r->get_error_code() === 'ghl_config' );
 
 foreach ( [ $qid, $qid2, $qid3, $qid4, $qid5 ] as $borrar ) {
-	if ( ! is_wp_error( $borrar ) && $borrar ) wp_delete_post( $borrar, true );
+	if ( ! is_wp_error( $borrar ) && $borrar ) {
+		// Los envíos simulados dejan cron programado; sin esto quedan reintentos huérfanos
+		// que luego fallan de verdad y ensucian el registro del sitio.
+		wp_clear_scheduled_hook( Glotracol_Quote_GHL::HOOK, [ (int) $borrar ] );
+		wp_clear_scheduled_hook( 'glotracol_quote_webhook_dispatch', [ (int) $borrar ] );
+		wp_delete_post( $borrar, true );
+	}
 }
+
+// El registro del sitio queda como estaba: este test no debe aparecer en Registros.
+if ( false !== $GLOBALS['gloq_log_orig'] ) update_option( 'glotracol_quote_log', $GLOBALS['gloq_log_orig'], false );
+else delete_option( 'glotracol_quote_log' );
+chk( 'el test no deja rastro en el registro del sitio', get_option( 'glotracol_quote_log' ) === $GLOBALS['gloq_log_orig'] );
 
 echo ( $GLOBALS['gloq_fail'] === 0 ? "TODO OK\n" : "HAY {$GLOBALS['gloq_fail']} FALLOS\n" );

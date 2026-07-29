@@ -81,12 +81,14 @@ class Glotracol_Quote_Logger_Admin {
 				</label>
 				<input type="submit" class="button button-primary" value="Filtrar">
 				<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=glo_quote&page=' . self::PAGE_SLUG ) ); ?>" class="button">Limpiar filtros</a>
+			</form>
 
-				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline-block;margin-left:10px" onsubmit="return confirm('Vas a borrar <?php echo (int) $counts['total']; ?> entradas del log de auditoria (incluye registros de envios a clientes). Es irreversible. Vaciar?');">
-					<input type="hidden" name="action" value="gloq_logs_clear">
-					<?php wp_nonce_field( self::NONCE_ACTION ); ?>
-					<input type="submit" class="button button-link-delete" value="Vaciar log">
-				</form>
+			<?php // Va FUERA del formulario de filtros: el HTML no admite formularios anidados, el
+			// navegador descartaba este y "Vaciar log" solo recargaba la pagina con los filtros. ?>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="gloq-logs-clear" style="display:inline-block;margin:10px 0" onsubmit="return confirm('Vas a borrar <?php echo (int) $counts['total']; ?> entradas del log de auditoria (incluye registros de envios a clientes). Es irreversible. Vaciar?');">
+				<input type="hidden" name="action" value="gloq_logs_clear">
+				<?php wp_nonce_field( self::NONCE_ACTION ); ?>
+				<input type="submit" class="button button-link-delete" value="Vaciar log">
 			</form>
 
 			<?php if ( empty( $entries ) ) : ?>
