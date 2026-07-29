@@ -83,6 +83,9 @@ class Glotracol_Quote_Webhook {
 			'admin_url'       => admin_url( 'post.php?post=' . $quote_id . '&action=edit' ),
 		];
 
+		if ( glotracol_quote_get_setting( 'webhook_format' ) === 'gohighlevel' ) {
+			$payload = self::flatten_for_ghl( $payload );
+		}
 		$payload = apply_filters( 'glotracol_quote_webhook_payload', $payload, $quote_id );
 		$body    = wp_json_encode( $payload );
 
@@ -130,6 +133,61 @@ class Glotracol_Quote_Webhook {
 			// Éxito: limpiar el contador para no arrastrar estado de fallos previos.
 			delete_post_meta( $quote_id, '_glo_webhook_attempts' );
 		}
+	}
+
+	/**
+	 * Aplana el payload para GoHighLevel: sus workflows no mapean objetos
+	 * anidados ni arrays, así que todo baja a un solo nivel y los items se
+	 * resumen en un texto legible que se puede pegar en la oportunidad.
+	 *
+	 * @param array $p Payload estándar.
+	 * @return array Array de un solo nivel.
+	 */
+	public static function flatten_for_ghl( $p ) {
+		$cust   = (array) ( $p['customer'] ?? [] );
+		$client = (array) ( $p['client'] ?? [] );
+		$items  = (array) ( $p['items'] ?? [] );
+
+		$lineas = [];
+		foreach ( $items as $it ) {
+			$precio = ( isset( $it['unit_price'] ) && $it['unit_price'] !== null )
+				? glotracol_quote_format_price( (int) $it['unit_price'] )
+				: 'A cotizar';
+			$lineas[] = sprintf(
+				'%d x %s (%s) - %s',
+				(int) ( $it['quantity'] ?? 0 ),
+				(string) ( $it['name'] ?? '' ),
+				(string) ( $it['sku'] ?? 's/sku' ),
+				$precio
+			);
+		}
+
+		return [
+			'quote_id'         => (int) ( $p['quote_id'] ?? 0 ),
+			'reference'        => (string) ( $p['reference'] ?? '' ),
+			'type'             => (string) ( $p['type'] ?? '' ),
+			'status'           => (string) ( $p['status'] ?? '' ),
+			'pricing_status'   => (string) ( $p['pricing_status'] ?? '' ),
+			'customer_name'    => (string) ( $cust['name'] ?? '' ),
+			'customer_email'   => (string) ( $cust['email'] ?? '' ),
+			'customer_phone'   => (string) ( $cust['phone'] ?? '' ),
+			'customer_company' => (string) ( $cust['company'] ?? '' ),
+			'customer_nit'     => (string) ( $cust['nit'] ?? '' ),
+			'customer_city'    => (string) ( $cust['city'] ?? '' ),
+			'customer_message' => (string) ( $p['message'] ?? '' ),
+			'client_nit'       => (string) ( $client['nit'] ?? '' ),
+			'client_name'      => (string) ( $client['name'] ?? '' ),
+			'is_b2b'           => ! empty( $client['is_b2b'] ),
+			'currency'         => (string) ( $p['currency'] ?? 'COP' ),
+			'total'            => (int) ( $p['total'] ?? 0 ),
+			'units_total'      => (int) ( $p['units_total'] ?? 0 ),
+			'weight_total_kg'  => (float) ( $p['weight_total_kg'] ?? 0 ),
+			'size_tag'         => (string) ( $p['size_tag'] ?? '' ),
+			'items_count'      => count( $items ),
+			'items_text'       => implode( "\n", $lineas ),
+			'admin_url'        => (string) ( $p['admin_url'] ?? '' ),
+			'created_at'       => (string) ( $p['created_at'] ?? '' ),
+		];
 	}
 
 	private function log( $quote_id, $url, $ok, $resp ) {

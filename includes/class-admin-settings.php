@@ -43,6 +43,8 @@ class Glotracol_Quote_Admin_Settings {
 		$out['thanks_message']           = sanitize_textarea_field( $input['thanks_message'] ?? $existing['thanks_message'] );
 		$out['webhook_url']              = esc_url_raw( $input['webhook_url'] ?? '' );
 		$out['webhook_secret']           = sanitize_text_field( $input['webhook_secret'] ?? '' );
+		$out['webhook_format'] = in_array( $input['webhook_format'] ?? '', [ 'estandar', 'gohighlevel' ], true )
+			? $input['webhook_format'] : 'estandar';
 		$out['rate_limit_per_hour']      = max( 0, (int) ( $input['rate_limit_per_hour'] ?? 3 ) );
 		$out['delete_data_on_uninstall'] = ! empty( $input['delete_data_on_uninstall'] ) ? 'yes' : 'no';
 
@@ -229,6 +231,14 @@ class Glotracol_Quote_Admin_Settings {
 					<tr><th><label>Webhook secret</label></th>
 						<td><input type="text" class="regular-text" name="<?php echo $opt; ?>[webhook_secret]" value="<?php echo esc_attr( $s['webhook_secret'] ); ?>">
 						<p class="description">Si se configura, el POST incluirá header <code>X-Glotracol-Signature: sha256=&lt;HMAC&gt;</code>.</p></td></tr>
+					<tr><th><label>Formato del webhook</label></th>
+						<td>
+							<select name="<?php echo $opt; ?>[webhook_format]">
+								<option value="estandar" <?php selected( $s['webhook_format'] ?? 'estandar', 'estandar' ); ?>>Estándar (JSON anidado)</option>
+								<option value="gohighlevel" <?php selected( $s['webhook_format'] ?? 'estandar', 'gohighlevel' ); ?>>GoHighLevel (campos planos)</option>
+							</select>
+							<p class="description">GoHighLevel no lee JSON anidado. Con esta opción se envían los campos en un solo nivel (<code>customer_name</code>, <code>total</code>…) y los productos como texto en <code>items_text</code>, listos para mapear en un <em>Create Opportunity</em>.</p>
+						</td></tr>
 				</table>
 				<?php
 				break;

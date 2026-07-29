@@ -16,6 +16,7 @@ function glotracol_quote_get_settings() {
 		'terms_text'                => 'Acepto que mis datos sean utilizados para responder a esta cotización.',
 		'webhook_url'               => '',
 		'webhook_secret'            => '',
+		'webhook_format'            => 'estandar',
 		'rate_limit_per_hour'       => 3,
 		'delete_data_on_uninstall'  => 'no',
 		// Reglas de clasificación por tamaño (F3 + F4)
