@@ -36,6 +36,7 @@ Plugin propio para Glotracol (Global Trading de Colombia). Reemplaza el flujo de
 * Se adjunta una nota con el detalle de productos, empaque, presentación, peso total y el enlace a la cotización en el panel.
 * Nueva sección de ajustes con prueba de conexión y selección de pipeline y etapa desde tu propia cuenta.
 * Si GoHighLevel falla, la cotización y los correos salen igual; los errores quedan en Registros y se reintenta solo.
+* Arreglado: guardar una pestaña de Ajustes borraba en silencio la configuración de las demás. Podías perder el servidor SMTP (y quedarte sin correos), las copias ocultas, el remitente, la alerta de pedidos grandes o la URL del webhook con solo guardar otra pantalla.
 
 = 2.13.0 =
 * El correo de cotización ahora llega completo: cada producto muestra tipo de empaque, presentación/peso, precio unitario y subtotal, además del total y el peso total del pedido.

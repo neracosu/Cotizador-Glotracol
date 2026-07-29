@@ -26,6 +26,29 @@ class Glotracol_Quote_Admin_Settings {
 		register_setting( 'glotracol_quote_group', self::OPTION_KEY, [ $this, 'sanitize' ] );
 	}
 
+	/**
+	 * Qué ajustes vive en cada pestaña.
+	 *
+	 * El formulario solo envía los campos de la pestaña que se está viendo, así que sin
+	 * este mapa guardar una pestaña vaciaría los ajustes de todas las demás.
+	 * `tests/test-settings-tabs.php` comprueba que no se desincronice del formulario.
+	 */
+	const TAB_FIELDS = [
+		'general'      => [ 'destination_emails', 'bcc_emails', 'sender_name', 'sender_email' ],
+		'emails'       => [ 'admin_subject', 'admin_intro', 'customer_subject', 'customer_intro' ],
+		'form'         => [ 'form_intro', 'terms_text', 'thanks_message' ],
+		'smtp'         => [ 'smtp_enabled', 'smtp_host', 'smtp_port', 'smtp_encryption', 'smtp_username',
+			'smtp_password', 'smtp_from_name', 'smtp_from_email' ],
+		'integrations' => [ 'webhook_url', 'webhook_secret', 'webhook_format', 'ghl_enabled', 'ghl_token',
+			'ghl_location_id', 'ghl_pipeline_id', 'ghl_stage_id', 'ghl_stage_id_pending' ],
+		'rules'        => [ 'size_threshold_medium_units', 'size_threshold_large_units', 'size_threshold_medium_skus',
+			'size_threshold_large_skus', 'large_alert_enabled', 'large_alert_email', 'weight_threshold_large_kg',
+			'weight_threshold_tons_kg', 'auto_respond_enabled' ],
+		'appearance'   => [ 'appearance_inherit_elementor', 'appearance_elementor_slot', 'mini_cart_enabled',
+			'mini_cart_position' ],
+		'advanced'     => [ 'rate_limit_per_hour', 'delete_data_on_uninstall' ],
+	];
+
 	public function sanitize( $input ) {
 		$existing = glotracol_quote_get_settings();
 		if ( ! is_array( $input ) ) $input = [];
@@ -41,29 +64,17 @@ class Glotracol_Quote_Admin_Settings {
 		$out['form_intro']               = sanitize_textarea_field( $input['form_intro'] ?? $existing['form_intro'] );
 		$out['terms_text']               = sanitize_textarea_field( $input['terms_text'] ?? $existing['terms_text'] );
 		$out['thanks_message']           = sanitize_textarea_field( $input['thanks_message'] ?? $existing['thanks_message'] );
-		// El formulario solo envía los campos de la pestaña visible (campo oculto __tab). Sin esta
-		// comprobación, guardar SMTP o Apariencia borraría el token y la URL del webhook.
-		if ( sanitize_key( $input['__tab'] ?? '' ) === 'integrations' ) {
-			$out['webhook_url']    = esc_url_raw( $input['webhook_url'] ?? '' );
-			$out['webhook_secret'] = sanitize_text_field( $input['webhook_secret'] ?? '' );
-			$out['webhook_format'] = in_array( $input['webhook_format'] ?? '', [ 'estandar', 'gohighlevel' ], true )
-				? $input['webhook_format'] : 'estandar';
+		$out['webhook_url']              = esc_url_raw( $input['webhook_url'] ?? '' );
+		$out['webhook_secret']           = sanitize_text_field( $input['webhook_secret'] ?? '' );
+		$out['webhook_format'] = in_array( $input['webhook_format'] ?? '', [ 'estandar', 'gohighlevel' ], true )
+			? $input['webhook_format'] : 'estandar';
 
-			$out['ghl_enabled']          = ( ( $input['ghl_enabled'] ?? '' ) === 'yes' ) ? 'yes' : 'no';
-			$out['ghl_token']            = trim( sanitize_text_field( $input['ghl_token'] ?? '' ) );
-			$out['ghl_location_id']      = trim( sanitize_text_field( $input['ghl_location_id'] ?? '' ) );
-			$out['ghl_pipeline_id']      = sanitize_text_field( $input['ghl_pipeline_id'] ?? '' );
-			$out['ghl_stage_id']         = sanitize_text_field( $input['ghl_stage_id'] ?? '' );
-			$out['ghl_stage_id_pending'] = sanitize_text_field( $input['ghl_stage_id_pending'] ?? '' );
-
-			// Los pipelines se releen en el próximo pintado: la config pudo cambiar de cuenta.
-			delete_transient( Glotracol_Quote_GHL::CACHE_KEY );
-		} else {
-			foreach ( [ 'webhook_url', 'webhook_secret', 'webhook_format', 'ghl_enabled', 'ghl_token',
-				'ghl_location_id', 'ghl_pipeline_id', 'ghl_stage_id', 'ghl_stage_id_pending' ] as $keep ) {
-				$out[ $keep ] = $existing[ $keep ] ?? '';
-			}
-		}
+		$out['ghl_enabled']          = ( ( $input['ghl_enabled'] ?? '' ) === 'yes' ) ? 'yes' : 'no';
+		$out['ghl_token']            = trim( sanitize_text_field( $input['ghl_token'] ?? '' ) );
+		$out['ghl_location_id']      = trim( sanitize_text_field( $input['ghl_location_id'] ?? '' ) );
+		$out['ghl_pipeline_id']      = sanitize_text_field( $input['ghl_pipeline_id'] ?? '' );
+		$out['ghl_stage_id']         = sanitize_text_field( $input['ghl_stage_id'] ?? '' );
+		$out['ghl_stage_id_pending'] = sanitize_text_field( $input['ghl_stage_id_pending'] ?? '' );
 
 		$out['rate_limit_per_hour']      = max( 0, (int) ( $input['rate_limit_per_hour'] ?? 3 ) );
 		$out['delete_data_on_uninstall'] = ! empty( $input['delete_data_on_uninstall'] ) ? 'yes' : 'no';
@@ -98,6 +109,24 @@ class Glotracol_Quote_Admin_Settings {
 		$out['smtp_password']    = $incoming_pwd !== '' ? $incoming_pwd : ( $existing['smtp_password'] ?? '' );
 		$out['smtp_from_name']   = sanitize_text_field( $input['smtp_from_name'] ?? '' );
 		$out['smtp_from_email']  = is_email( $input['smtp_from_email'] ?? '' ) ? sanitize_email( $input['smtp_from_email'] ) : '';
+
+		// Hasta aquí se ha saneado TODO el formulario, pero el navegador solo envió los campos de
+		// la pestaña visible: el resto vendría vacío y borraría ajustes de otras pestañas. Se
+		// conserva lo que no pertenece a la pestaña que se estaba guardando.
+		$tab = sanitize_key( $input['__tab'] ?? '' );
+		foreach ( $out as $k => $v ) {
+			if ( ! array_key_exists( $k, $existing ) ) continue;
+			$de_esta_pestana = isset( self::TAB_FIELDS[ $tab ] )
+				? in_array( $k, self::TAB_FIELDS[ $tab ], true )
+				: array_key_exists( $k, $input );  // sin pestaña conocida: solo lo que venga explícito
+			if ( ! $de_esta_pestana ) $out[ $k ] = $existing[ $k ];
+		}
+
+		// Los pipelines se releen en el próximo pintado: la config pudo cambiar de cuenta.
+		if ( $tab === 'integrations' ) {
+			delete_transient( Glotracol_Quote_GHL::CACHE_KEY );
+		}
+
 		return $out;
 	}
 

@@ -88,6 +88,7 @@ class Glotracol_Quote_Changelog_Admin {
 					'La nota incluye productos, empaque, presentación, peso total, NIT y el enlace directo a la cotización.',
 					'Ajustes con botón de prueba de conexión y selección de pipeline y etapa leídos de tu cuenta.',
 					'Si GoHighLevel falla, la cotización y los correos salen igual; se reintenta solo y queda constancia en Registros.',
+					'Arreglado un fallo antiguo de Ajustes: guardar una pestaña borraba en silencio la configuración de las otras. Con solo guardar otra pantalla podías perder el servidor SMTP y quedarte sin correos, o perder las copias ocultas, el remitente, la alerta de pedidos grandes y la URL del webhook.',
 				],
 			],
 			[
