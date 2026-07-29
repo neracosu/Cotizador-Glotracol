@@ -79,6 +79,18 @@ class Glotracol_Quote_Changelog_Admin {
 	public static function entries() {
 		return [
 			[
+				'date' => '2026-07-28', 'version' => '2.14.0', 'type' => 'feature',
+				'title' => 'Las cotizaciones entran solas a GoHighLevel',
+				'summary' => 'Cada cotización crea el contacto en GoHighLevel y abre una oportunidad con su valor, en el pipeline y la etapa que elijas. Se adjunta una nota con el detalle de productos. No hace falta contratar los activadores de pago de GoHighLevel ni configurar workflows.',
+				'details' => [
+					'El contacto se reutiliza si ya existe; cada cotización abre su propia oportunidad.',
+					'La etapa depende del estado de precios: "cotización enviada" si ya tiene todos los precios, etapa de lead nuevo si faltan.',
+					'La nota incluye productos, empaque, presentación, peso total, NIT y el enlace directo a la cotización.',
+					'Ajustes con botón de prueba de conexión y selección de pipeline y etapa leídos de tu cuenta.',
+					'Si GoHighLevel falla, la cotización y los correos salen igual; se reintenta solo y queda constancia en Registros.',
+				],
+			],
+			[
 				'date' => '2026-07-28', 'version' => '2.13.0', 'type' => 'feature',
 				'title' => 'El correo de cotización ahora llega completo, con PDF',
 				'summary' => 'El correo que llega al cotizar ya no muestra solo nombre, SKU y cantidad: ahora trae el tipo de empaque, la presentación con el peso, el precio unitario, el subtotal y el total. Los productos sin precio aparecen como "A cotizar" en vez de desaparecer. Además se adjunta un PDF de la cotización y el correo al cliente incluye los datos que llenó en el formulario.',
