@@ -48,6 +48,7 @@ require_once GLOTRACOL_QUOTE_PATH . 'includes/class-quote-pdf.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-quote-emails.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-smtp.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-webhook.php';
+require_once GLOTRACOL_QUOTE_PATH . 'includes/class-ghl.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-quote-form.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-admin-meta-box.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-admin-settings.php';

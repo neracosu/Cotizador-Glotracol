@@ -53,7 +53,8 @@ function glotracol_quote_get_settings() {
 
 function glotracol_quote_get_setting( $key, $fallback = '' ) {
 	$settings = glotracol_quote_get_settings();
-	return isset( $settings[ $key ] ) && $settings[ $key ] !== '' ? $settings[ $key ] : $fallback;
+	$valor = isset( $settings[ $key ] ) && $settings[ $key ] !== '' ? $settings[ $key ] : $fallback;
+	return apply_filters( 'glotracol_quote_setting', $valor, $key );
 }
 
 function glotracol_quote_replace_placeholders( $text, $vars ) {
