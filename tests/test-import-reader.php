@@ -129,7 +129,11 @@ chk( 'round-trip celda con &', ( function() {
 // --- v2.6.0 Task 2: template_sheets ---
 $ts = Glotracol_Quote_Import_Reader::template_sheets( 'precios_catalogo' );
 chk( 'template tiene Datos e Instrucciones', array_keys( $ts ), [ 'Datos', 'Instrucciones' ] );
-chk( 'Datos headers = del CSV template', $ts['Datos'][0], [ 'ID', 'Nombre', 'Peso (kg)', 'Precio normal', 'Disponibilidad' ] );
+// Presentacion y Empaque se añadieron a la plantilla en v2.7.0; van aquí como referencia visual
+// aunque el importador no las lea. Si cambias templates/csv/precios_catalogo.csv, actualiza esto.
+chk( 'Datos headers = del CSV template', $ts['Datos'][0], [ 'ID', 'Nombre', 'Presentacion', 'Empaque', 'Peso (kg)', 'Precio normal', 'Disponibilidad' ] );
+$primera_linea = (array) file( GLOTRACOL_QUOTE_PATH . 'templates/csv/precios_catalogo.csv', FILE_IGNORE_NEW_LINES );
+chk( 'Datos headers salen verbatim del CSV, no del schema', $ts['Datos'][0], str_getcsv( (string) ( $primera_linea[0] ?? '' ) ) );
 chk( 'Datos tiene fila de ejemplo', isset( $ts['Datos'][1] ) && count( $ts['Datos'][1] ) >= 3, true );
 chk( 'Instrucciones cabecera', $ts['Instrucciones'][0][0], 'Columna' );
 // La fila de 'precio normal' en Instrucciones incluye 'valor' como sinónimo.
