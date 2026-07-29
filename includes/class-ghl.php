@@ -110,8 +110,202 @@ class Glotracol_Quote_GHL {
 		return $out;
 	}
 
-	// Implementados en la Task 3; declarados ya para que el constructor no enganche a nada inexistente.
-	public function schedule_dispatch( $quote_id, $payload ) {}
+	/** Parte el nombre del formulario: primera palabra nombre, el resto apellido. */
+	private static function split_name( $full ) {
+		$full = trim( preg_replace( '/\s+/', ' ', (string) $full ) );
+		if ( $full === '' ) return [ '', '' ];
+		$pos = strpos( $full, ' ' );
+		return $pos === false ? [ $full, '' ] : [ substr( $full, 0, $pos ), substr( $full, $pos + 1 ) ];
+	}
 
-	public function dispatch( $quote_id ) {}
+	/** @return string|WP_Error contactId */
+	public static function upsert_contact( $customer ) {
+		list( $first, $last ) = self::split_name( $customer['name'] ?? '' );
+		$body = [
+			'firstName'   => $first,
+			'lastName'    => $last,
+			'email'       => (string) ( $customer['email'] ?? '' ),
+			'companyName' => (string) ( $customer['company'] ?? '' ),
+			'city'        => (string) ( $customer['city'] ?? '' ),
+			'locationId'  => self::location_id(),
+		];
+		$phone = trim( (string) ( $customer['phone'] ?? '' ) );
+		if ( $phone !== '' ) $body['phone'] = $phone;
+
+		$r = self::request( 'POST', '/contacts/upsert', $body );
+		if ( is_wp_error( $r ) ) return $r;
+		$id = (string) ( $r['contact']['id'] ?? '' );
+		return $id !== '' ? $id : new WP_Error( 'ghl_http', 'GoHighLevel no devolvió el id del contacto' );
+	}
+
+	/**
+	 * @param array $datos [ 'name' => string, 'monetary_value' => int, 'stage_id' => string ]
+	 * @return string|WP_Error opportunityId
+	 */
+	public static function create_opportunity( $contact_id, $datos ) {
+		$body = [
+			'pipelineId'      => (string) glotracol_quote_get_setting( 'ghl_pipeline_id' ),
+			'locationId'      => self::location_id(),
+			'name'            => (string) $datos['name'],
+			'pipelineStageId' => (string) $datos['stage_id'],
+			'status'          => 'open',
+			'contactId'       => (string) $contact_id,
+			'monetaryValue'   => (int) $datos['monetary_value'],
+		];
+		$r = self::request( 'POST', '/opportunities/upsert', $body );
+		if ( is_wp_error( $r ) ) return $r;
+		$id = (string) ( $r['opportunity']['id'] ?? '' );
+		return $id !== '' ? $id : new WP_Error( 'ghl_http', 'GoHighLevel no devolvió el id de la oportunidad' );
+	}
+
+	/** @return true|WP_Error */
+	public static function add_note( $contact_id, $texto ) {
+		$r = self::request( 'POST', '/contacts/' . rawurlencode( $contact_id ) . '/notes', [ 'body' => $texto ] );
+		return is_wp_error( $r ) ? $r : true;
+	}
+
+	/** Detalle de la cotización en texto plano, para pegar en la nota de GHL. */
+	public static function note_text( $quote_id ) {
+		$quote_id = (int) $quote_id;
+		$items = glotracol_quote_enrich_items( get_post_meta( $quote_id, '_glo_items', true ) ?: [] );
+		$total = (int) get_post_meta( $quote_id, '_glo_total', true );
+		$peso  = (float) get_post_meta( $quote_id, '_glo_weight_total_kg', true );
+		$nit   = (string) get_post_meta( $quote_id, '_glo_customer_nit', true );
+
+		$l = [ 'Cotización #' . $quote_id ];
+		if ( $nit !== '' ) $l[] = 'NIT: ' . $nit;
+		$l[] = '';
+		foreach ( $items as $it ) {
+			$l[] = sprintf(
+				'%d x %s | %s | %s | subtotal %s',
+				(int) ( $it['quantity'] ?? 0 ),
+				(string) ( $it['name'] ?? '' ),
+				(string) ( $it['empaque'] ?? '—' ),
+				(string) ( $it['presentacion'] ?? '—' ),
+				(string) ( $it['precio_sub_fmt'] ?? '—' )
+			);
+		}
+		$l[] = '';
+		if ( $peso > 0 ) $l[] = 'Peso total: ' . number_format( $peso, 2, ',', '.' ) . ' kg';
+		$l[] = 'TOTAL: ' . glotracol_quote_format_price( $total );
+		$l[] = '';
+		$l[] = 'Ver en el panel: ' . admin_url( 'post.php?post=' . $quote_id . '&action=edit' );
+		return implode( "\n", $l );
+	}
+
+	/**
+	 * Orquesta los tres pasos. Cada uno guarda su resultado, así un reintento
+	 * retoma donde falló en vez de duplicar lo ya creado.
+	 *
+	 * @return true|WP_Error
+	 */
+	public static function send_quote( $quote_id ) {
+		$quote_id = (int) $quote_id;
+		$post = get_post( $quote_id );
+		if ( ! $post || $post->post_type !== 'glo_quote' ) {
+			return new WP_Error( 'ghl_config', 'La cotización no existe' );
+		}
+		if ( ! self::is_configured() ) {
+			return new WP_Error( 'ghl_config', 'Falta el token o el Location ID de GoHighLevel' );
+		}
+		$pipeline = (string) glotracol_quote_get_setting( 'ghl_pipeline_id' );
+		if ( $pipeline === '' ) {
+			return new WP_Error( 'ghl_config', 'Falta elegir el pipeline de GoHighLevel' );
+		}
+
+		// Etapa según el estado de precios.
+		$pricing = (string) get_post_meta( $quote_id, '_glo_pricing_status', true );
+		$stage   = (string) glotracol_quote_get_setting( 'ghl_stage_id' );
+		if ( $pricing !== 'priced' ) {
+			$pend = (string) glotracol_quote_get_setting( 'ghl_stage_id_pending' );
+			if ( $pend !== '' ) $stage = $pend;
+		}
+		if ( $stage === '' ) {
+			return new WP_Error( 'ghl_config', 'Falta elegir la etapa de GoHighLevel' );
+		}
+
+		// --- Paso 1: contacto ---
+		$contact_id = (string) get_post_meta( $quote_id, '_glo_ghl_contact_id', true );
+		if ( $contact_id === '' ) {
+			$r = self::upsert_contact( [
+				'name'    => get_post_meta( $quote_id, '_glo_customer_name', true ),
+				'email'   => get_post_meta( $quote_id, '_glo_customer_email', true ),
+				'phone'   => get_post_meta( $quote_id, '_glo_customer_phone', true ),
+				'company' => get_post_meta( $quote_id, '_glo_customer_company', true ),
+				'city'    => get_post_meta( $quote_id, '_glo_customer_city', true ),
+			] );
+			if ( is_wp_error( $r ) ) return $r;
+			$contact_id = $r;
+			update_post_meta( $quote_id, '_glo_ghl_contact_id', $contact_id );
+		}
+
+		// --- Paso 2: oportunidad ---
+		$opp_id = (string) get_post_meta( $quote_id, '_glo_ghl_opportunity_id', true );
+		if ( $opp_id === '' ) {
+			$nombre = sprintf(
+				'%s #%d — %s',
+				get_post_meta( $quote_id, '_glo_type', true ) === 'order' ? 'Pedido' : 'Cotización',
+				$quote_id,
+				(string) get_post_meta( $quote_id, '_glo_customer_name', true )
+			);
+			$r = self::create_opportunity( $contact_id, [
+				'name'           => $nombre,
+				'monetary_value' => (int) get_post_meta( $quote_id, '_glo_total', true ),
+				'stage_id'       => $stage,
+			] );
+			if ( is_wp_error( $r ) ) return $r;
+			$opp_id = $r;
+			update_post_meta( $quote_id, '_glo_ghl_opportunity_id', $opp_id );
+		}
+
+		// --- Paso 3: nota. Si falla, la oportunidad ya existe y es lo importante. ---
+		if ( ! get_post_meta( $quote_id, '_glo_ghl_note_ok', true ) ) {
+			$r = self::add_note( $contact_id, self::note_text( $quote_id ) );
+			if ( is_wp_error( $r ) ) {
+				Glotracol_Quote_Logger::warn( 'ghl', 'La oportunidad se creó pero la nota falló: ' . $r->get_error_message(), [ 'quote_id' => $quote_id ] );
+			} else {
+				update_post_meta( $quote_id, '_glo_ghl_note_ok', 1 );
+			}
+		}
+
+		Glotracol_Quote_Logger::info( 'ghl', sprintf( 'Cotización #%d enviada a GoHighLevel', $quote_id ), [
+			'quote_id' => $quote_id, 'contact_id' => $contact_id, 'opportunity_id' => $opp_id,
+		] );
+		return true;
+	}
+
+	public function schedule_dispatch( $quote_id, $payload ) {
+		if ( glotracol_quote_get_setting( 'ghl_enabled' ) !== 'yes' ) return;
+		if ( ! self::is_configured() ) return;
+		// Async a 5 segundos: el cliente no espera a GHL para ver su página de gracias.
+		wp_schedule_single_event( time() + 5, self::HOOK, [ (int) $quote_id ] );
+	}
+
+	public function dispatch( $quote_id ) {
+		if ( glotracol_quote_get_setting( 'ghl_enabled' ) !== 'yes' ) return;
+
+		$r = self::send_quote( (int) $quote_id );
+		if ( $r === true ) {
+			delete_post_meta( $quote_id, '_glo_ghl_attempts' );
+			return;
+		}
+
+		$code = $r->get_error_code();
+		Glotracol_Quote_Logger::error( 'ghl', 'Fallo enviando a GoHighLevel: ' . $r->get_error_message(), [
+			'quote_id' => $quote_id, 'code' => $code,
+		] );
+
+		// Credencial mala o configuración incompleta: reintentar no lo arregla.
+		if ( $code === 'ghl_auth' || $code === 'ghl_config' ) return;
+
+		$attempts = (int) get_post_meta( $quote_id, '_glo_ghl_attempts', true ) + 1;
+		update_post_meta( $quote_id, '_glo_ghl_attempts', $attempts );
+		$backoffs = [ 60, 300, 900 ];
+		if ( isset( $backoffs[ $attempts - 1 ] ) ) {
+			wp_schedule_single_event( time() + $backoffs[ $attempts - 1 ], self::HOOK, [ (int) $quote_id ] );
+			Glotracol_Quote_Logger::info( 'ghl', sprintf( 'Reintento #%d programado en %ds', $attempts, $backoffs[ $attempts - 1 ] ), [ 'quote_id' => $quote_id ] );
+		} else {
+			Glotracol_Quote_Logger::error( 'ghl', 'GoHighLevel agotó los reintentos', [ 'quote_id' => $quote_id, 'attempts' => $attempts ] );
+		}
+	}
 }

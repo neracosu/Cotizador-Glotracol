@@ -29,6 +29,7 @@ class Glotracol_Quote_Plugin {
 		new Glotracol_Quote_Emails();
 		new Glotracol_Quote_SMTP();
 		new Glotracol_Quote_Webhook();
+		new Glotracol_Quote_GHL();
 		new Glotracol_Quote_Admin_Meta_Box();
 		new Glotracol_Quote_Admin_Settings();
 		new Glotracol_Quote_Admin_Dashboard();
