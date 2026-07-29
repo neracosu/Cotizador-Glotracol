@@ -81,6 +81,7 @@ class Glotracol_Quote_Plugin {
 			'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
 			'smtpNonce'    => wp_create_nonce( 'gloq_smtp_test' ),
 			'convertNonce' => wp_create_nonce( 'gloq_convert_to_order' ),
+			'ghlNonce'     => wp_create_nonce( 'gloq_ghl_test' ),
 			'i18n'         => [
 				'confirmDeleteRow' => 'Quitar esta fila.',
 				'sending'          => 'Enviando…',

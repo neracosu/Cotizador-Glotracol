@@ -302,6 +302,11 @@ class Glotracol_Quote_Admin_Settings {
 						<td><select name="<?php echo $opt; ?>[ghl_stage_id_pending]" id="gloq-ghl-stage-pending" data-selected="<?php echo esc_attr( $s['ghl_stage_id_pending'] ?? '' ); ?>"></select>
 						<p class="description">Donde cae cuando algún producto quedó sin precio. Si lo dejas vacío, se usa la etapa de arriba.</p></td></tr>
 					<?php endif; ?>
+
+					<tr><th></th>
+						<td><button type="button" class="button" id="gloq-ghl-test">Probar conexión</button>
+						<span id="gloq-ghl-test-result" style="margin-left:10px"></span>
+						<p class="description">Guarda los ajustes antes de probar.</p></td></tr>
 				</table>
 				<script type="application/json" id="gloq-ghl-pipelines"><?php echo wp_json_encode( $ghl_pipes ); ?></script>
 				<?php

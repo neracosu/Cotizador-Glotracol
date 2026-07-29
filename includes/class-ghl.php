@@ -17,6 +17,7 @@ class Glotracol_Quote_GHL {
 	public function __construct() {
 		add_action( 'glotracol_quote_created', [ $this, 'schedule_dispatch' ], 30, 2 );
 		add_action( self::HOOK, [ $this, 'dispatch' ], 10, 1 );
+		add_action( 'wp_ajax_gloq_ghl_test', [ $this, 'ajax_test' ] );
 	}
 
 	public static function token() {
@@ -279,6 +280,25 @@ class Glotracol_Quote_GHL {
 		if ( ! self::is_configured() ) return;
 		// Async a 5 segundos: el cliente no espera a GHL para ver su página de gracias.
 		wp_schedule_single_event( time() + 5, self::HOOK, [ (int) $quote_id ] );
+	}
+
+	/** Prueba la conexión desde la pantalla de Ajustes. Nunca devuelve el token. */
+	public function ajax_test() {
+		check_ajax_referer( 'gloq_ghl_test', '_wpnonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( [ 'message' => 'Sin permisos' ] );
+		}
+		if ( ! self::is_configured() ) {
+			wp_send_json_error( [ 'message' => 'Falta el token o el Location ID. Guarda los ajustes primero.' ] );
+		}
+		$p = self::pipelines( true );
+		if ( empty( $p ) ) {
+			wp_send_json_error( [ 'message' => 'GoHighLevel no devolvió pipelines. Revisa que el token tenga el permiso opportunities.readonly y que el Location ID sea el correcto.' ] );
+		}
+		$nombres = array_map( function ( $x ) { return $x['name']; }, array_values( $p ) );
+		wp_send_json_success( [
+			'message' => sprintf( 'Conexión correcta. %d pipelines encontrados: %s', count( $p ), implode( ', ', $nombres ) ),
+		] );
 	}
 
 	public function dispatch( $quote_id ) {

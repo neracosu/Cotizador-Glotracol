@@ -207,3 +207,33 @@
 	pipeSel.addEventListener('change', fill);
 	fill();
 })();
+
+// Ajustes → Integraciones → GoHighLevel: botón "Probar conexión".
+(function () {
+	var btn = document.getElementById('gloq-ghl-test');
+	if (!btn || typeof GloqAdmin === 'undefined') return;
+	var out = document.getElementById('gloq-ghl-test-result');
+
+	btn.addEventListener('click', function () {
+		btn.disabled = true;
+		out.textContent = 'Probando…';
+		out.style.color = '#666';
+
+		var body = new URLSearchParams();
+		body.append('action', 'gloq_ghl_test');
+		body.append('_wpnonce', GloqAdmin.ghlNonce);
+
+		fetch(GloqAdmin.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body })
+			.then(function (r) { return r.json(); })
+			.then(function (j) {
+				var okey = j && j.success;
+				out.textContent = (j && j.data && j.data.message) || 'Respuesta inesperada';
+				out.style.color = okey ? '#0a4d3a' : '#dc3545';
+			})
+			.catch(function () {
+				out.textContent = 'No se pudo contactar al servidor';
+				out.style.color = '#dc3545';
+			})
+			.finally(function () { btn.disabled = false; });
+	});
+})();
