@@ -17,6 +17,12 @@ function glotracol_quote_get_settings() {
 		'webhook_url'               => '',
 		'webhook_secret'            => '',
 		'webhook_format'            => 'estandar',
+		'ghl_enabled'               => 'no',
+		'ghl_token'                 => '',
+		'ghl_location_id'           => '',
+		'ghl_pipeline_id'           => '',
+		'ghl_stage_id'              => '',
+		'ghl_stage_id_pending'      => '',
 		'rate_limit_per_hour'       => 3,
 		'delete_data_on_uninstall'  => 'no',
 		// Reglas de clasificación por tamaño (F3 + F4)

@@ -41,10 +41,30 @@ class Glotracol_Quote_Admin_Settings {
 		$out['form_intro']               = sanitize_textarea_field( $input['form_intro'] ?? $existing['form_intro'] );
 		$out['terms_text']               = sanitize_textarea_field( $input['terms_text'] ?? $existing['terms_text'] );
 		$out['thanks_message']           = sanitize_textarea_field( $input['thanks_message'] ?? $existing['thanks_message'] );
-		$out['webhook_url']              = esc_url_raw( $input['webhook_url'] ?? '' );
-		$out['webhook_secret']           = sanitize_text_field( $input['webhook_secret'] ?? '' );
-		$out['webhook_format'] = in_array( $input['webhook_format'] ?? '', [ 'estandar', 'gohighlevel' ], true )
-			? $input['webhook_format'] : 'estandar';
+		// El formulario solo envía los campos de la pestaña visible (campo oculto __tab). Sin esta
+		// comprobación, guardar SMTP o Apariencia borraría el token y la URL del webhook.
+		if ( sanitize_key( $input['__tab'] ?? '' ) === 'integrations' ) {
+			$out['webhook_url']    = esc_url_raw( $input['webhook_url'] ?? '' );
+			$out['webhook_secret'] = sanitize_text_field( $input['webhook_secret'] ?? '' );
+			$out['webhook_format'] = in_array( $input['webhook_format'] ?? '', [ 'estandar', 'gohighlevel' ], true )
+				? $input['webhook_format'] : 'estandar';
+
+			$out['ghl_enabled']          = ( ( $input['ghl_enabled'] ?? '' ) === 'yes' ) ? 'yes' : 'no';
+			$out['ghl_token']            = trim( sanitize_text_field( $input['ghl_token'] ?? '' ) );
+			$out['ghl_location_id']      = trim( sanitize_text_field( $input['ghl_location_id'] ?? '' ) );
+			$out['ghl_pipeline_id']      = sanitize_text_field( $input['ghl_pipeline_id'] ?? '' );
+			$out['ghl_stage_id']         = sanitize_text_field( $input['ghl_stage_id'] ?? '' );
+			$out['ghl_stage_id_pending'] = sanitize_text_field( $input['ghl_stage_id_pending'] ?? '' );
+
+			// Los pipelines se releen en el próximo pintado: la config pudo cambiar de cuenta.
+			delete_transient( Glotracol_Quote_GHL::CACHE_KEY );
+		} else {
+			foreach ( [ 'webhook_url', 'webhook_secret', 'webhook_format', 'ghl_enabled', 'ghl_token',
+				'ghl_location_id', 'ghl_pipeline_id', 'ghl_stage_id', 'ghl_stage_id_pending' ] as $keep ) {
+				$out[ $keep ] = $existing[ $keep ] ?? '';
+			}
+		}
+
 		$out['rate_limit_per_hour']      = max( 0, (int) ( $input['rate_limit_per_hour'] ?? 3 ) );
 		$out['delete_data_on_uninstall'] = ! empty( $input['delete_data_on_uninstall'] ) ? 'yes' : 'no';
 
@@ -240,6 +260,50 @@ class Glotracol_Quote_Admin_Settings {
 							<p class="description">GoHighLevel no lee JSON anidado. Con esta opción se envían los campos en un solo nivel (<code>customer_name</code>, <code>total</code>…) y los productos como texto en <code>items_text</code>, listos para mapear en un <em>Create Opportunity</em>.</p>
 						</td></tr>
 				</table>
+
+				<h2 style="margin-top:32px">GoHighLevel</h2>
+				<p class="description">Crea el contacto y la oportunidad directamente en GoHighLevel, sin depender de los activadores Premium. El token se genera en <em>Configuración → Integraciones Privado</em> con los permisos <code>contacts.write</code>, <code>contacts.readonly</code>, <code>opportunities.write</code>, <code>opportunities.readonly</code> y <code>locations.readonly</code>.</p>
+				<?php
+				$ghl_pipes = class_exists( 'Glotracol_Quote_GHL' ) ? Glotracol_Quote_GHL::pipelines() : [];
+				$ghl_pid   = $s['ghl_pipeline_id'] ?? '';
+				?>
+				<table class="form-table">
+					<tr><th><label>Activar integración</label></th>
+						<td><label><input type="checkbox" name="<?php echo $opt; ?>[ghl_enabled]" value="yes" <?php checked( $s['ghl_enabled'] ?? 'no', 'yes' ); ?>> Enviar cada cotización a GoHighLevel</label></td></tr>
+
+					<tr><th><label>Token de Integración Privada</label></th>
+						<td><input type="password" class="regular-text" name="<?php echo $opt; ?>[ghl_token]" value="<?php echo esc_attr( $s['ghl_token'] ?? '' ); ?>" autocomplete="new-password" placeholder="pit-…">
+						<p class="description">Se guarda en la base de datos del sitio. Rótalo cada 90 días desde GoHighLevel.</p></td></tr>
+
+					<tr><th><label>Location ID</label></th>
+						<td><input type="text" class="regular-text" name="<?php echo $opt; ?>[ghl_location_id]" value="<?php echo esc_attr( $s['ghl_location_id'] ?? '' ); ?>">
+						<p class="description">Está en la URL del navegador dentro de la subcuenta: <code>…/location/<strong>ESTO</strong>/…</code></p></td></tr>
+
+					<tr><th><label>Pipeline</label></th>
+						<td>
+							<?php if ( empty( $ghl_pipes ) ) : ?>
+								<p class="description">Guarda primero el token y el Location ID; al recargar aparecerán aquí tus pipelines.</p>
+							<?php else : ?>
+							<select name="<?php echo $opt; ?>[ghl_pipeline_id]" id="gloq-ghl-pipeline">
+								<option value="">— Elegir —</option>
+								<?php foreach ( $ghl_pipes as $pid => $p ) : ?>
+								<option value="<?php echo esc_attr( $pid ); ?>" <?php selected( $ghl_pid, $pid ); ?>><?php echo esc_html( $p['name'] ); ?></option>
+								<?php endforeach; ?>
+							</select>
+							<?php endif; ?>
+						</td></tr>
+
+					<?php if ( ! empty( $ghl_pipes ) ) : ?>
+					<tr><th><label>Etapa — cotización con precios</label></th>
+						<td><select name="<?php echo $opt; ?>[ghl_stage_id]" id="gloq-ghl-stage" data-selected="<?php echo esc_attr( $s['ghl_stage_id'] ?? '' ); ?>"></select>
+						<p class="description">Donde cae cuando el cliente ya recibió su cotización con todos los precios.</p></td></tr>
+
+					<tr><th><label>Etapa — faltan precios</label></th>
+						<td><select name="<?php echo $opt; ?>[ghl_stage_id_pending]" id="gloq-ghl-stage-pending" data-selected="<?php echo esc_attr( $s['ghl_stage_id_pending'] ?? '' ); ?>"></select>
+						<p class="description">Donde cae cuando algún producto quedó sin precio. Si lo dejas vacío, se usa la etapa de arriba.</p></td></tr>
+					<?php endif; ?>
+				</table>
+				<script type="application/json" id="gloq-ghl-pipelines"><?php echo wp_json_encode( $ghl_pipes ); ?></script>
 				<?php
 				break;
 

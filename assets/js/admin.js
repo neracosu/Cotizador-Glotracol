@@ -171,3 +171,39 @@
 	} );
 
 } )( jQuery );
+
+// Ajustes → Integraciones → GoHighLevel: rellena las etapas según el pipeline elegido.
+(function () {
+	var raw = document.getElementById('gloq-ghl-pipelines');
+	var pipeSel = document.getElementById('gloq-ghl-pipeline');
+	if (!raw || !pipeSel) return;
+
+	var data = {};
+	try { data = JSON.parse(raw.textContent || '{}'); } catch (e) { return; }
+
+	var stageSels = ['gloq-ghl-stage', 'gloq-ghl-stage-pending']
+		.map(function (id) { return document.getElementById(id); })
+		.filter(Boolean);
+
+	function fill() {
+		var stages = (data[pipeSel.value] && data[pipeSel.value].stages) || {};
+		stageSels.forEach(function (sel) {
+			var want = sel.getAttribute('data-selected') || '';
+			sel.innerHTML = '';
+			var empty = document.createElement('option');
+			empty.value = '';
+			empty.textContent = '— Elegir —';
+			sel.appendChild(empty);
+			Object.keys(stages).forEach(function (sid) {
+				var o = document.createElement('option');
+				o.value = sid;
+				o.textContent = stages[sid];
+				if (sid === want) o.selected = true;
+				sel.appendChild(o);
+			});
+		});
+	}
+
+	pipeSel.addEventListener('change', fill);
+	fill();
+})();
