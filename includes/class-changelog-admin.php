@@ -79,6 +79,18 @@ class Glotracol_Quote_Changelog_Admin {
 	public static function entries() {
 		return [
 			[
+				'date' => '2026-07-28', 'version' => '2.13.0', 'type' => 'feature',
+				'title' => 'El correo de cotización ahora llega completo, con PDF',
+				'summary' => 'El correo que llega al cotizar ya no muestra solo nombre, SKU y cantidad: ahora trae el tipo de empaque, la presentación con el peso, el precio unitario, el subtotal y el total. Los productos sin precio aparecen como "A cotizar" en vez de desaparecer. Además se adjunta un PDF de la cotización y el correo al cliente incluye los datos que llenó en el formulario.',
+				'details' => [
+					'Cada producto muestra empaque, presentación/peso, cantidad, precio unitario y subtotal, con peso total y total del pedido al pie.',
+					'Los productos sin precio se muestran como "A cotizar" y el total se marca como parcial; antes el correo salía sin ningún precio.',
+					'El correo al cliente ahora incluye nombre, empresa, NIT, teléfono, ciudad y mensaje del formulario.',
+					'PDF de la cotización adjunto a los correos y descargable desde la ficha de la cotización.',
+					'Nuevo formato de webhook "GoHighLevel" con campos planos y los productos como texto, para crear oportunidades sin configuración extra.',
+				],
+			],
+			[
 				'date' => '2026-07-17', 'version' => '2.12.0', 'type' => 'fix',
 				'title' => 'Precios públicos que sí se cargan + depurador de archivos corridos',
 				'summary' => 'La carga "Precios Lista A" ahora sí escribe el precio que ves en la pantalla de Precios (antes iba a un registro interno que nadie mostraba). Además, esa carga pasa por la previsualización con el nombre del producto al lado, y un depurador detecta cuando un archivo quedó "corrido" una fila (por una celda de precio vacía) y ofrece realinearlo.',
