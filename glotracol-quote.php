@@ -44,6 +44,7 @@ require_once GLOTRACOL_QUOTE_PATH . 'includes/class-import-diff.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-importer-admin.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-presentations-admin.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-reports.php';
+require_once GLOTRACOL_QUOTE_PATH . 'includes/class-quote-pdf.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-quote-emails.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-smtp.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-webhook.php';
