@@ -39,6 +39,30 @@ class Glotracol_Quote_Plugin {
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
 		add_action( 'wp_head', [ $this, 'print_appearance_css' ], 99 );
 		add_filter( 'plugin_action_links_' . GLOTRACOL_QUOTE_BASENAME, [ $this, 'plugin_action_links' ] );
+		add_action( 'admin_post_gloq_download_pdf', [ $this, 'handle_download_pdf' ] );
+	}
+
+	/**
+	 * Descarga del PDF de una cotización desde el panel. Se genera al vuelo, así
+	 * que siempre refleja los precios actuales de la cotización.
+	 */
+	public function handle_download_pdf() {
+		$quote_id = isset( $_GET['quote_id'] ) ? (int) $_GET['quote_id'] : 0;
+		if ( ! $quote_id || ! current_user_can( 'edit_post', $quote_id ) ) {
+			wp_die( 'Sin permisos para descargar esta cotización.', 'Error', [ 'response' => 403 ] );
+		}
+		check_admin_referer( 'gloq_pdf_' . $quote_id );
+
+		$data = class_exists( 'Glotracol_Quote_PDF' ) ? Glotracol_Quote_PDF::render( $quote_id ) : '';
+		if ( $data === '' ) {
+			wp_die( 'No se pudo generar el PDF de esta cotización.', 'Error', [ 'response' => 500 ] );
+		}
+		nocache_headers();
+		header( 'Content-Type: application/pdf' );
+		header( 'Content-Disposition: attachment; filename="' . Glotracol_Quote_PDF::filename( $quote_id ) . '"' );
+		header( 'Content-Length: ' . strlen( $data ) );
+		echo $data;
+		exit;
 	}
 
 	/**

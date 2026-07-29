@@ -108,7 +108,24 @@ class Glotracol_Quote_Emails {
 			'weight_total'    => $weight_total,
 		] );
 		$admin_body = apply_filters( 'glotracol_quote_email_admin_body', $admin_body, $quote_id, $payload );
-		$admin_ok = wp_mail( $admin_recipients, $admin_subject, $admin_body, $admin_headers );
+
+		// Adjunto PDF. Si falla, se envía igual sin adjunto: un PDF roto no puede
+		// bloquear el envío de la cotización.
+		$attachments = [];
+		if ( class_exists( 'Glotracol_Quote_PDF' ) ) {
+			try {
+				$pdf_path = Glotracol_Quote_PDF::save_temp( $quote_id );
+				if ( $pdf_path ) $attachments[] = $pdf_path;
+			} catch ( Throwable $e ) {
+				if ( class_exists( 'Glotracol_Quote_Logger' ) ) {
+					Glotracol_Quote_Logger::log( 'error', 'pdf', 'No se pudo generar el PDF adjunto', [
+						'quote_id' => $quote_id, 'error' => $e->getMessage(),
+					] );
+				}
+			}
+		}
+
+		$admin_ok = wp_mail( $admin_recipients, $admin_subject, $admin_body, $admin_headers, $attachments );
 		$this->log( $quote_id, $admin_log_type, implode( ', ', $admin_recipients ), $admin_ok );
 		if ( class_exists( 'Glotracol_Quote_Logger' ) ) {
 			Glotracol_Quote_Logger::log( $admin_ok ? 'info' : 'error', 'email', sprintf( 'Email %s al admin (%s) #%d %s', $admin_log_type, implode(', ', $admin_recipients), $quote_id, $admin_ok ? 'enviado' : 'FALLÓ' ), [
@@ -142,13 +159,18 @@ class Glotracol_Quote_Emails {
 				'weight_total' => $weight_total,
 			] );
 			$cust_body = apply_filters( 'glotracol_quote_email_customer_body', $cust_body, $quote_id, $payload );
-			$cust_ok = wp_mail( $customer['email'], $cust_subject, $cust_body, $headers );
+			$cust_ok = wp_mail( $customer['email'], $cust_subject, $cust_body, $headers, $attachments );
 			$this->log( $quote_id, $is_auto_priced ? 'customer-priced' : 'customer', $customer['email'], $cust_ok );
 			if ( class_exists( 'Glotracol_Quote_Logger' ) ) {
 				Glotracol_Quote_Logger::log( $cust_ok ? 'info' : 'error', 'email', sprintf( 'Email cliente %s #%d %s', $is_auto_priced ? '(auto-priced)' : '(confirmación)', $quote_id, $cust_ok ? 'enviado' : 'FALLÓ' ), [
 					'quote_id' => $quote_id, 'to' => $customer['email'], 'template' => $cust_template, 'success' => $cust_ok,
 				] );
 			}
+		}
+
+		// El PDF se regenera al vuelo cada vez; el temporal no debe quedar en disco.
+		foreach ( $attachments as $tmp ) {
+			if ( file_exists( $tmp ) ) @unlink( $tmp );
 		}
 	}
 

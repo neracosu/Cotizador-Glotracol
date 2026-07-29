@@ -78,6 +78,12 @@ class Glotracol_Quote_Admin_Meta_Box {
 			echo '<td>' . esc_html( $qty ) . '</td></tr>';
 		}
 		echo '</tbody></table>';
+
+		$url = wp_nonce_url(
+			admin_url( 'admin-post.php?action=gloq_download_pdf&quote_id=' . (int) $post->ID ),
+			'gloq_pdf_' . (int) $post->ID
+		);
+		echo '<p style="margin-top:14px"><a href="' . esc_url( $url ) . '" class="button button-secondary">Descargar PDF</a></p>';
 	}
 
 	public function render_meta( $post ) {
