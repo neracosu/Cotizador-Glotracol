@@ -609,3 +609,29 @@ function glotracol_quote_brand() {
 	return apply_filters( 'glotracol_quote_brand', $brand );
 }
 
+/**
+ * Reconstruye, desde las metas, un payload equivalente al del envio original del
+ * formulario. Lo usan la conversion a pedido y el reenvio del correo al cliente.
+ */
+function glotracol_quote_reconstruct_payload( $quote_id ) {
+	$quote_id = (int) $quote_id;
+	return [
+		'customer' => [
+			'name'    => get_post_meta( $quote_id, '_glo_customer_name', true ),
+			'email'   => get_post_meta( $quote_id, '_glo_customer_email', true ),
+			'phone'   => get_post_meta( $quote_id, '_glo_customer_phone', true ),
+			'company' => get_post_meta( $quote_id, '_glo_customer_company', true ),
+			'nit'     => get_post_meta( $quote_id, '_glo_customer_nit', true ),
+			'city'    => get_post_meta( $quote_id, '_glo_customer_city', true ),
+			'message' => get_post_meta( $quote_id, '_glo_customer_message', true ),
+		],
+		'type'      => get_post_meta( $quote_id, '_glo_type', true ) ?: 'quote',
+		'client_id' => (int) get_post_meta( $quote_id, '_glo_client_id', true ),
+		'items'     => get_post_meta( $quote_id, '_glo_items', true ) ?: [],
+		'pricing'   => [
+			'status' => get_post_meta( $quote_id, '_glo_pricing_status', true ),
+			'total'  => (int) get_post_meta( $quote_id, '_glo_total', true ),
+		],
+		'meta'      => get_post_meta( $quote_id, '_glo_meta', true ) ?: [],
+	];
+}

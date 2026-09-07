@@ -5,7 +5,7 @@ Tags: woocommerce, quote, request-a-quote, b2b
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.15.0
+Stable tag: 2.16.0
 WC requires at least: 8.0
 
 Convierte WooCommerce en un sistema de solicitud de cotizaciones (RFQ) sin checkout ni pago.
@@ -29,6 +29,14 @@ Plugin propio para Glotracol (Global Trading de Colombia). Reemplaza el flujo de
 * Templates sobreescribibles desde el tema en `glotracol-quote/`.
 
 == Changelog ==
+
+= 2.16.0 =
+* Panel web para el equipo: la página /panel-cotizaciones (shortcode [glotracol_quote_dashboard]) muestra el resumen del cotizador en el frontend a editores y administradores, con acceso por usuario de WordPress.
+* Botón "Reenviar correo al cliente" en cada cotización (caja "Log de envíos"): vuelve a mandar el correo con el PDF adjunto y los precios actuales, y lo anota en el registro.
+* GoHighLevel: al guardar Integraciones se prueba el token y se dice en pantalla si fue aceptado o rechazado, con cuántos pipelines encontró.
+* GoHighLevel: si en Location ID se pega la URL completa del navegador, se guarda solo el identificador.
+* GoHighLevel: aviso amarillo en las pantallas del plugin y en el Estado de configuración cuando la integración está activada pero falta el pipeline o la etapa.
+* La pantalla de Ajustes ahora muestra los avisos de guardado (antes ni "Ajustes guardados" se veía, porque la pantalla no cuelga de Opciones).
 
 = 2.15.0 =
 * Color de marca y logo configurables en Ajustes > Apariencia. Por defecto, el naranja de Global Trading (#f2a649) y el logo del sitio.

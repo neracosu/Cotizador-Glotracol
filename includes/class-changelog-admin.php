@@ -79,6 +79,19 @@ class Glotracol_Quote_Changelog_Admin {
 	public static function entries() {
 		return [
 			[
+				'date' => '2026-09-07', 'version' => '2.16.0', 'type' => 'feature',
+				'title' => 'Panel web para el equipo, reenvío de correos y GoHighLevel que avisa',
+				'summary' => 'Los editores ven el resumen del cotizador desde la web sin entrar al escritorio, cada cotización tiene un botón para reenviar el correo al cliente, y la conexión con GoHighLevel dice en pantalla qué le falta en vez de fallar en silencio.',
+				'details' => [
+					'Nueva página /panel-cotizaciones con el shortcode [glotracol_quote_dashboard]: resumen del mes, conteo por estado y últimas cotizaciones con enlace al PDF. Pide usuario de WordPress; entran editores y administradores.',
+					'Botón "Reenviar correo al cliente" en la caja "Log de envíos" de cada cotización. Manda el correo con el PDF y los precios actuales y lo anota en el registro.',
+					'Al guardar Integraciones, el plugin prueba el token contra GoHighLevel y avisa si lo aceptó (con cuántos pipelines) o lo rechazó.',
+					'Si en Location ID se pega la dirección completa del navegador, se guarda solo el identificador.',
+					'Aviso amarillo en las pantallas del plugin cuando GoHighLevel está activado pero falta el pipeline o la etapa; el Estado de configuración del Inicio también lo lista.',
+					'La pantalla de Ajustes ahora muestra los avisos de guardado.',
+				],
+			],
+			[
 				'date' => '2026-09-07', 'version' => '2.15.0', 'type' => 'feature',
 				'title' => 'Correos y PDF con la marca de Global Trading',
 				'summary' => 'Los correos de cotización y el PDF adjunto salen ahora con el logo y el naranja corporativo en vez del verde. El color y el logo se cambian desde Cotizaciones → Configuración → Apariencia, sin tocar código.',

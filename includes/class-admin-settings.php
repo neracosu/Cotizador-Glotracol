@@ -71,7 +71,7 @@ class Glotracol_Quote_Admin_Settings {
 
 		$out['ghl_enabled']          = ( ( $input['ghl_enabled'] ?? '' ) === 'yes' ) ? 'yes' : 'no';
 		$out['ghl_token']            = trim( sanitize_text_field( $input['ghl_token'] ?? '' ) );
-		$out['ghl_location_id']      = trim( sanitize_text_field( $input['ghl_location_id'] ?? '' ) );
+		$out['ghl_location_id']      = Glotracol_Quote_GHL::normalize_location_id( sanitize_text_field( $input['ghl_location_id'] ?? '' ) );
 		$out['ghl_pipeline_id']      = sanitize_text_field( $input['ghl_pipeline_id'] ?? '' );
 		$out['ghl_stage_id']         = sanitize_text_field( $input['ghl_stage_id'] ?? '' );
 		$out['ghl_stage_id_pending'] = sanitize_text_field( $input['ghl_stage_id_pending'] ?? '' );
@@ -128,9 +128,41 @@ class Glotracol_Quote_Admin_Settings {
 		// Los pipelines se releen en el próximo pintado: la config pudo cambiar de cuenta.
 		if ( $tab === 'integrations' ) {
 			delete_transient( Glotracol_Quote_GHL::CACHE_KEY );
+			$this->verify_ghl_on_save( $out );
 		}
 
 		return $out;
+	}
+
+	/**
+	 * Al guardar Integraciones se prueba el token contra GoHighLevel y se dice en
+	 * pantalla si lo acepto o lo rechazo. Antes fallaba en silencio cotizacion por
+	 * cotizacion y el unico rastro quedaba en Registros.
+	 */
+	private function verify_ghl_on_save( array $out ) {
+		$token    = (string) ( $out['ghl_token'] ?? '' );
+		$location = (string) ( $out['ghl_location_id'] ?? '' );
+		if ( $token === '' || $location === '' ) return;
+
+		$r = Glotracol_Quote_GHL::verify( $token, $location );
+		if ( is_wp_error( $r ) ) {
+			$msg = $r->get_error_code() === 'ghl_auth'
+				? 'GoHighLevel rechazó el token. Genera uno nuevo en Configuración → Integraciones Privadas (permisos de contactos y oportunidades) y pégalo aquí.'
+				: 'No se pudo verificar el token con GoHighLevel: ' . $r->get_error_message();
+			add_settings_error( self::OPTION_KEY, 'gloq_ghl_token', $msg, 'error' );
+			return;
+		}
+
+		$n = count( $r );
+		add_settings_error( self::OPTION_KEY, 'gloq_ghl_token', sprintf(
+			'GoHighLevel aceptó el token: %d pipeline%s encontrado%s%s.',
+			$n, $n === 1 ? '' : 's', $n === 1 ? '' : 's',
+			$n ? ' (' . implode( ', ', wp_list_pluck( $r, 'name' ) ) . ')' : ''
+		), 'success' );
+
+		if ( ( $out['ghl_enabled'] ?? 'no' ) === 'yes' && trim( (string) ( $out['ghl_pipeline_id'] ?? '' ) ) === '' ) {
+			add_settings_error( self::OPTION_KEY, 'gloq_ghl_pipeline', 'Falta elegir el pipeline y la etapa. Hasta entonces las cotizaciones no se envían a GoHighLevel.', 'warning' );
+		}
 	}
 
 	public function render_page() {
@@ -141,6 +173,11 @@ class Glotracol_Quote_Admin_Settings {
 		?>
 		<div class="wrap gloq-admin">
 			<h1>Configuración del cotizador</h1>
+			<?php
+			// Esta pantalla cuelga del CPT, no de Opciones, y WordPress solo imprime los
+			// avisos de guardado bajo options-general.php. Sin esto no se ve ni "guardado".
+			settings_errors();
+			?>
 			<h2 class="nav-tab-wrapper">
 				<a class="nav-tab <?php echo $tab === 'general' ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url( $base_url . '&tab=general' ); ?>">General</a>
 				<a class="nav-tab <?php echo $tab === 'emails' ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url( $base_url . '&tab=emails' ); ?>">Emails</a>

@@ -18,6 +18,64 @@ class Glotracol_Quote_GHL {
 		add_action( 'glotracol_quote_created', [ $this, 'schedule_dispatch' ], 30, 2 );
 		add_action( self::HOOK, [ $this, 'dispatch' ], 10, 1 );
 		add_action( 'wp_ajax_gloq_ghl_test', [ $this, 'ajax_test' ] );
+		add_action( 'admin_notices', [ __CLASS__, 'admin_notice' ] );
+	}
+
+	/**
+	 * El Location ID suele pegarse con la URL completa del navegador
+	 * (…/v2/location/ID/…). Se queda solo con el id.
+	 */
+	public static function normalize_location_id( $raw ) {
+		$raw = trim( (string) $raw );
+		if ( preg_match( '~/location/([A-Za-z0-9_-]+)~', $raw, $m ) ) {
+			return $m[1];
+		}
+		return $raw;
+	}
+
+	/**
+	 * Que le falta a la integracion para funcionar, en una frase para el usuario.
+	 *
+	 * @return string|null null si esta apagada o completa.
+	 */
+	public static function config_problem() {
+		if ( glotracol_quote_get_setting( 'ghl_enabled' ) !== 'yes' ) return null;
+		if ( ! self::is_configured() ) {
+			return 'Falta el token de Integración Privada o el Location ID.';
+		}
+		if ( trim( (string) glotracol_quote_get_setting( 'ghl_pipeline_id' ) ) === '' ) {
+			return 'Falta elegir el pipeline. Hasta entonces las cotizaciones no se envían a GoHighLevel.';
+		}
+		if ( trim( (string) glotracol_quote_get_setting( 'ghl_stage_id' ) ) === '' ) {
+			return 'Falta elegir la etapa del pipeline. Hasta entonces las cotizaciones no se envían a GoHighLevel.';
+		}
+		return null;
+	}
+
+	/**
+	 * Prueba un token y un location contra GoHighLevel sin guardarlos. Si los
+	 * acepta, deja los pipelines en cache para que el desplegable salga lleno.
+	 *
+	 * @return array|WP_Error Pipelines normalizados, o el error de la API.
+	 */
+	public static function verify( $token, $location_id ) {
+		$data = self::request( 'GET', '/opportunities/pipelines?locationId=' . rawurlencode( $location_id ), null, $token );
+		if ( is_wp_error( $data ) ) return $data;
+		$out = self::normalize_pipelines( $data );
+		set_transient( self::CACHE_KEY, $out, HOUR_IN_SECONDS );
+		return $out;
+	}
+
+	/** Aviso amarillo en las pantallas del plugin cuando la integracion esta activa pero incompleta. */
+	public static function admin_notice() {
+		if ( ! current_user_can( 'manage_options' ) ) return;
+		if ( ! Glotracol_Quote_Plugin::instance()->is_plugin_admin_screen() ) return;
+		$problem = self::config_problem();
+		if ( $problem === null ) return;
+		$url = admin_url( 'edit.php?post_type=glo_quote&page=' . Glotracol_Quote_Admin_Settings::PAGE_SLUG . '&tab=integrations' );
+		echo '<div class="notice notice-warning"><p><strong>GoHighLevel está activado pero incompleto.</strong> '
+			. esc_html( $problem )
+			. ' <a href="' . esc_url( $url ) . '">Completar en Integraciones</a></p></div>';
 	}
 
 	public static function token() {
@@ -39,12 +97,12 @@ class Glotracol_Quote_GHL {
 	 * @return array|WP_Error Cuerpo decodificado, o WP_Error con código
 	 *                        ghl_auth | ghl_http | ghl_net.
 	 */
-	public static function request( $method, $path, $body = null ) {
+	public static function request( $method, $path, $body = null, $token = null ) {
 		$args = [
 			'method'  => strtoupper( $method ),
 			'timeout' => 15,
 			'headers' => [
-				'Authorization' => 'Bearer ' . self::token(),
+				'Authorization' => 'Bearer ' . ( $token === null ? self::token() : (string) $token ),
 				'Version'       => self::API_VER,
 				'Content-Type'  => 'application/json',
 				'Accept'        => 'application/json',
@@ -95,6 +153,13 @@ class Glotracol_Quote_GHL {
 			return [];
 		}
 
+		$out = self::normalize_pipelines( $data );
+		set_transient( self::CACHE_KEY, $out, HOUR_IN_SECONDS );
+		return $out;
+	}
+
+	/** Respuesta cruda de /opportunities/pipelines → [ id => [ 'name', 'stages' => [ id => name ] ] ]. */
+	private static function normalize_pipelines( $data ) {
 		$out = [];
 		foreach ( (array) ( $data['pipelines'] ?? [] ) as $p ) {
 			$pid = (string) ( $p['id'] ?? '' );
@@ -106,8 +171,6 @@ class Glotracol_Quote_GHL {
 			}
 			$out[ $pid ] = [ 'name' => (string) ( $p['name'] ?? $pid ), 'stages' => $stages ];
 		}
-
-		set_transient( self::CACHE_KEY, $out, HOUR_IN_SECONDS );
 		return $out;
 	}
 

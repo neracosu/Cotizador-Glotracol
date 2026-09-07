@@ -40,7 +40,7 @@ class Glotracol_Quote_Admin_Dashboard {
 	}
 
 	public function render() {
-		$stats = $this->get_stats();
+		$stats = self::get_stats();
 		$config_checks = $this->config_checks();
 		$compat_checks = $this->compatibility_checks();
 		$compat_summary = $this->summarize_compat( $compat_checks );
@@ -377,7 +377,11 @@ class Glotracol_Quote_Admin_Dashboard {
 		<?php
 	}
 
-	private function get_stats() {
+	/**
+	 * Numeros del panel. Publica porque el panel web ([glotracol_quote_dashboard])
+	 * muestra exactamente los mismos.
+	 */
+	public static function get_stats( $recent_limit = 5 ) {
 		$counts = wp_count_posts( 'glo_quote' );
 		$total = 0;
 		foreach ( (array) $counts as $k => $v ) {
@@ -386,7 +390,7 @@ class Glotracol_Quote_Admin_Dashboard {
 		$recent = get_posts( [
 			'post_type'   => 'glo_quote',
 			'post_status' => [ 'glo-new', 'glo-pending-prices', 'glo-auto-priced', 'glo-processing', 'glo-responded', 'glo-closed' ],
-			'numberposts' => 5,
+			'numberposts' => max( 1, (int) $recent_limit ),
 			'orderby'     => 'date',
 			'order'       => 'DESC',
 		] );
@@ -476,6 +480,17 @@ class Glotracol_Quote_Admin_Dashboard {
 			'action_label' => '',
 		];
 
+		$panel_url = class_exists( 'Glotracol_Quote_Frontend_Dashboard' ) ? Glotracol_Quote_Frontend_Dashboard::page_url() : '';
+		$checks[] = [
+			'ok'    => $panel_url !== '',
+			'title' => 'Panel web para el equipo',
+			'desc'  => $panel_url !== ''
+				? 'Editores y administradores ven este resumen desde <a href="' . esc_url( $panel_url ) . '" target="_blank">' . esc_html( $panel_url ) . '</a> con su usuario de WordPress. Es el shortcode <code>[glotracol_quote_dashboard]</code>; se puede poner en cualquier otra página.'
+				: 'No se encontró la página del panel web. Reactiva el plugin para recrearla.',
+			'action_url'   => '',
+			'action_label' => '',
+		];
+
 		$checks[] = [
 			'ok'    => is_email( $s['sender_email'] ),
 			'title' => 'Remitente configurado',
@@ -494,6 +509,20 @@ class Glotracol_Quote_Admin_Dashboard {
 				: 'Sin webhook configurado. Es opcional — actívalo cuando quieras integrar con Goja/Make/Zapier para mensajes automáticos de WhatsApp.',
 			'action_url'   => $settings_url . '&tab=integrations',
 			'action_label' => 'Configurar webhook',
+		];
+
+		$ghl_on      = ( $s['ghl_enabled'] ?? 'no' ) === 'yes';
+		$ghl_problem = class_exists( 'Glotracol_Quote_GHL' ) ? Glotracol_Quote_GHL::config_problem() : null;
+		$checks[] = [
+			'ok'    => $ghl_on && $ghl_problem === null,
+			'title' => 'GoHighLevel' . ( $ghl_on ? '' : ' (opcional)' ),
+			'desc'  => $ghl_on
+				? ( $ghl_problem === null
+					? 'Cada cotización crea el contacto y la oportunidad en GoHighLevel.'
+					: '<strong>Activado pero incompleto.</strong> ' . esc_html( $ghl_problem ) )
+				: 'Integración apagada. Actívala en Integraciones con un token de Integración Privada para que cada cotización cree su contacto y oportunidad.',
+			'action_url'   => $settings_url . '&tab=integrations',
+			'action_label' => $ghl_on ? 'Completar en Integraciones' : 'Configurar GoHighLevel',
 		];
 
 		$external_smtp = Glotracol_Quote_SMTP::detect_external_smtp();

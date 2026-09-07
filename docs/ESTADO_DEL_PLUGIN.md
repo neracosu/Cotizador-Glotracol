@@ -1,6 +1,6 @@
 # Estado del plugin — Glotracol Cotizador
 
-**Versión:** 2.2.0 · **Fecha del snapshot:** 2026-06-03
+**Versión:** 2.16.0 · **Fecha del snapshot:** 2026-09-07
 
 Plugin propio que convierte WooCommerce en un sistema de solicitud de cotizaciones (RFQ): reemplaza el checkout por un formulario que arma la lista de productos y la envía al equipo comercial de Glotracol y al cliente, con resolución de precios público/B2B, CRM, reportes e integraciones.
 
@@ -12,7 +12,7 @@ Este documento es un resumen de estado para arrancar la siguiente iteración de 
 
 | Campo | Valor |
 |---|---|
-| Versión | 2.2.0 |
+| Versión | 2.16.0 |
 | Desarrollado por | [Neracosu](https://neracosu.com/) para [eagencia](https://www.eagencia.co/) |
 | Cliente final | Glotracol — Global Trading de Colombia |
 | Licencia | GPL-3.0 |
@@ -228,6 +228,7 @@ Mejoras de UX ya implementadas en 2.0.3: assets de admin unificados en todas las
 | 2.0.2 | Ocho correcciones de code-review: autorización por objeto, CSV injection, eliminación de N+1, robustez de importador/webhook/logger. |
 | 2.0.3 | UI de admin unificada, estados de carga y empty states, retiro de emojis en panel/emails/plantillas/docs. |
 | 2.1.0 | Carrito flotante persistente, herencia de tipografía/color de Elementor, semáforo por peso (toneladas), webhook enriquecido + re-disparo en conversión (GHL). |
+| 2.16.0 | Panel web `[glotracol_quote_dashboard]` para editores (`Glotracol_Quote_Frontend_Dashboard`, `get_stats()` público), botón "Reenviar correo al cliente" (`Glotracol_Quote_Emails::resend_customer()`), GHL con saneado del Location ID, verificación del token al guardar y aviso de configuración incompleta; `settings_errors()` en Ajustes. |
 | 2.15.0 | Color de marca y logo configurables (`glotracol_quote_brand()`), cabecera de marca en correos (`partials/brand-header.php`) y PDF, paleta derivada en PHP (`glotracol_quote_brand_palette()`) con texto de contraste automático; nombres largos envueltos en el PDF. |
 | 2.1.2 | Fixes del carrito flotante: la "X" elimina correctamente (refresco directo por AJAX), badge sin rojo y campo de cantidad acotado. |
 | 2.2.0 | Precios por ID de producto: importador "Precios del catálogo (por ID)" (export WC), precio público en `_glo_price` (sin tocar `regular_price`), tarifas B2B por ID, sincronización opcional de stock; resolver por ID con respaldo SKU; pantalla "Precios" reorientada a producto. |

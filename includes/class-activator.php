@@ -6,6 +6,7 @@ class Glotracol_Quote_Activator {
 	public static function activate() {
 		self::ensure_page( 'glotracol_quote_form_page_id', 'Solicitar cotización', 'solicitar-cotizacion', '[glotracol_quote_form]' );
 		self::ensure_page( 'glotracol_quote_thanks_page_id', 'Cotización enviada', 'cotizacion-enviada', '[glotracol_quote_thanks]' );
+		self::ensure_page( 'glotracol_quote_dashboard_page_id', 'Panel de cotizaciones', 'panel-cotizaciones', '[glotracol_quote_dashboard]' );
 
 		if ( ! get_option( 'glotracol_quote_settings' ) ) {
 			update_option( 'glotracol_quote_settings', glotracol_quote_get_settings() );
@@ -23,7 +24,7 @@ class Glotracol_Quote_Activator {
 		flush_rewrite_rules();
 	}
 
-	private static function ensure_page( $option_key, $title, $slug, $content ) {
+	public static function ensure_page( $option_key, $title, $slug, $content ) {
 		$existing_id = (int) get_option( $option_key );
 		if ( $existing_id && get_post( $existing_id ) ) {
 			return $existing_id;

@@ -33,6 +33,7 @@ class Glotracol_Quote_Plugin {
 		new Glotracol_Quote_Admin_Meta_Box();
 		new Glotracol_Quote_Admin_Settings();
 		new Glotracol_Quote_Admin_Dashboard();
+		new Glotracol_Quote_Frontend_Dashboard();
 		new Glotracol_Quote_Changelog_Admin();
 		new Glotracol_Quote_Tour();
 
@@ -88,6 +89,7 @@ class Glotracol_Quote_Plugin {
 			'smtpNonce'    => wp_create_nonce( 'gloq_smtp_test' ),
 			'convertNonce' => wp_create_nonce( 'gloq_convert_to_order' ),
 			'ghlNonce'     => wp_create_nonce( 'gloq_ghl_test' ),
+			'resendNonce'  => wp_create_nonce( 'gloq_resend_customer' ),
 			'i18n'         => [
 				'confirmDeleteRow' => 'Quitar esta fila.',
 				'sending'          => 'Enviando…',
@@ -101,7 +103,7 @@ class Glotracol_Quote_Plugin {
 	 * registrados bajo `edit.php?post_type=glo_quote` heredan post_type glo_quote
 	 * en su WP_Screen, así que basta con mirar el post_type del screen.
 	 */
-	private function is_plugin_admin_screen() {
+	public function is_plugin_admin_screen() {
 		// Páginas propias del plugin (submenús): su slug empieza por 'glotracol-quote-'.
 		// Se detecta por el slug ANTES que por post_type porque en algunas cargas de
 		// esos submenús (p. ej. el dashboard) el post_type del WP_Screen viene vacío,

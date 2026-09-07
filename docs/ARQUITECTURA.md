@@ -7,6 +7,8 @@ Este documento describe el estado actual del plugin. La versión inicial 1.0.0 (
 
 ## Changelog rápido
 
+- **2.16.0** (2026-09-07) — Panel web `[glotracol_quote_dashboard]` (`Glotracol_Quote_Frontend_Dashboard`, página `panel-cotizaciones`, cap `edit_others_posts` filtrable), botón "Reenviar correo al cliente" (`Glotracol_Quote_Emails::resend_customer()`, AJAX `gloq_resend_customer`), GHL: `normalize_location_id()`, `verify()` al guardar Integraciones con `add_settings_error`, `config_problem()` + aviso `admin_notices`; `settings_errors()` en la pantalla de Ajustes.
+- **2.15.0** (2026-09-07) — Color de marca y logo configurables; correos, PDF y formulario en el naranja corporativo.
 - **2.0.1** (2026-04-30) — Fix bug importador (token mixed-case → file not found) + sistema de logs centralizado (`Glotracol_Quote_Logger`) con pantalla viewer, filtros, banner de alerta en dashboard.
 - **2.0.0** (2026-04-30) — Fase E — Reportes y QA. Release final del roadmap v2.0.
 - **1.5.0** (2026-04-30) — Fase D — Cotización vs Pedido + auto-respuesta: modal pre-submit, conexión a pricing resolver, statuses nuevos, emails diferenciados, "Convertir en pedido" desde admin.
@@ -152,6 +154,7 @@ Activación (`Glotracol_Quote_Activator::activate`) crea o reutiliza:
 |---|---|---|---|
 | `solicitar-cotizacion` | Solicitar cotización | `[glotracol_quote_form]` | `glotracol_quote_form_page_id` |
 | `cotizacion-enviada` | Cotización enviada | `[glotracol_quote_thanks]` | `glotracol_quote_thanks_page_id` |
+| `panel-cotizaciones` | Panel de cotizaciones | `[glotracol_quote_dashboard]` | `glotracol_quote_dashboard_page_id` |
 
 Si la página ya existe pero no contiene el shortcode, se inyecta. Si el option ya apunta a un post válido, no se toca.
 
@@ -168,6 +171,13 @@ Si la página ya existe pero no contiene el shortcode, se inyecta. Si el option 
 
 - Lee `?qid=<token>` y resuelve el post id buscando por `_glo_qid`.
 - Reemplaza placeholders `{quote_id}`, `{customer_email}`, `{customer_name}` en el `thanks_message`.
+
+#### `[glotracol_quote_dashboard recientes="10"]`
+
+- Panel web para el equipo (`Glotracol_Quote_Frontend_Dashboard`). Sin sesión pinta `wp_login_form()` (template `dashboard-login.php`); con sesión sin permiso, `dashboard-denied.php`; con permiso, `dashboard.php` con `Glotracol_Quote_Admin_Dashboard::get_stats( $recientes )`.
+- Permiso: `edit_others_posts` (editores y administradores), filtrable con `glotracol_quote_dashboard_cap`.
+- La página `panel-cotizaciones` se crea en la activación y se recrea sola en `admin_init` si falta (`ensure_page()`).
+- Estilos `.gloq-fd-*` al final de `quote.css`, sobre las variables `--gloq-brand*`.
 
 ---
 

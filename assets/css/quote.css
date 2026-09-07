@@ -297,3 +297,67 @@
 .gloq-cotiza-hint,.gloq-valor-nota{font-size:.9em;color:#555;margin:8px 0}
 .gloq-b2b-badge{color:var(--gloq-brand-dark);font-weight:600;background:var(--gloq-brand-tint);padding:6px 10px;border-radius:6px;display:inline-block}
 .glotracol-quote-items.gloq-repricing{opacity:.6;transition:opacity .15s}
+
+/* ============================================
+   PANEL WEB [glotracol_quote_dashboard]
+   ============================================ */
+.gloq-fd{--fd-ink:#1f2430;--fd-muted:#5b6474;--fd-line:#e3e6eb;--fd-panel:#fff;font-family:inherit;color:var(--fd-ink);max-width:1100px;margin:0 auto}
+.gloq-fd *{box-sizing:border-box}
+.gloq-fd-eyebrow{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gloq-brand-dark);margin:0 0 4px}
+.gloq-fd-title{font-size:28px;line-height:1.15;margin:0 0 6px}
+.gloq-fd-sub{margin:0;color:var(--fd-muted);font-size:15px}
+.gloq-fd-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px;padding:0 0 18px;border-bottom:3px solid var(--gloq-brand);margin-bottom:24px}
+.gloq-fd-actions{display:flex;flex-wrap:wrap;gap:8px}
+/* Con .gloq-fd delante para ganarle a la regla de enlaces del tema (Elementor pinta los <a> del color de marca). */
+.gloq-fd a.gloq-fd-btn{display:inline-block;padding:9px 16px;border-radius:6px;border:1px solid var(--gloq-brand-line);background:var(--gloq-brand-tint);color:var(--gloq-brand-dark);font-weight:600;font-size:14px;text-decoration:none;line-height:1.2}
+.gloq-fd a.gloq-fd-btn:hover{background:var(--gloq-brand);color:var(--gloq-brand-text);border-color:var(--gloq-brand)}
+.gloq-fd a.gloq-fd-btn-primary{background:var(--gloq-brand);color:var(--gloq-brand-text);border-color:var(--gloq-brand)}
+.gloq-fd a.gloq-fd-btn-primary:hover{background:var(--gloq-brand-dark);color:#fff}
+.gloq-fd a.gloq-fd-btn-quiet{background:transparent;border-color:var(--fd-line);color:var(--fd-muted)}
+.gloq-fd-section{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--fd-muted);margin:26px 0 10px}
+.gloq-fd-stats{display:grid;gap:12px;margin:0}
+.gloq-fd-stats-month{grid-template-columns:repeat(3,1fr)}
+.gloq-fd-stats-status{grid-template-columns:repeat(6,1fr)}
+.gloq-fd-stat{display:block;background:var(--fd-panel);border:1px solid var(--fd-line);border-radius:8px;padding:16px 18px;text-decoration:none;color:var(--fd-ink);border-top:3px solid var(--fd-line)}
+a.gloq-fd-stat:hover{border-color:var(--gloq-brand);color:var(--fd-ink)}
+.gloq-fd-stat-brand{border-top-color:var(--gloq-brand);background:var(--gloq-brand-tint)}
+.gloq-fd-stat-value{display:block;font-size:30px;font-weight:700;line-height:1;margin-bottom:6px;font-variant-numeric:tabular-nums}
+.gloq-fd-stat-money{font-size:22px}
+.gloq-fd-stat-label{display:block;font-size:12px;color:var(--fd-muted);text-transform:uppercase;letter-spacing:.04em;line-height:1.3}
+.gloq-fd-stat-new{border-top-color:#28a745}.gloq-fd-stat-new .gloq-fd-stat-value{color:#1e7e34}
+.gloq-fd-stat-pending_prices{border-top-color:#e0a800}.gloq-fd-stat-pending_prices .gloq-fd-stat-value{color:#a67c00}
+.gloq-fd-stat-auto_priced{border-top-color:#17a2b8}.gloq-fd-stat-auto_priced .gloq-fd-stat-value{color:#117a8b}
+.gloq-fd-stat-processing{border-top-color:#6f42c1}.gloq-fd-stat-processing .gloq-fd-stat-value{color:#5a32a3}
+.gloq-fd-stat-responded{border-top-color:#20c997}.gloq-fd-stat-responded .gloq-fd-stat-value{color:#158765}
+.gloq-fd-stat-closed{border-top-color:#8a94a6}.gloq-fd-stat-closed .gloq-fd-stat-value{color:#5a6268}
+.gloq-fd-tablewrap{overflow-x:auto;background:var(--fd-panel);border:1px solid var(--fd-line);border-radius:8px}
+.gloq-fd-table{width:100%;border-collapse:collapse;font-size:14px;margin:0}
+.gloq-fd-table th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--fd-muted);text-align:left;padding:10px 12px;border-bottom:1px solid var(--fd-line);background:#f7f8fa;white-space:nowrap}
+.gloq-fd-table td{padding:10px 12px;border-bottom:1px solid var(--fd-line);vertical-align:top}
+.gloq-fd-table tr:last-child td{border-bottom:0}
+.gloq-fd-table td small{display:block;color:var(--fd-muted);font-size:12px}
+.gloq-fd-num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.gloq-fd-id{font-weight:700;white-space:nowrap}
+.gloq-fd-muted{color:var(--fd-muted)}
+.gloq-fd-type,.gloq-fd-status{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;white-space:nowrap;background:#eef0f3;color:#3b4450}
+.gloq-fd-type-order{background:var(--gloq-brand-tint);color:var(--gloq-brand-dark)}
+.gloq-fd-status-glo-new{background:#e4f3e9;color:#1e7e34}
+.gloq-fd-status-glo-pending-prices{background:#fbf0d6;color:#8a6500}
+.gloq-fd-status-glo-auto-priced{background:#dff3f7;color:#117a8b}
+.gloq-fd-status-glo-processing{background:#ece4f8;color:#5a32a3}
+.gloq-fd-status-glo-responded{background:#dcf5ee;color:#158765}
+.gloq-fd-rowactions{white-space:nowrap}
+.gloq-fd .gloq-fd-rowactions a{font-weight:600;color:var(--gloq-brand-dark);text-decoration:none;margin-right:10px}
+.gloq-fd-rowactions a:hover{text-decoration:underline}
+.gloq-fd-empty{color:var(--fd-muted);padding:18px;border:1px dashed var(--fd-line);border-radius:8px}
+.gloq-fd-login{max-width:420px}
+.gloq-fd-login .gloq-fd-sub{margin-bottom:18px}
+.gloq-fd-login form p{margin:0 0 12px}
+.gloq-fd-login label{display:block;font-size:13px;font-weight:600;margin-bottom:4px}
+.gloq-fd-login input[type=text],.gloq-fd-login input[type=password]{width:100%;padding:10px 12px;border:1px solid var(--fd-line);border-radius:6px;font-size:15px}
+.gloq-fd-login .login-remember label{display:flex;align-items:center;gap:8px;font-weight:400}
+.gloq-fd-login input[type=submit]{background:var(--gloq-brand);color:var(--gloq-brand-text);border:0;border-radius:6px;padding:11px 20px;font-weight:700;font-size:15px;cursor:pointer}
+.gloq-fd-login input[type=submit]:hover{background:var(--gloq-brand-dark);color:#fff}
+.gloq-fd-lost{font-size:13px;margin-top:10px}
+@media (max-width:900px){.gloq-fd-stats-status{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:560px){.gloq-fd-stats-month,.gloq-fd-stats-status{grid-template-columns:1fr 1fr}.gloq-fd-title{font-size:23px}}

@@ -7,6 +7,7 @@ class Glotracol_Quote_Admin_Meta_Box {
 		add_action( 'add_meta_boxes', [ $this, 'register' ] );
 		add_action( 'edit_form_after_title', [ $this, 'inject_summary_top' ] );
 		add_action( 'wp_ajax_gloq_convert_to_order', [ $this, 'ajax_convert_to_order' ] );
+		add_action( 'wp_ajax_gloq_resend_customer', [ $this, 'ajax_resend_customer' ] );
 	}
 
 	public function register() {
@@ -106,6 +107,12 @@ class Glotracol_Quote_Admin_Meta_Box {
 
 	public function render_email_log( $post ) {
 		$log = get_post_meta( $post->ID, '_glo_email_log', true );
+		$email = (string) get_post_meta( $post->ID, '_glo_customer_email', true );
+		if ( is_email( $email ) ) {
+			echo '<p style="margin:0 0 10px"><button type="button" class="button" id="gloq-resend-btn" data-post-id="' . (int) $post->ID . '">Reenviar correo al cliente</button>';
+			echo '<span id="gloq-resend-status" style="display:block;margin-top:6px;font-size:12px"></span></p>';
+			echo '<p style="font-size:12px;color:#666;margin:0 0 10px">Vuelve a enviar a <code>' . esc_html( $email ) . '</code> el correo de la cotización con el PDF adjunto y los precios actuales.</p>';
+		}
 		if ( ! is_array( $log ) || empty( $log ) ) {
 			echo '<p>Sin envíos registrados.</p>';
 			return;
@@ -350,28 +357,25 @@ class Glotracol_Quote_Admin_Meta_Box {
 		return $ok;
 	}
 
-	/**
-	 * Reconstruye un payload similar al del submit original a partir de las metas.
-	 */
+	/** Reconstruye un payload similar al del submit original a partir de las metas. */
 	private function reconstruct_payload( $post_id ) {
-		return [
-			'customer' => [
-				'name'    => get_post_meta( $post_id, '_glo_customer_name', true ),
-				'email'   => get_post_meta( $post_id, '_glo_customer_email', true ),
-				'phone'   => get_post_meta( $post_id, '_glo_customer_phone', true ),
-				'company' => get_post_meta( $post_id, '_glo_customer_company', true ),
-				'nit'     => get_post_meta( $post_id, '_glo_customer_nit', true ),
-				'city'    => get_post_meta( $post_id, '_glo_customer_city', true ),
-				'message' => get_post_meta( $post_id, '_glo_customer_message', true ),
-			],
-			'type'      => get_post_meta( $post_id, '_glo_type', true ),
-			'client_id' => (int) get_post_meta( $post_id, '_glo_client_id', true ),
-			'items'     => get_post_meta( $post_id, '_glo_items', true ) ?: [],
-			'pricing'   => [
-				'status' => get_post_meta( $post_id, '_glo_pricing_status', true ),
-				'total'  => (int) get_post_meta( $post_id, '_glo_total', true ),
-			],
-			'meta'      => get_post_meta( $post_id, '_glo_meta', true ) ?: [],
-		];
+		return glotracol_quote_reconstruct_payload( $post_id );
+	}
+
+	/** Boton "Reenviar correo al cliente" de la caja Log de envios. */
+	public function ajax_resend_customer() {
+		check_ajax_referer( 'gloq_resend_customer', '_wpnonce' );
+		$post_id = isset( $_POST['post_id'] ) ? (int) $_POST['post_id'] : 0;
+		if ( ! $post_id || get_post_type( $post_id ) !== 'glo_quote' ) {
+			wp_send_json_error( [ 'message' => 'Cotización inválida' ] );
+		}
+		if ( ! current_user_can( 'edit_post', $post_id ) ) {
+			wp_send_json_error( [ 'message' => 'Sin permisos' ] );
+		}
+		$r = Glotracol_Quote_Emails::resend_customer( $post_id );
+		if ( is_wp_error( $r ) ) {
+			wp_send_json_error( [ 'message' => $r->get_error_message() ] );
+		}
+		wp_send_json_success( [ 'message' => 'Correo reenviado a ' . get_post_meta( $post_id, '_glo_customer_email', true ) . '.' ] );
 	}
 }

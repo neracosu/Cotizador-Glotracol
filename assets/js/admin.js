@@ -148,6 +148,35 @@
 		} );
 	} );
 
+	/* Cotización → caja "Log de envíos": reenviar el correo al cliente. */
+	$( function () {
+		var $btn = $( '#gloq-resend-btn' );
+		if ( ! $btn.length ) return;
+		var $status = $( '#gloq-resend-status' );
+		$btn.on( 'click', function () {
+			if ( ! window.confirm( 'Se volverá a enviar al cliente el correo de la cotización con el PDF adjunto. ¿Enviar?' ) ) return;
+			$btn.data( 'label', $btn.text() ).prop( 'disabled', true ).text( I18N.sending || 'Enviando…' );
+			$status.empty();
+			$.post( G.ajaxUrl, {
+				action: 'gloq_resend_customer',
+				_wpnonce: G.resendNonce,
+				post_id: $btn.data( 'post-id' )
+			} )
+				.done( function ( resp ) {
+					var ok = resp && resp.success;
+					var msg = ( resp && resp.data && resp.data.message ) || 'Respuesta inesperada';
+					$status.html( '<span class="gloq-msg ' + ( ok ? 'gloq-msg-ok' : 'gloq-msg-err' ) + '">' + msg + '</span>' );
+					if ( ok ) setTimeout( function () { location.reload(); }, 1500 );
+				} )
+				.fail( function () {
+					$status.html( '<span class="gloq-msg gloq-msg-err">Error de conexión</span>' );
+				} )
+				.always( function () {
+					$btn.prop( 'disabled', false ).text( $btn.data( 'label' ) );
+				} );
+		} );
+	} );
+
 	/* ---------------------------------------------------------------
 	 * Cotejo de importación: filtros por estado y plegado de "iguales".
 	 * ------------------------------------------------------------- */

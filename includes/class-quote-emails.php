@@ -174,6 +174,86 @@ class Glotracol_Quote_Emails {
 		}
 	}
 
+	/**
+	 * Vuelve a mandar al cliente el correo de su cotizacion, con el PDF adjunto y
+	 * los precios actuales. Para cuando el cliente dice que no le llego.
+	 *
+	 * @return true|WP_Error
+	 */
+	public static function resend_customer( $quote_id ) {
+		$quote_id = (int) $quote_id;
+		$post = get_post( $quote_id );
+		if ( ! $post || $post->post_type !== 'glo_quote' ) {
+			return new WP_Error( 'gloq_resend', 'La cotización no existe.' );
+		}
+		$payload  = glotracol_quote_reconstruct_payload( $quote_id );
+		$customer = $payload['customer'];
+		if ( ! is_email( $customer['email'] ?? '' ) ) {
+			return new WP_Error( 'gloq_resend', 'La cotización no tiene un correo de cliente válido.' );
+		}
+
+		$settings   = glotracol_quote_get_settings();
+		$type       = $payload['type'];
+		$total      = (int) $payload['pricing']['total'];
+		$client_id  = (int) $payload['client_id'];
+		$is_priced  = $payload['pricing']['status'] === 'priced' && ( $settings['auto_respond_enabled'] ?? 'yes' ) === 'yes';
+		$placeholders = [
+			'quote_id'         => $quote_id,
+			'customer_name'    => $customer['name'] ?? '',
+			'customer_email'   => $customer['email'] ?? '',
+			'customer_phone'   => $customer['phone'] ?? '',
+			'customer_company' => $customer['company'] ?? '',
+			'site_name'        => get_bloginfo( 'name' ),
+		];
+		$subject = $is_priced
+			? sprintf( '%s #%d — %s', $type === 'order' ? 'Confirmación de pedido' : 'Cotización formal', $quote_id, glotracol_quote_format_price( $total ) )
+			: glotracol_quote_replace_placeholders( $settings['customer_subject'], $placeholders );
+		// En un reenvio el cliente puede tener varias cotizaciones: el numero siempre va en el asunto.
+		if ( strpos( $subject, '#' . $quote_id ) === false ) {
+			$subject .= ' — #' . $quote_id;
+		}
+
+		$from_name  = $settings['sender_name'] ?: get_bloginfo( 'name' );
+		$from_email = is_email( $settings['sender_email'] ) ? $settings['sender_email'] : get_option( 'admin_email' );
+		$headers = [
+			'Content-Type: text/html; charset=UTF-8',
+			sprintf( 'From: %s <%s>', $from_name, $from_email ),
+		];
+		$body = glotracol_quote_load_template( 'email-customer.php', [
+			'quote_id'     => $quote_id,
+			'customer'     => $customer,
+			'items'        => glotracol_quote_enrich_items( $payload['items'] ),
+			'intro'        => glotracol_quote_replace_placeholders( $settings['customer_intro'], $placeholders ),
+			'type'         => $type,
+			'total'        => $total,
+			'client_name'  => $client_id ? get_post_meta( $client_id, '_glo_client_name', true ) : '',
+			'weight_total' => (float) get_post_meta( $quote_id, '_glo_weight_total_kg', true ),
+		] );
+		$body = apply_filters( 'glotracol_quote_email_customer_body', $body, $quote_id, $payload );
+
+		$attachments = [];
+		if ( class_exists( 'Glotracol_Quote_PDF' ) ) {
+			try {
+				$pdf_path = Glotracol_Quote_PDF::save_temp( $quote_id );
+				if ( $pdf_path ) $attachments[] = $pdf_path;
+			} catch ( Throwable $e ) {
+				Glotracol_Quote_Logger::log( 'error', 'pdf', 'No se pudo generar el PDF adjunto', [ 'quote_id' => $quote_id, 'error' => $e->getMessage() ] );
+			}
+		}
+
+		$ok = wp_mail( $customer['email'], $subject, $body, $headers, $attachments );
+		foreach ( $attachments as $tmp ) {
+			if ( file_exists( $tmp ) ) @unlink( $tmp );
+		}
+
+		( new self() )->log( $quote_id, 'customer-resent', $customer['email'], $ok );
+		Glotracol_Quote_Logger::log( $ok ? 'info' : 'error', 'email', sprintf( 'Email cliente reenviado #%d %s', $quote_id, $ok ? 'enviado' : 'FALLÓ' ), [
+			'quote_id' => $quote_id, 'to' => $customer['email'], 'template' => 'email-customer.php', 'success' => $ok, 'user' => get_current_user_id(),
+		] );
+
+		return $ok ? true : new WP_Error( 'gloq_resend', 'El servidor de correo rechazó el envío. Revisa Registros.' );
+	}
+
 	private function log( $quote_id, $type, $to, $success ) {
 		$log = get_post_meta( $quote_id, '_glo_email_log', true );
 		if ( ! is_array( $log ) ) $log = [];
