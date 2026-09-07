@@ -42,6 +42,36 @@ class Glotracol_Quote_Plugin {
 		add_action( 'wp_head', [ $this, 'print_appearance_css' ], 99 );
 		add_filter( 'plugin_action_links_' . GLOTRACOL_QUOTE_BASENAME, [ $this, 'plugin_action_links' ] );
 		add_action( 'admin_post_gloq_download_pdf', [ $this, 'handle_download_pdf' ] );
+		add_action( 'admin_notices', [ __CLASS__, 'duplicate_notice' ] );
+	}
+
+	/**
+	 * Otras carpetas activas con este mismo plugin (glotracol-quote.php en otra
+	 * carpeta). Quedan inertes porque las constantes son de la primera copia, pero
+	 * muestran su version vieja en la lista de plugins y confunden.
+	 *
+	 * @return string[] basenames de las copias sobrantes.
+	 */
+	public static function duplicate_copies() {
+		$out = [];
+		foreach ( (array) get_option( 'active_plugins', [] ) as $basename ) {
+			$basename = (string) $basename;
+			if ( $basename === GLOTRACOL_QUOTE_BASENAME ) continue;
+			if ( basename( $basename ) === basename( GLOTRACOL_QUOTE_FILE ) ) $out[] = $basename;
+		}
+		return $out;
+	}
+
+	public static function duplicate_notice() {
+		if ( ! current_user_can( 'manage_options' ) ) return;
+		$dups = self::duplicate_copies();
+		if ( ! $dups ) return;
+		$sobran = array_map( function ( $b ) { return '<code>' . esc_html( dirname( $b ) ) . '</code>'; }, $dups );
+		echo '<div class="notice notice-error"><p><strong>Hay ' . ( count( $dups ) + 1 ) . ' copias del Cotizador Glotracol activas.</strong> '
+			. 'La que funciona es la de la carpeta <code>' . esc_html( dirname( GLOTRACOL_QUOTE_BASENAME ) ) . '</code> (v' . esc_html( GLOTRACOL_QUOTE_VERSION ) . '). '
+			. 'Sobra' . ( count( $dups ) > 1 ? 'n' : '' ) . ' ' . implode( ' y ', $sobran ) . ': no hace' . ( count( $dups ) > 1 ? 'n' : '' ) . ' nada, pero muestra' . ( count( $dups ) > 1 ? 'n' : '' ) . ' una versión vieja. '
+			. '<a href="' . esc_url( admin_url( 'plugins.php' ) ) . '">Desactívala y bórrala desde Plugins</a>. '
+			. 'Para actualizar no hace falta subir ningún ZIP: el plugin se actualiza solo desde GitHub.</p></div>';
 	}
 
 	/**

@@ -89,6 +89,7 @@ class Glotracol_Quote_Changelog_Admin {
 					'Si en Location ID se pega la dirección completa del navegador, se guarda solo el identificador.',
 					'Aviso amarillo en las pantallas del plugin cuando GoHighLevel está activado pero falta el pipeline o la etapa; el Estado de configuración del Inicio también lo lista.',
 					'La pantalla de Ajustes ahora muestra los avisos de guardado.',
+					'Si hay más de una copia del plugin activa (pasa al subir el ZIP a mano), solo carga una y el admin ve un aviso rojo con la carpeta que sobra. Para actualizar no hay que subir ZIP: el plugin se actualiza solo desde GitHub.',
 				],
 			],
 			[

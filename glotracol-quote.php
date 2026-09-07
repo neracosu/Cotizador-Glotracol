@@ -18,6 +18,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// Copia duplicada: cada ZIP subido a mano crea una carpeta nueva y WordPress carga las
+// dos. La primera en cargar se queda con las constantes; esta no debe hacer nada mas
+// (ni registrar otro updater). La copia que corre avisa en el admin cual sobra.
+if ( defined( 'GLOTRACOL_QUOTE_FILE' ) ) {
+	return;
+}
+
 define( 'GLOTRACOL_QUOTE_VERSION', '2.16.0' );
 define( 'GLOTRACOL_QUOTE_BRAND_DEFAULT', '#f2a649' );
 define( 'GLOTRACOL_QUOTE_FILE', __FILE__ );

@@ -37,6 +37,7 @@ Plugin propio para Glotracol (Global Trading de Colombia). Reemplaza el flujo de
 * GoHighLevel: si en Location ID se pega la URL completa del navegador, se guarda solo el identificador.
 * GoHighLevel: aviso amarillo en las pantallas del plugin y en el Estado de configuración cuando la integración está activada pero falta el pipeline o la etapa.
 * La pantalla de Ajustes ahora muestra los avisos de guardado (antes ni "Ajustes guardados" se veía, porque la pantalla no cuelga de Opciones).
+* Copias duplicadas del plugin (cada ZIP subido a mano crea una carpeta nueva): la segunda copia ya no carga nada ni registra otro actualizador, y el admin ve un aviso con la carpeta que sobra y qué hacer con ella.
 
 = 2.15.0 =
 * Color de marca y logo configurables en Ajustes > Apariencia. Por defecto, el naranja de Global Trading (#f2a649) y el logo del sitio.
