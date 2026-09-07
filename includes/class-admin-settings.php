@@ -44,8 +44,8 @@ class Glotracol_Quote_Admin_Settings {
 		'rules'        => [ 'size_threshold_medium_units', 'size_threshold_large_units', 'size_threshold_medium_skus',
 			'size_threshold_large_skus', 'large_alert_enabled', 'large_alert_email', 'weight_threshold_large_kg',
 			'weight_threshold_tons_kg', 'auto_respond_enabled' ],
-		'appearance'   => [ 'appearance_inherit_elementor', 'appearance_elementor_slot', 'mini_cart_enabled',
-			'mini_cart_position' ],
+		'appearance'   => [ 'appearance_inherit_elementor', 'appearance_elementor_slot', 'brand_color', 'brand_logo_id',
+			'mini_cart_enabled', 'mini_cart_position' ],
 		'advanced'     => [ 'rate_limit_per_hour', 'delete_data_on_uninstall' ],
 	];
 
@@ -93,6 +93,9 @@ class Glotracol_Quote_Admin_Settings {
 		$slot    = preg_replace( '/[^a-z0-9_-]/i', '', (string) ( $input['appearance_elementor_slot'] ?? 'primary' ) );
 		$allowed = array_merge( [ 'primary', 'secondary', 'accent', 'text' ], wp_list_pluck( glotracol_quote_elementor_global_colors(), 'id' ) );
 		$out['appearance_elementor_slot'] = ( $slot !== '' && in_array( $slot, $allowed, true ) ) ? $slot : 'primary';
+		$color = strtolower( trim( (string) ( $input['brand_color'] ?? '' ) ) );
+		$out['brand_color']   = preg_match( '/^#[0-9a-f]{6}$/', $color ) ? $color : GLOTRACOL_QUOTE_BRAND_DEFAULT;
+		$out['brand_logo_id'] = max( 0, (int) ( $input['brand_logo_id'] ?? 0 ) );
 		$out['mini_cart_enabled'] = ! empty( $input['mini_cart_enabled'] ) ? 'yes' : 'no';
 		$mcp = sanitize_key( $input['mini_cart_position'] ?? 'bottom-left' );
 		$out['mini_cart_position'] = in_array( $mcp, [ 'bottom-left', 'bottom-right', 'top-left', 'top-right' ], true ) ? $mcp : 'bottom-left';
@@ -397,10 +400,30 @@ class Glotracol_Quote_Admin_Settings {
 			case 'appearance':
 				?>
 				<h2>Apariencia</h2>
-				<p class="description">El plugin puede heredar el color principal de tu kit global de Elementor. Si lo dejas desactivado, usa el verde Glotracol.</p>
+				<p class="description">El color y el logo se usan en el formulario, en los correos y en el PDF de la cotización.</p>
 				<table class="form-table" role="presentation">
+					<?php
+					$brand   = glotracol_quote_brand();
+					$logo_id = (int) ( $s['brand_logo_id'] ?? 0 );
+					$logo_src = $logo_id ? wp_get_attachment_image_url( $logo_id, 'medium' ) : '';
+					?>
+					<tr><th scope="row"><label for="gloq-brand-color">Color de marca</label></th>
+						<td>
+							<input type="text" id="gloq-brand-color" class="gloq-color-field" name="<?php echo $opt; ?>[brand_color]" value="<?php echo esc_attr( $s['brand_color'] ?? GLOTRACOL_QUOTE_BRAND_DEFAULT ); ?>" data-default-color="<?php echo esc_attr( GLOTRACOL_QUOTE_BRAND_DEFAULT ); ?>">
+							<p class="description">Por defecto <?php echo esc_html( GLOTRACOL_QUOTE_BRAND_DEFAULT ); ?>, el naranja de Global Trading. Sobre este color el texto va <?php echo $brand['text'] === '#ffffff' ? 'blanco' : 'oscuro'; ?> para que se lea bien.</p>
+						</td></tr>
+					<tr><th scope="row">Logo</th>
+						<td>
+							<div class="gloq-logo-picker">
+								<input type="hidden" id="gloq-brand-logo-id" name="<?php echo $opt; ?>[brand_logo_id]" value="<?php echo (int) $logo_id; ?>">
+								<div class="gloq-logo-preview"<?php echo $logo_src ? '' : ' hidden'; ?>><img src="<?php echo esc_url( $logo_src ?: '' ); ?>" alt=""></div>
+								<button type="button" class="button" id="gloq-brand-logo-pick">Elegir logo</button>
+								<button type="button" class="button-link-delete" id="gloq-brand-logo-clear"<?php echo $logo_id ? '' : ' hidden'; ?>>Quitar</button>
+							</div>
+							<p class="description">Si no eliges ninguno, se usa el logo del sitio<?php echo $brand['logo_url'] && ! $logo_id ? ' (<a href="' . esc_url( $brand['logo_url'] ) . '" target="_blank">ver</a>)' : ''; ?>. Va sobre fondo blanco: mejor un PNG con fondo transparente.</p>
+						</td></tr>
 					<tr><th scope="row">Heredar color de Elementor</th>
-						<td><label><input type="checkbox" name="<?php echo $opt; ?>[appearance_inherit_elementor]" value="yes" <?php checked( $s['appearance_inherit_elementor'] ?? 'no', 'yes' ); ?>> Usar el color global de Elementor como color de marca del plugin</label></td></tr>
+						<td><label><input type="checkbox" name="<?php echo $opt; ?>[appearance_inherit_elementor]" value="yes" <?php checked( $s['appearance_inherit_elementor'] ?? 'no', 'yes' ); ?>> Usar el color global de Elementor en lugar del color de marca fijo</label></td></tr>
 					<tr><th scope="row">Color de la marca (global de Elementor)</th>
 						<td>
 						<?php
@@ -408,7 +431,7 @@ class Glotracol_Quote_Admin_Settings {
 						$current = $s['appearance_elementor_slot'] ?? 'primary';
 						if ( empty( $globals ) ) :
 							?>
-							<p class="description">No se detectaron colores globales de Elementor (¿está activo Elementor?). Mientras tanto, el plugin usa el verde Glotracol.</p>
+							<p class="description">No se detectaron colores globales de Elementor (¿está activo Elementor?). Mientras tanto, el plugin usa el color de marca de arriba.</p>
 							<input type="hidden" name="<?php echo $opt; ?>[appearance_elementor_slot]" value="<?php echo esc_attr( $current ); ?>">
 						<?php else : ?>
 							<select name="<?php echo $opt; ?>[appearance_elementor_slot]">
@@ -428,7 +451,7 @@ class Glotracol_Quote_Admin_Settings {
 									</optgroup>
 								<?php endforeach; ?>
 							</select>
-							<p class="description">Elige cuál color global de Elementor es el de la marca. El plugin lo hereda <strong>en vivo</strong>: si lo cambias en Elementor, el plugin cambia solo — sin volver a configurarlo. Si ese color se elimina, cae al verde Glotracol.</p>
+							<p class="description">Elige cuál color global de Elementor es el de la marca. El plugin lo hereda <strong>en vivo</strong>: si lo cambias en Elementor, el plugin cambia solo — sin volver a configurarlo. Si ese color se elimina, cae al color de marca fijo.</p>
 						<?php endif; ?>
 						</td></tr>
 				</table>

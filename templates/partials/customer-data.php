@@ -1,6 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit;
-$accent          = $accent ?? '#0a4d3a';
+$accent          = $accent ?? glotracol_quote_brand()['color'];
+$pal             = glotracol_quote_brand_palette( $accent );
 $customer        = (array) ( $customer ?? [] );
 $client_id       = (int) ( $client_id ?? 0 );
 $show_crm_badge  = $show_crm_badge ?? false;
@@ -28,7 +29,7 @@ $rows = [
 	<?php endforeach; ?>
 	<?php if ( ! empty( $customer['email'] ) ) : ?>
 	<tr><td style="color:#666"><strong>Email</strong></td>
-		<td><a href="mailto:<?php echo esc_attr( $customer['email'] ); ?>" style="color:<?php echo esc_attr( $accent ); ?>"><?php echo esc_html( $customer['email'] ); ?></a></td></tr>
+		<td><a href="mailto:<?php echo esc_attr( $customer['email'] ); ?>" style="color:<?php echo esc_attr( $pal['dark'] ); ?>"><?php echo esc_html( $customer['email'] ); ?></a></td></tr>
 	<?php endif; ?>
 	<?php if ( $phone !== '' ) : ?>
 	<tr><td style="color:#666"><strong>Teléfono</strong></td>
@@ -36,6 +37,6 @@ $rows = [
 	<?php endif; ?>
 </table>
 <?php if ( ! empty( $customer['message'] ) ) : ?>
-<h3 style="font-size:14px;margin:18px 0 6px;color:<?php echo esc_attr( $accent ); ?>">Mensaje del cliente</h3>
+<h3 style="font-size:14px;margin:18px 0 6px;color:#1a1a1a">Mensaje del cliente</h3>
 <div style="background:#f4f6f8;border-left:3px solid <?php echo esc_attr( $accent ); ?>;padding:10px 14px;font-size:14px;white-space:pre-wrap"><?php echo esc_html( $customer['message'] ); ?></div>
 <?php endif; ?>

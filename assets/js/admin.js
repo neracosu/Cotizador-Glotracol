@@ -237,3 +237,38 @@
 			.finally(function () { btn.disabled = false; });
 	});
 })();
+
+/* Apariencia: selector de color y de logo */
+(function () {
+	if (typeof jQuery === 'undefined') return;
+	jQuery(function ($) {
+		var $color = $('.gloq-color-field');
+		if ($color.length && $.fn.wpColorPicker) $color.wpColorPicker();
+
+		var $pick = $('#gloq-brand-logo-pick');
+		if (!$pick.length || typeof wp === 'undefined' || !wp.media) return;
+		var $id = $('#gloq-brand-logo-id'), $prev = $('.gloq-logo-preview'), $clear = $('#gloq-brand-logo-clear');
+		var frame;
+		$pick.on('click', function (e) {
+			e.preventDefault();
+			if (!frame) {
+				frame = wp.media({ title: 'Elegir logo', library: { type: 'image' }, multiple: false, button: { text: 'Usar este logo' } });
+				frame.on('select', function () {
+					var a = frame.state().get('selection').first().toJSON();
+					var src = (a.sizes && a.sizes.medium) ? a.sizes.medium.url : a.url;
+					$id.val(a.id);
+					$prev.find('img').attr('src', src);
+					$prev.prop('hidden', false);
+					$clear.prop('hidden', false);
+				});
+			}
+			frame.open();
+		});
+		$clear.on('click', function (e) {
+			e.preventDefault();
+			$id.val(0);
+			$prev.prop('hidden', true);
+			$clear.prop('hidden', true);
+		});
+	});
+})();

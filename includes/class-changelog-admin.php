@@ -79,6 +79,18 @@ class Glotracol_Quote_Changelog_Admin {
 	public static function entries() {
 		return [
 			[
+				'date' => '2026-09-07', 'version' => '2.15.0', 'type' => 'feature',
+				'title' => 'Correos y PDF con la marca de Global Trading',
+				'summary' => 'Los correos de cotización y el PDF adjunto salen ahora con el logo y el naranja corporativo en vez del verde. El color y el logo se cambian desde Cotizaciones → Configuración → Apariencia, sin tocar código.',
+				'details' => [
+					'Cabecera blanca con el logo a la izquierda y el número de cotización a la derecha, franja de color arriba y total resaltado.',
+					'En el PDF los nombres largos de producto ya no se recortan: se envuelven en dos líneas.',
+					'El formulario de cotización, el carrito flotante y los botones del catálogo usan el mismo color.',
+					'Si el color elegido es claro, el texto encima va oscuro; si es oscuro, va blanco. Así siempre se lee.',
+					'La opción de heredar el color global de Elementor sigue disponible y manda cuando está activa.',
+				],
+			],
+			[
 				'date' => '2026-07-29', 'version' => '2.14.1', 'type' => 'fix',
 				'title' => 'El botón "Vaciar log" ya funciona',
 				'summary' => 'En Cotizaciones → Registros, el botón "Vaciar log" no hacía nada: al pulsarlo la página solo se recargaba y el registro seguía igual. Ya borra las entradas como debe. Además, el registro deja de llenarse de errores provocados por las pruebas internas del plugin.',

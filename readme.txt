@@ -5,7 +5,7 @@ Tags: woocommerce, quote, request-a-quote, b2b
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.14.1
+Stable tag: 2.15.0
 WC requires at least: 8.0
 
 Convierte WooCommerce en un sistema de solicitud de cotizaciones (RFQ) sin checkout ni pago.
@@ -29,6 +29,13 @@ Plugin propio para Glotracol (Global Trading de Colombia). Reemplaza el flujo de
 * Templates sobreescribibles desde el tema en `glotracol-quote/`.
 
 == Changelog ==
+
+= 2.15.0 =
+* Color de marca y logo configurables en Ajustes > Apariencia. Por defecto, el naranja de Global Trading (#f2a649) y el logo del sitio.
+* Los correos de cotización (cliente y equipo) estrenan cabecera blanca con el logo, franja de color y total legible; desaparece el verde escrito a mano.
+* El PDF de la cotización lleva el logo, la franja de color y el total en el color de marca. Los nombres largos de producto se envuelven en dos líneas en vez de recortarse.
+* El formulario, el carrito flotante y los botones del catálogo toman el mismo color; el texto sobre el color de marca se elige solo (oscuro o blanco) para que se lea.
+* La herencia del color global de Elementor sigue disponible y manda sobre el color fijo cuando está activa.
 
 = 2.14.1 =
 * Arreglado el botón "Vaciar log" de la pantalla de Registros: no hacía nada al pulsarlo (la página solo se recargaba). Ahora borra el registro como debe.

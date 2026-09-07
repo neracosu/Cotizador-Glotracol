@@ -39,6 +39,8 @@ function glotracol_quote_get_settings() {
 		// Apariencia (Feature 3 — herencia de colores de Elementor)
 		'appearance_inherit_elementor' => 'no',          // 'yes'|'no'
 		'appearance_elementor_slot'    => 'primary',     // 'primary'|'secondary'|'accent'
+		'brand_color'                  => GLOTRACOL_QUOTE_BRAND_DEFAULT, // hex, naranja Global Trading
+		'brand_logo_id'                => 0,             // ID de adjunto; 0 = logo del sitio (custom_logo)
 		'mini_cart_enabled'  => 'yes',           // 'yes'|'no'
 		'mini_cart_position' => 'bottom-left',   // bottom-left|bottom-right|top-left|top-right
 		'smtp_enabled'              => 'no',
@@ -535,3 +537,75 @@ function glotracol_quote_enrich_items( $items ) {
 	}
 	return $out;
 }
+
+/**
+ * Paleta derivada de un color de marca. Se calcula en PHP porque los correos y el
+ * PDF no pueden usar variables CSS ni color-mix.
+ *
+ * @return array{color:string,dark:string,tint:string,line:string,text:string,rgb:int[]}
+ */
+function glotracol_quote_brand_palette( $hex ) {
+	$hex = strtolower( trim( (string) $hex ) );
+	if ( preg_match( '/^#?([0-9a-f]{3})$/', $hex, $m ) ) {
+		$hex = $m[1][0] . $m[1][0] . $m[1][1] . $m[1][1] . $m[1][2] . $m[1][2];
+	} elseif ( preg_match( '/^#?([0-9a-f]{6})$/', $hex, $m ) ) {
+		$hex = $m[1];
+	} else {
+		$hex = ltrim( GLOTRACOL_QUOTE_BRAND_DEFAULT, '#' );
+	}
+	$rgb = [ hexdec( substr( $hex, 0, 2 ) ), hexdec( substr( $hex, 2, 2 ) ), hexdec( substr( $hex, 4, 2 ) ) ];
+	$mix = function ( $target, $ratio ) use ( $rgb ) {
+		$out = '#';
+		foreach ( $rgb as $c ) {
+			$out .= str_pad( dechex( (int) round( $c + ( $target - $c ) * $ratio ) ), 2, '0', STR_PAD_LEFT );
+		}
+		return $out;
+	};
+	// Luminancia percibida (0-255): decide si el texto sobre la marca va oscuro o blanco.
+	$lum = 0.299 * $rgb[0] + 0.587 * $rgb[1] + 0.114 * $rgb[2];
+	return [
+		'color' => '#' . $hex,
+		'dark'  => $mix( 0, 0.35 ),   // contraste AA sobre blanco para el naranja por defecto
+		'tint'  => $mix( 255, 0.90 ),
+		'line'  => $mix( 255, 0.60 ),
+		'text'  => $lum > 150 ? '#1a1a1a' : '#ffffff',
+		'rgb'   => $rgb,
+	];
+}
+
+/**
+ * Marca efectiva del plugin: color (con herencia de Elementor si esta activa) y logo.
+ *
+ * @return array{color:string,dark:string,tint:string,text:string,rgb:int[],logo_id:int,logo_url:string,logo_path:string}
+ */
+function glotracol_quote_brand() {
+	$settings = glotracol_quote_get_settings();
+	$color    = (string) ( $settings['brand_color'] ?? GLOTRACOL_QUOTE_BRAND_DEFAULT );
+
+	if ( ( $settings['appearance_inherit_elementor'] ?? 'no' ) === 'yes' ) {
+		$slot = (string) ( $settings['appearance_elementor_slot'] ?? 'primary' );
+		foreach ( glotracol_quote_elementor_global_colors() as $g ) {
+			if ( $g['id'] === $slot && preg_match( '/^#[0-9a-f]{3,6}$/i', $g['color'] ) ) {
+				$color = $g['color'];
+				break;
+			}
+		}
+	}
+
+	$logo_id = (int) ( $settings['brand_logo_id'] ?? 0 );
+	if ( ! $logo_id ) {
+		$logo_id = (int) get_theme_mod( 'custom_logo' );
+	}
+	$logo_url  = $logo_id ? (string) wp_get_attachment_url( $logo_id ) : '';
+	$logo_path = $logo_id ? (string) get_attached_file( $logo_id ) : '';
+	if ( $logo_path === '' || ! file_exists( $logo_path ) ) {
+		$logo_path = '';
+	}
+
+	$brand = glotracol_quote_brand_palette( $color );
+	$brand['logo_id']   = $logo_id;
+	$brand['logo_url']  = $logo_url;
+	$brand['logo_path'] = $logo_path;
+	return apply_filters( 'glotracol_quote_brand', $brand );
+}
+

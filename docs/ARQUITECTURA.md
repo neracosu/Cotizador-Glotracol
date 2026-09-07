@@ -365,7 +365,7 @@ Template `templates/form.php`. Estructura:
 - **Para:** `destination_emails` (parseado por `glotracol_quote_emails_to_array`). Fallback: `admin_email`.
 - **Headers:** `Content-Type: text/html`, `From: <sender_name> <sender_email>`, `Reply-To: <customer_email>`, `Bcc: ...` (uno por cada).
 - **Asunto:** `admin_subject` con placeholders.
-- **Body:** template `email-admin.php` (HTML responsive, header verde `#0a4d3a`, tabla de cliente, mensaje, tabla de productos, botón CTA al admin, footer con IP). Filtrable vía `glotracol_quote_email_admin_body`.
+- **Body:** template `email-admin.php` (HTML responsive, cabecera de marca `partials/brand-header.php` con logo y color de `glotracol_quote_brand()`; rojo `#dc3545` si es pedido grande, tabla de cliente, mensaje, tabla de productos, botón CTA al admin, footer con IP). Filtrable vía `glotracol_quote_email_admin_body`.
 
 ### 9.2. Email al cliente
 
@@ -505,7 +505,7 @@ Bloques principales:
 - **Página de gracias** centrada con icono ✓.
 - **Statuses** del CPT: pills coloreadas (`.glo-status-glo-new` verde, `glo-processing` amarillo, `glo-responded` azul, `glo-closed` gris).
 
-**Brand color principal:** `#0a4d3a` (verde Glotracol). Hover: `#0d6149`.
+**Brand color principal:** configurable en Ajustes > Apariencia (`brand_color`, por defecto `#f2a649`, naranja Global Trading) y `brand_logo_id`. `glotracol_quote_brand_palette()` deriva `dark` (hover y texto sobre blanco), `tint`, `line` y `text` (color de texto sobre la marca, oscuro o blanco según luminancia). `Glotracol_Quote_Plugin::print_appearance_css()` imprime esas cinco variables (`--gloq-brand*`) en cada página; correos y PDF las leen del helper porque no pueden usar CSS.
 
 ### 15.2. CSS admin (`assets/css/admin.css`)
 
@@ -1272,7 +1272,7 @@ Ejemplo: `🔥 [GRANDE] ⚠️ [PENDIENTE PRECIOS] 🛒 [PEDIDO] Nueva cotizaci�
 
 **Email al cliente**:
 - Si `pricing=priced` Y `auto_respond` → `email-customer-priced.php`:
-  - Header verde gradiente con badge "Cotización formal" o "Confirmación de pedido"
+  - Cabecera de marca (logo + número + fecha, franja del color de marca) con etiqueta "Tu cotización" o "Confirmación de pedido"
   - Bloque "Cliente identificado" (si NIT match, fondo verde) o "Lista pública" (si no, fondo amarillo)
   - Tabla con precio unitario + badge B2B en items con precio negociado
   - Footer del subtotal: tfoot con TOTAL prominente verde

@@ -1,6 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit;
-$accent       = $accent ?? '#0a4d3a';
+$accent       = $accent ?? glotracol_quote_brand()['color'];
+$pal          = glotracol_quote_brand_palette( $accent );
 $show_sku     = $show_sku ?? true;
 $items        = (array) ( $items ?? [] );
 $weight_total = (float) ( $weight_total ?? 0 );
@@ -8,16 +9,16 @@ $pendientes   = 0;
 foreach ( $items as $it ) { if ( ! empty( $it['es_pendiente'] ) ) $pendientes++; }
 $cols = $show_sku ? 6 : 5;
 ?>
-<table cellpadding="8" cellspacing="0" style="border-collapse:collapse;width:100%;font-size:13px;border:1px solid #e6e9ec">
+<table cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%;table-layout:fixed;font-size:13px;border:1px solid #e6e9ec">
 	<thead>
-		<tr style="background:#f4f6f8;text-align:left;color:<?php echo esc_attr( $accent ); ?>">
-			<th>Producto</th>
-			<?php if ( $show_sku ) : ?><th style="width:90px">SKU</th><?php endif; ?>
-			<th style="width:90px">Empaque</th>
-			<th style="width:100px">Presentación / Peso</th>
-			<th style="width:55px;text-align:center">Cant.</th>
-			<th style="width:110px;text-align:right">Precio unit.</th>
-			<th style="width:120px;text-align:right">Subtotal</th>
+		<tr style="background:#f4f6f8;text-align:left;color:#333;border-bottom:2px solid <?php echo esc_attr( $pal['color'] ); ?>">
+			<th style="width:190px">Producto</th>
+			<?php if ( $show_sku ) : ?><th style="width:46px">SKU</th><?php endif; ?>
+			<th style="width:62px">Empaque</th>
+			<th style="width:84px">Presentación</th>
+			<th style="width:44px;text-align:center">Cant.</th>
+			<th style="width:100px;text-align:right;white-space:nowrap">Precio unit.</th>
+			<th style="width:118px;text-align:right">Subtotal</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -26,15 +27,15 @@ $cols = $show_sku ? 6 : 5;
 		$bg   = $pend ? '#fff8e1' : '#ffffff';
 	?>
 		<tr style="border-top:1px solid #e6e9ec;background:<?php echo $bg; ?>">
-			<td><?php echo esc_html( $it['name'] ?? '' ); ?></td>
+			<td style="word-wrap:break-word"><?php echo esc_html( $it['name'] ?? '' ); ?></td>
 			<?php if ( $show_sku ) : ?>
 			<td style="font-family:monospace;font-size:12px;color:#666"><?php echo esc_html( $it['sku'] ?? '—' ); ?></td>
 			<?php endif; ?>
 			<td style="color:#555"><?php echo esc_html( $it['empaque'] ?? '—' ); ?></td>
 			<td style="color:#555"><?php echo esc_html( $it['presentacion'] ?? '—' ); ?></td>
 			<td style="text-align:center"><strong><?php echo (int) ( $it['quantity'] ?? 0 ); ?></strong></td>
-			<td style="text-align:right;<?php echo $pend ? 'color:#8a6d00;font-style:italic' : ''; ?>"><?php echo esc_html( $it['precio_unit_fmt'] ?? '—' ); ?></td>
-			<td style="text-align:right"><strong><?php echo esc_html( $it['precio_sub_fmt'] ?? '—' ); ?></strong></td>
+			<td style="text-align:right;white-space:nowrap;font-size:12px;<?php echo $pend ? 'color:#8a6d00;font-style:italic' : ''; ?>"><?php echo esc_html( $it['precio_unit_fmt'] ?? '—' ); ?></td>
+			<td style="text-align:right;white-space:nowrap;font-size:12px"><strong><?php echo esc_html( $it['precio_sub_fmt'] ?? '—' ); ?></strong></td>
 		</tr>
 	<?php endforeach; ?>
 	</tbody>
@@ -42,12 +43,12 @@ $cols = $show_sku ? 6 : 5;
 		<?php if ( $weight_total > 0 ) : ?>
 		<tr style="background:#f4f6f8;font-size:12px;color:#555">
 			<td colspan="<?php echo (int) $cols; ?>" style="text-align:right;padding:8px 12px">Peso total</td>
-			<td style="text-align:right;padding:8px 12px"><strong><?php echo esc_html( number_format( $weight_total, 2, ',', '.' ) ); ?> kg</strong></td>
+			<td style="text-align:right;padding:8px 12px;white-space:nowrap"><strong><?php echo esc_html( number_format( $weight_total, 2, ',', '.' ) ); ?> kg</strong></td>
 		</tr>
 		<?php endif; ?>
-		<tr style="background:<?php echo esc_attr( $accent ); ?>;color:#fff">
+		<tr style="background:<?php echo esc_attr( $pal['color'] ); ?>;color:<?php echo esc_attr( $pal['text'] ); ?>">
 			<td colspan="<?php echo (int) $cols; ?>" style="text-align:right;padding:12px 14px;font-weight:700;font-size:14px"><?php echo $pendientes > 0 ? 'TOTAL PARCIAL' : 'TOTAL'; ?></td>
-			<td style="text-align:right;padding:12px 14px;font-weight:700;font-size:17px"><?php echo esc_html( glotracol_quote_format_price( (int) ( $total ?? 0 ) ) ); ?></td>
+			<td style="text-align:right;padding:12px 14px;font-weight:700;font-size:16px;white-space:nowrap"><?php echo esc_html( glotracol_quote_format_price( (int) ( $total ?? 0 ) ) ); ?></td>
 		</tr>
 	</tfoot>
 </table>

@@ -358,3 +358,8 @@ button[disabled] .gloq-spinner{margin-right:6px}
 .gloq-field-change .gloq-field-new, .gloq-field-fill .gloq-field-new { background: #fff2d8; font-weight: 600; padding: 0 4px; border-radius: 3px; }
 .gloq-field-edit { padding: 1px 4px; }
 .gloq-row-alert { box-shadow: inset 3px 0 0 #e0a800; }
+
+/* Ajustes > Apariencia: selector de logo */
+.gloq-logo-picker{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.gloq-logo-preview{padding:8px 12px;background:#fff;border:1px solid var(--gloq-line);border-radius:var(--gloq-radius-sm)}
+.gloq-logo-preview img{display:block;max-height:56px;max-width:220px;width:auto;height:auto}

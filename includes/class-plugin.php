@@ -76,7 +76,13 @@ class Glotracol_Quote_Plugin {
 			return;
 		}
 		wp_enqueue_style( 'glotracol-quote-admin', GLOTRACOL_QUOTE_URL . 'assets/css/admin.css', [ 'dashicons' ], GLOTRACOL_QUOTE_VERSION );
-		wp_enqueue_script( 'glotracol-quote-admin', GLOTRACOL_QUOTE_URL . 'assets/js/admin.js', [ 'jquery' ], GLOTRACOL_QUOTE_VERSION, true );
+		$deps = [ 'jquery' ];
+		if ( isset( $_GET['page'] ) && $_GET['page'] === Glotracol_Quote_Admin_Settings::PAGE_SLUG ) {
+			wp_enqueue_style( 'wp-color-picker' );
+			wp_enqueue_media();
+			$deps[] = 'wp-color-picker';
+		}
+		wp_enqueue_script( 'glotracol-quote-admin', GLOTRACOL_QUOTE_URL . 'assets/js/admin.js', $deps, GLOTRACOL_QUOTE_VERSION, true );
 		wp_localize_script( 'glotracol-quote-admin', 'GloqAdmin', [
 			'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
 			'smtpNonce'    => wp_create_nonce( 'gloq_smtp_test' ),
@@ -183,24 +189,18 @@ class Glotracol_Quote_Plugin {
 	}
 
 	/**
-	 * Si la herencia de Elementor está activa, re-define --gloq-brand apuntando al
-	 * slot global elegido, con fallback al verde. Deriva dark/tint con color-mix.
+	 * Imprime la paleta de marca como variables CSS. Se calcula en PHP en cada
+	 * carga (glotracol_quote_brand lee el kit de Elementor si la herencia esta
+	 * activa), asi que el frontend, los correos y el PDF comparten el mismo color.
 	 */
 	public function print_appearance_css() {
 		if ( is_admin() ) {
 			return;
 		}
-		if ( glotracol_quote_get_setting( 'appearance_inherit_elementor', 'no' ) !== 'yes' ) {
-			return;
-		}
-		$slot = glotracol_quote_get_setting( 'appearance_elementor_slot', 'primary' );
-		// Acepta slots de sistema (primary/secondary/accent/text) o IDs de colores
-		// personalizados (hash). Sanitiza a un token seguro para evitar inyección en CSS.
-		$slot = preg_replace( '/[^a-z0-9_-]/i', '', (string) $slot );
-		if ( $slot === '' ) {
-			$slot = 'primary';
-		}
-		$var  = '--e-global-color-' . $slot;
-		echo "<style id='gloq-appearance'>:root{--gloq-brand:var($var,#0a4d3a);--gloq-brand-dark:color-mix(in srgb,var($var,#0a4d3a) 85%,#000);--gloq-brand-tint:color-mix(in srgb,var($var,#0a4d3a) 8%,#fff);}</style>\n";
+		$b = glotracol_quote_brand();
+		printf(
+			"<style id='gloq-appearance'>:root{--gloq-brand:%s;--gloq-brand-dark:%s;--gloq-brand-tint:%s;--gloq-brand-line:%s;--gloq-brand-text:%s;}</style>\n",
+			esc_attr( $b['color'] ), esc_attr( $b['dark'] ), esc_attr( $b['tint'] ), esc_attr( $b['line'] ), esc_attr( $b['text'] )
+		);
 	}
 }

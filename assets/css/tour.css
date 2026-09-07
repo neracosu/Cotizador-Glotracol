@@ -6,12 +6,12 @@
 .gloq-tour-target {
 	position: relative; z-index: 9001;
 	border-radius: var(--gloq-radius-sm, 4px);
-	box-shadow: 0 0 0 3px var(--gloq-brand-2, #13855e), 0 0 0 9999px rgba(0,0,0,.55);
+	box-shadow: 0 0 0 3px var(--gloq-brand-dark, #9d6c2f), 0 0 0 9999px rgba(0,0,0,.55);
 }
 .gloq-tour-bubble {
 	position: absolute; z-index: 9002; max-width: 340px;
 	background: #fff; border: 1px solid var(--gloq-line, #e2e8f0);
-	border-top: 4px solid var(--gloq-brand, #0a4d3a);
+	border-top: 4px solid var(--gloq-brand, #f2a649);
 	border-radius: var(--gloq-radius, 8px);
 	box-shadow: 0 8px 30px rgba(0,0,0,.25);
 	padding: 16px 18px;
