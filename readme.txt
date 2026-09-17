@@ -30,6 +30,10 @@ Plugin propio para Glotracol (Global Trading de Colombia). Reemplaza el flujo de
 
 == Changelog ==
 
+= 2.16.1 =
+* Formulario de cotización en móvil: la tabla de productos ya no se sale de la pantalla. Cada producto se muestra como una tarjeta con su presentación, empaque, cantidad y valor, y los botones de cantidad y de quitar son más grandes para el dedo.
+* Ficha de producto: el botón dice solo "Añadir más" cuando el producto ya está en la cotización. El texto largo con la cantidad entre paréntesis no cabía en móvil; la cantidad se sigue viendo en el carrito flotante.
+
 = 2.16.0 =
 * Panel web para el equipo: la página /panel-cotizaciones (shortcode [glotracol_quote_dashboard]) muestra el resumen del cotizador en el frontend a editores y administradores, con acceso por usuario de WordPress.
 * Botón "Reenviar correo al cliente" en cada cotización (caja "Log de envíos"): vuelve a mandar el correo con el PDF adjunto y los precios actuales, y lo anota en el registro.

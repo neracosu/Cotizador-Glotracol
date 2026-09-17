@@ -23,9 +23,10 @@ class Glotracol_Quote_Product_Buttons {
 
 	public function single_text( $text ) {
 		$pid = get_the_ID();
+		// Texto corto a proposito: con la cantidad entre parentesis el boton no
+		// cabia en movil. La cantidad ya se ve en el carrito flotante.
 		if ( $pid && $this->is_in_cart( $pid ) ) {
-			$qty = $this->get_cart_qty( $pid );
-			return sprintf( 'Añadir más (ya tienes %d en tu cotización)', $qty );
+			return 'Añadir más';
 		}
 		return 'Añadir a mi cotización';
 	}

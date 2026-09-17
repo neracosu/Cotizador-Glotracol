@@ -79,6 +79,16 @@ class Glotracol_Quote_Changelog_Admin {
 	public static function entries() {
 		return [
 			[
+				'date' => '2026-09-17', 'version' => '2.16.1', 'type' => 'fix',
+				'title' => 'El formulario de cotización se ve bien en el celular',
+				'summary' => 'La tabla de productos se salía de la pantalla del teléfono y obligaba a alejar toda la página. Ahora cada producto es una tarjeta y el botón de la ficha de producto quedó corto.',
+				'details' => [
+					'En pantallas angostas cada producto de la cotización se muestra como una tarjeta: foto y nombre arriba, presentación y empaque debajo, y la cantidad con su valor en la última línea. En escritorio la tabla sigue igual.',
+					'Los botones de cantidad (− y +) y el de quitar son más grandes en móvil para que se puedan tocar con el dedo.',
+					'En la ficha de producto, cuando el producto ya está en la cotización el botón dice solo "Añadir más". Antes decía "Añadir más (ya tienes N en tu cotización)" y no cabía en móvil; la cantidad se sigue viendo en el carrito flotante.',
+				],
+			],
+			[
 				'date' => '2026-09-07', 'version' => '2.16.0', 'type' => 'feature',
 				'title' => 'Panel web para el equipo, reenvío de correos y GoHighLevel que avisa',
 				'summary' => 'Los editores ven el resumen del cotizador desde la web sin entrar al escritorio, cada cotización tiene un botón para reenviar el correo al cliente, y la conexión con GoHighLevel dice en pantalla qué le falta en vez de fallar en silencio.',

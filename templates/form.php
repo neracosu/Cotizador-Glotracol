@@ -22,13 +22,13 @@
 		<tbody>
 		<?php foreach ( $cart_items as $item ) : ?>
 			<tr data-cart-key="<?php echo esc_attr( $item['key'] ); ?>">
-				<td>
+				<td class="gloq-col-producto">
 					<?php echo $item['image']; // image markup from WC ?>
 					<a href="<?php echo esc_url( $item['permalink'] ); ?>"><?php echo esc_html( $item['name'] ); ?></a>
 				</td>
-				<td class="gloq-col-presentacion"><?php echo esc_html( $item['presentacion'] ?: '—' ); ?></td>
-				<td class="gloq-col-empaque"><?php echo esc_html( $item['empaque'] ?: '—' ); ?></td>
-				<td>
+				<td class="gloq-col-presentacion" data-label="Presentación"><?php echo esc_html( $item['presentacion'] ?: '—' ); ?></td>
+				<td class="gloq-col-empaque" data-label="Tipo de empaque"><?php echo esc_html( $item['empaque'] ?: '—' ); ?></td>
+				<td class="gloq-col-cantidad">
 					<div class="gloq-qty-cell gloq-stepper">
 						<button type="button" class="gloq-qty-btn gloq-qty-minus" aria-label="Disminuir cantidad" tabindex="-1">−</button>
 						<input type="number"
@@ -45,7 +45,7 @@
 					<span class="gloq-valor-sub"><?php echo esc_html( $item['valor_sub_fmt'] ); ?></span>
 					<span class="gloq-valor-unit"><?php echo esc_html( $item['valor_unit_fmt'] ); ?></span>
 				</td>
-				<td>
+				<td class="gloq-col-quitar">
 					<button type="button" class="gloq-remove-item" data-cart-key="<?php echo esc_attr( $item['key'] ); ?>" title="Quitar de la cotización" aria-label="Quitar producto">×</button>
 				</td>
 			</tr>
@@ -53,9 +53,9 @@
 		</tbody>
 		<tfoot>
 			<tr class="gloq-total-row"<?php echo empty( $cart_total_fmt ) ? ' hidden' : ''; ?>>
-				<td colspan="4"></td>
+				<td colspan="4" class="gloq-total-pad"></td>
 				<td class="gloq-col-valor"><strong>Total:</strong> <span class="gloq-total-value"><?php echo esc_html( $cart_total_fmt ); ?></span></td>
-				<td></td>
+				<td class="gloq-total-pad"></td>
 			</tr>
 		</tfoot>
 	</table>

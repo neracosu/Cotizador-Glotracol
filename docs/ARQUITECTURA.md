@@ -288,7 +288,7 @@ El dropdown de estado se sustituye vía JS para listar los 4 estados glo-*.
 
 `Glotracol_Quote_Product_Buttons` aplica:
 
-- `woocommerce_product_single_add_to_cart_text` → `"Añadir a mi cotización"` o, si ya está en cart, `"✓ Añadir más (ya tienes N en tu cotización)"`.
+- `woocommerce_product_single_add_to_cart_text` → `"Añadir a mi cotización"` o, si ya está en cart, `"Añadir más"` (corto a propósito: con la cantidad no cabía en móvil).
 - `woocommerce_product_add_to_cart_text` (loop) → `"Añadir a la cotización"` o `"✓ Añadir más a la cotización"`.
 - `woocommerce_get_price_html` → `''` (oculta precios en todo el frontend).
 - `woocommerce_is_purchasable` y `woocommerce_variation_is_purchasable` → fuerza `true` si el producto existe y tiene stock (necesario porque sin precio WC marca como no comprable).
@@ -331,6 +331,7 @@ Template `templates/form.php`. Estructura:
 2. `form_intro` (configurable).
 3. Header con count y link "+ Añadir más productos" (al shop).
 4. Tabla de items con: imagen, nombre+permalink, SKU, **input de cantidad editable inline**, botón × para quitar.
+   Hasta 640 px de ancho la tabla se convierte en tarjetas por CSS (`quote.css`, bloque `#gloq-items-table`): las celdas llevan clase `gloq-col-*` y `data-label` para pintar la etiqueta; el JS sigue usando `closest('tr')`, no cambia.
 5. Helper text: "Las cantidades se guardan automáticamente al cambiarlas".
 6. Form de datos personales: name*, email*, phone*, company*, nit, city, message.
 7. Honeypot oculto (`gloq_website`) en `position:absolute;left:-9999px`.
