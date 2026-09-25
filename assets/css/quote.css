@@ -391,7 +391,7 @@ a.gloq-fd-stat:hover{border-color:var(--gloq-brand);color:var(--fd-ink)}
 
 /* Verificacion por codigo del NIT */
 .gloq-nit-verify{margin:4px 0 16px;padding:12px 14px;border:1px solid var(--gloq-brand-line,#e5e5e5);background:var(--gloq-brand-tint,#fafafa);border-radius:8px}
-.gloq-nit-verify[hidden],.gloq-nit-code-row[hidden]{display:none}
+.gloq-nit-verify[hidden],.gloq-nit-verify [hidden]{display:none !important}
 .gloq-nit-verify-intro{margin:0 0 8px;font-size:.92em}
 .gloq-nit-code-row{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin-top:10px}
 .gloq-nit-code-row label{flex:1 1 160px;margin:0}
