@@ -45,7 +45,8 @@ class Glotracol_Quote_Frontend_Dashboard {
 
 	/** Crea (una sola vez) la pagina que lleva el shortcode y devuelve su id. */
 	public static function ensure_page() {
-		return Glotracol_Quote_Activator::ensure_page( self::PAGE_OPTION, 'Panel de cotizaciones', 'panel-cotizaciones', '[' . self::SHORTCODE . ']' );
+		// En cada carga del admin: no recrea la pagina si el administrador la borro.
+		return Glotracol_Quote_Activator::ensure_page( self::PAGE_OPTION, 'Panel de cotizaciones', 'panel-cotizaciones', '[' . self::SHORTCODE . ']', false );
 	}
 
 	public static function page_url() {
