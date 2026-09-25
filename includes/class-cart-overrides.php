@@ -337,7 +337,9 @@ class Glotracol_Quote_Cart_Overrides {
 	 * remove/add (preserva la posición y la cantidad).
 	 */
 	public function ajax_swap_presentation() {
-		check_ajax_referer( 'gloq_swap_presentation', '_wpnonce' );
+		if ( ! Glotracol_Quote_Form::verify_cart_request( 'gloq_swap_presentation' ) ) {
+			wp_send_json_error( [ 'message' => 'Tu sesión venció. Recarga la página.' ], 403 );
+		}
 		if ( ! function_exists( 'WC' ) || ! WC()->cart ) {
 			wp_send_json_error( [ 'message' => 'Carrito no disponible' ] );
 		}
@@ -357,8 +359,8 @@ class Glotracol_Quote_Cart_Overrides {
 		if ( ! $nueva ) {
 			wp_send_json_error( [ 'message' => 'Presentación inválida' ] );
 		}
-		// La forma robusta de cambiar es: remove → add con new cart_item_data.
-		WC()->cart->remove_cart_item( $key );
+		// Primero se agrega la nueva y solo si entro se quita la anterior: al reves, si el
+		// alta fallaba (stock, producto despublicado) el item desaparecia del carrito.
 		$new_cart_item_data = [
 			'gloq_presentacion' => [
 				'idx'             => (int) $nueva['idx'],
@@ -370,10 +372,11 @@ class Glotracol_Quote_Cart_Overrides {
 			'unique_key' => md5( microtime() . $product_id . '_' . $new_idx ),
 		];
 		$new_key = WC()->cart->add_to_cart( $product_id, $qty, 0, [], $new_cart_item_data );
-		WC()->cart->calculate_totals();
 		if ( ! $new_key ) {
 			wp_send_json_error( [ 'message' => 'No se pudo cambiar la presentación' ] );
 		}
+		WC()->cart->remove_cart_item( $key );
+		WC()->cart->calculate_totals();
 		wp_send_json_success( [
 			'new_key' => $new_key,
 			'count'   => WC()->cart->get_cart_contents_count(),
