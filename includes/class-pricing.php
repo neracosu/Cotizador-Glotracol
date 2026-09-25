@@ -68,8 +68,10 @@ class Glotracol_Quote_Pricing {
 				if ( isset( $pricing[ $product_id ] ) && (int) $pricing[ $product_id ] > 0 ) {
 					return [ 'price' => (int) $pricing[ $product_id ], 'source' => 'b2b' ];
 				}
+				// Compat con claves viejas por SKU. Un SKU numerico no se busca: PHP lo
+				// convierte en clave entera y se confundiria con el ID de otro producto.
 				$sku = (string) get_post_meta( $product_id, '_sku', true );
-				if ( $sku !== '' && isset( $pricing[ $sku ] ) && (int) $pricing[ $sku ] > 0 ) {
+				if ( $sku !== '' && ! ctype_digit( $sku ) && isset( $pricing[ $sku ] ) && (int) $pricing[ $sku ] > 0 ) {
 					return [ 'price' => (int) $pricing[ $sku ], 'source' => 'b2b' ];
 				}
 			}

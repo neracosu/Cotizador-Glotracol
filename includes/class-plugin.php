@@ -14,6 +14,7 @@ class Glotracol_Quote_Plugin {
 
 	private function __construct() {
 		Glotracol_Quote_Rate_Limit::init();
+		Glotracol_Quote_Upgrade::maybe_run();
 		new Glotracol_Quote_CPT();
 		new Glotracol_Quote_Client_CPT();
 		new Glotracol_Quote_Client_Admin();

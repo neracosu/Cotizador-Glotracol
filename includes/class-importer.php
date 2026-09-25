@@ -414,19 +414,55 @@ class Glotracol_Quote_Importer {
 	 * @return int  product_id > 0, o 0 si no existe.
 	 */
 	public static function resolve_product_id_by_ref( $ref ) {
+		$r = self::resolve_ref( $ref );
+		return is_int( $r['key'] ) ? $r['key'] : 0;
+	}
+
+	/**
+	 * Resuelve una referencia de planilla (ID de producto, SKU de producto o SKU de
+	 * presentacion) a la clave con que se guardan los precios negociados:
+	 * int product_id, o 'sku:<SKU>' para una presentacion.
+	 *
+	 * Si el valor es el ID de un producto y a la vez el SKU de OTRO, es ambiguo y no se
+	 * adivina: antes se tomaba el ID y el precio terminaba en el producto equivocado.
+	 *
+	 * @return array{key:int|string|null, error:string}
+	 */
+	public static function resolve_ref( $ref ) {
 		$ref = trim( (string) $ref );
-		if ( $ref === '' ) return 0;
-		// 1) ID numérico de un producto existente.
+		if ( $ref === '' ) return [ 'key' => null, 'error' => 'Referencia vacía.' ];
+		$by_id = 0;
 		if ( ctype_digit( $ref ) && function_exists( 'wc_get_product' ) ) {
-			$product = wc_get_product( (int) $ref );
-			if ( $product ) return (int) $ref;
+			$p = wc_get_product( (int) $ref );
+			if ( $p && $p->get_status() !== 'trash' ) $by_id = (int) $ref;
 		}
-		// 2) SKU real.
-		if ( function_exists( 'wc_get_product_id_by_sku' ) ) {
-			$by_sku = (int) wc_get_product_id_by_sku( $ref );
-			if ( $by_sku > 0 ) return $by_sku;
+		$by_sku = function_exists( 'wc_get_product_id_by_sku' ) ? (int) wc_get_product_id_by_sku( $ref ) : 0;
+		if ( $by_id && $by_sku && $by_id !== $by_sku ) {
+			return [ 'key' => null, 'error' => sprintf( '"%s" es el ID de un producto y el SKU de otro; usa un SKU único o corrige el SKU.', $ref ) ];
 		}
-		return 0;
+		if ( $by_sku ) return [ 'key' => $by_sku, 'error' => '' ];
+		if ( $by_id ) return [ 'key' => $by_id, 'error' => '' ];
+		if ( self::presentation_sku_exists( $ref ) ) return [ 'key' => 'sku:' . $ref, 'error' => '' ];
+		return [ 'key' => null, 'error' => sprintf( 'No hay ningún producto ni presentación con la referencia "%s".', $ref ) ];
+	}
+
+	/** True si algun producto tiene una presentacion con ese SKU. */
+	public static function presentation_sku_exists( $sku ) {
+		static $index = null;
+		if ( $index === null ) {
+			$index = [];
+			global $wpdb;
+			$rows = $wpdb->get_col( "SELECT meta_value FROM {$wpdb->postmeta} WHERE meta_key = '_glo_presentaciones' AND meta_value <> ''" );
+			foreach ( (array) $rows as $raw ) {
+				$list = maybe_unserialize( $raw );
+				if ( ! is_array( $list ) ) continue;
+				foreach ( $list as $pres ) {
+					$s = trim( (string) ( $pres['sku'] ?? '' ) );
+					if ( $s !== '' ) $index[ $s ] = true;
+				}
+			}
+		}
+		return isset( $index[ trim( (string) $sku ) ] );
 	}
 
 	public static function import_b2b_pricing( $rows ) {
@@ -449,7 +485,13 @@ class Glotracol_Quote_Importer {
 				$report['errors'][] = "Línea $line: NIT $nit no existe en clientes B2B (importa primero la hoja de clientes).";
 				continue;
 			}
-			$by_client[ $client_id ][ $sku ] = $price;
+			$ref = self::resolve_ref( $sku );
+			if ( $ref['key'] === null ) {
+				$report['skipped']++;
+				$report['errors'][] = "Línea $line: " . $ref['error'];
+				continue;
+			}
+			$by_client[ $client_id ][ $ref['key'] ] = $price;
 		}
 		// Aplicar
 		foreach ( $by_client as $client_id => $prices ) {

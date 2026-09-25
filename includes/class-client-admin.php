@@ -95,6 +95,30 @@ class Glotracol_Quote_Client_Admin {
 		<?php
 	}
 
+	/**
+	 * Filas del metabox -> mapa de precios. Acepta ID de producto, 'sku:<SKU>' de una
+	 * presentacion o un SKU escrito a mano (se resuelve). Antes el campo era numerico:
+	 * las claves por SKU llegaban vacias y guardar la ficha las borraba en silencio.
+	 *
+	 * @return array<int|string,int>
+	 */
+	public static function sanitize_pricing_rows( $rows ) {
+		$out = [];
+		foreach ( (array) $rows as $row ) {
+			if ( ! is_array( $row ) ) continue;
+			$ref   = trim( sanitize_text_field( (string) ( $row['product_id'] ?? '' ) ) );
+			$price = (int) ( $row['price'] ?? 0 );
+			if ( $ref === '' || $price <= 0 ) continue;
+			if ( strpos( $ref, 'sku:' ) === 0 ) {
+				$out[ $ref ] = $price;
+				continue;
+			}
+			$r = Glotracol_Quote_Importer::resolve_ref( $ref );
+			if ( $r['key'] !== null ) $out[ $r['key'] ] = $price;
+		}
+		return $out;
+	}
+
 	private function render_pricing_row( $idx, $product_id, $price ) {
 		// Resolve product name for existing entries; new/template rows show a hint.
 		$product_name = '';
@@ -103,8 +127,10 @@ class Glotracol_Quote_Client_Admin {
 			if ( $numeric_id > 0 ) {
 				$product = wc_get_product( $numeric_id );
 				$product_name = $product ? esc_html( $product->get_name() ) : '<em>(producto no encontrado)</em>';
+			} elseif ( strpos( (string) $product_id, 'sku:' ) === 0 ) {
+				$product_name = 'Presentación <code>' . esc_html( substr( (string) $product_id, 4 ) ) . '</code>';
 			} else {
-				// Compat: old SKU key — keep it visible so data is not lost on screen.
+				// Clave vieja por SKU: visible para no perderla; al guardar se resuelve.
 				$product_name = '<em>' . esc_html( $product_id ) . '</em>';
 			}
 		}
@@ -112,7 +138,7 @@ class Glotracol_Quote_Client_Admin {
 		$idx_attr = ( $idx === '__IDX__' ) ? '__IDX__' : (int) $idx;
 		?>
 		<tr>
-			<td><input type="number" name="glo_pricing[<?php echo esc_attr( $idx_attr ); ?>][product_id]" value="<?php echo esc_attr( $product_id ); ?>" min="1" step="1" placeholder="ID" style="width:80px"></td>
+			<td><input type="text" name="glo_pricing[<?php echo esc_attr( $idx_attr ); ?>][product_id]" value="<?php echo esc_attr( $product_id ); ?>" placeholder="ID o SKU" style="width:120px"></td>
 			<td class="glo-pricing-name" style="padding-top:8px;color:#555"><?php
 				if ( $product_name !== '' ) {
 					echo $product_name; // Already escaped above.
@@ -193,17 +219,9 @@ class Glotracol_Quote_Client_Admin {
 		$price_list = ( isset( $_POST['_glo_price_list'] ) && $_POST['_glo_price_list'] === 'B' ) ? 'B' : 'A';
 		update_post_meta( $post_id, '_glo_price_list', $price_list );
 
-		// Pricing rows — keyed by product_id (int).
-		$pricing = [];
-		if ( isset( $_POST['glo_pricing'] ) && is_array( $_POST['glo_pricing'] ) ) {
-			foreach ( $_POST['glo_pricing'] as $row ) {
-				if ( ! is_array( $row ) ) continue;
-				$product_id = isset( $row['product_id'] ) ? (int) $row['product_id'] : 0;
-				$price      = isset( $row['price'] ) ? (int) $row['price'] : 0;
-				if ( $product_id <= 0 || $price <= 0 ) continue;
-				$pricing[ $product_id ] = $price;
-			}
-		}
+		// Precios negociados: clave product_id (int) o 'sku:<SKU>' de una presentacion.
+		$rows    = isset( $_POST['glo_pricing'] ) && is_array( $_POST['glo_pricing'] ) ? wp_unslash( $_POST['glo_pricing'] ) : [];
+		$pricing = self::sanitize_pricing_rows( $rows );
 		update_post_meta( $post_id, '_glo_client_pricing', $pricing );
 
 		// Si el title vino vacío, usar la razón social como title del CPT

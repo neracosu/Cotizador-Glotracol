@@ -45,6 +45,7 @@ require_once GLOTRACOL_QUOTE_PATH . 'includes/class-quote-cpt.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-client-cpt.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-client-admin.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-nit-verify.php';
+require_once GLOTRACOL_QUOTE_PATH . 'includes/class-upgrade.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-pricing.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-pricing-admin.php';
 require_once GLOTRACOL_QUOTE_PATH . 'includes/class-importer.php';
