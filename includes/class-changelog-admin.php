@@ -79,6 +79,23 @@ class Glotracol_Quote_Changelog_Admin {
 	public static function entries() {
 		return [
 			[
+				'date' => '2026-09-25', 'version' => '2.17.0', 'type' => 'security',
+				'title' => 'Precios acordados con código de verificación y una revisión completa de seguridad',
+				'summary' => 'Los clientes B2B ven sus precios acordados después de confirmar un código que les llega al correo registrado de su empresa. Además se hizo una revisión técnica completa del cotizador y se corrigieron los puntos encontrados.',
+				'details' => [
+					'Al escribir el NIT en el formulario aparece la opción "Enviar código". El código llega al correo registrado del cliente en el CRM, no al que se escribe en el formulario. Con el código correcto se aplican sus precios acordados.',
+					'Si el cliente envía la cotización sin verificar, se cotiza con precios públicos y en la ficha aparece "Cliente sin verificar" para que el equipo la revise.',
+					'La cotización con precios acordados y su PDF se envían al correo registrado del cliente.',
+					'Cuando un producto tiene varias presentaciones, cada una se cotiza con su propio precio. Si una presentación no tiene precio, queda "A cotizar" para el equipo.',
+					'Los precios negociados importados por SKU quedan siempre asociados al producto correcto, y guardar la ficha del cliente ya no borra ninguno.',
+					'El importador ya no deja filas sin importar en catálogos grandes: si algo llega incompleto, avisa y no importa nada.',
+					'Enviar el formulario dos veces (doble clic o reintento) crea una sola cotización.',
+					'El carrito flotante sigue funcionando en páginas guardadas en caché.',
+					'Solo administradores, gerentes de tienda y editores ven cotizaciones y clientes.',
+					'Protección más fuerte contra envíos masivos del formulario, y otras mejoras de estabilidad y seguridad.',
+				],
+			],
+			[
 				'date' => '2026-09-17', 'version' => '2.16.1', 'type' => 'fix',
 				'title' => 'El formulario de cotización se ve bien en el celular',
 				'summary' => 'La tabla de productos se salía de la pantalla del teléfono y obligaba a alejar toda la página. Ahora cada producto es una tarjeta y el botón de la ficha de producto quedó corto.',

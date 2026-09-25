@@ -30,6 +30,19 @@ Plugin propio para Glotracol (Global Trading de Colombia). Reemplaza el flujo de
 
 == Changelog ==
 
+= 2.17.0 =
+* Precios acordados con código de verificación: al escribir el NIT, el cliente pide un código que llega al correo registrado de su empresa en el CRM; con el código correcto se aplican sus precios. Sin verificar se cotiza con precios públicos y la ficha lo marca como "Cliente sin verificar".
+* La cotización con precios acordados y su PDF se envían al correo registrado del cliente.
+* Cada presentación de un producto se cotiza con su propio precio; sin precio propio queda "A cotizar".
+* Precios negociados siempre asociados al producto correcto (ID o SKU de presentación), con migración automática de los datos existentes. Guardar la ficha del cliente ya no borra precios.
+* Importador: las decisiones del cotejo viajan en un solo campo, así que los catálogos grandes no pierden filas.
+* Un envío repetido del formulario crea una sola cotización; los datos del formulario ya no viajan en la dirección de la página.
+* El carrito flotante funciona con caché de página; cambiar la presentación en el carrito ya no puede quitar el producto.
+* Cotizaciones y clientes con permisos propios: administradores, gerentes de tienda y editores.
+* Límites de envío por visitante, por correo y total por hora; la tienda no crea pedidos por ninguna vía; solo se cotizan productos publicados.
+* Token de GoHighLevel y secreto del webhook de solo escritura; GoHighLevel no modifica contactos existentes ni duplica oportunidades.
+* La activación no sobrescribe páginas existentes; archivos temporales en carpetas privadas.
+
 = 2.16.1 =
 * Formulario de cotización en móvil: la tabla de productos ya no se sale de la pantalla. Cada producto se muestra como una tarjeta con su presentación, empaque, cantidad y valor, y los botones de cantidad y de quitar son más grandes para el dedo.
 * Ficha de producto: el botón dice solo "Añadir más" cuando el producto ya está en la cotización. El texto largo con la cantidad entre paréntesis no cabía en móvil; la cantidad se sigue viendo en el carrito flotante.
