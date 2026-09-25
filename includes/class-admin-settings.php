@@ -65,12 +65,15 @@ class Glotracol_Quote_Admin_Settings {
 		$out['terms_text']               = sanitize_textarea_field( $input['terms_text'] ?? $existing['terms_text'] );
 		$out['thanks_message']           = sanitize_textarea_field( $input['thanks_message'] ?? $existing['thanks_message'] );
 		$out['webhook_url']              = esc_url_raw( $input['webhook_url'] ?? '' );
-		$out['webhook_secret']           = sanitize_text_field( $input['webhook_secret'] ?? '' );
+		// Secretos de solo escritura: la pagina no los vuelve a imprimir; vacio = sin cambios.
+		$incoming_secret = sanitize_text_field( $input['webhook_secret'] ?? '' );
+		$out['webhook_secret']           = $incoming_secret !== '' ? $incoming_secret : ( $existing['webhook_secret'] ?? '' );
 		$out['webhook_format'] = in_array( $input['webhook_format'] ?? '', [ 'estandar', 'gohighlevel' ], true )
 			? $input['webhook_format'] : 'estandar';
 
 		$out['ghl_enabled']          = ( ( $input['ghl_enabled'] ?? '' ) === 'yes' ) ? 'yes' : 'no';
-		$out['ghl_token']            = trim( sanitize_text_field( $input['ghl_token'] ?? '' ) );
+		$incoming_token = trim( sanitize_text_field( $input['ghl_token'] ?? '' ) );
+		$out['ghl_token']            = $incoming_token !== '' ? $incoming_token : ( $existing['ghl_token'] ?? '' );
 		$out['ghl_location_id']      = Glotracol_Quote_GHL::normalize_location_id( sanitize_text_field( $input['ghl_location_id'] ?? '' ) );
 		$out['ghl_pipeline_id']      = sanitize_text_field( $input['ghl_pipeline_id'] ?? '' );
 		$out['ghl_stage_id']         = sanitize_text_field( $input['ghl_stage_id'] ?? '' );
@@ -319,7 +322,7 @@ class Glotracol_Quote_Admin_Settings {
 						<td><input type="url" class="large-text" name="<?php echo $opt; ?>[webhook_url]" value="<?php echo esc_attr( $s['webhook_url'] ); ?>" placeholder="https://hook.eu1.make.com/abc123">
 						<p class="description">URL a la que se enviará un POST JSON cuando se cree una cotización (Make/Zapier/n8n/Goja).</p></td></tr>
 					<tr><th><label>Webhook secret</label></th>
-						<td><input type="text" class="regular-text" name="<?php echo $opt; ?>[webhook_secret]" value="<?php echo esc_attr( $s['webhook_secret'] ); ?>">
+						<td><input type="password" class="regular-text" name="<?php echo $opt; ?>[webhook_secret]" value="" placeholder="<?php echo $s['webhook_secret'] !== '' ? '•••••••• (sin cambios)' : ''; ?>" autocomplete="new-password">
 						<p class="description">Si se configura, el POST incluirá header <code>X-Glotracol-Signature: sha256=&lt;HMAC&gt;</code>.</p></td></tr>
 					<tr><th><label>Formato del webhook</label></th>
 						<td>
@@ -342,7 +345,7 @@ class Glotracol_Quote_Admin_Settings {
 						<td><label><input type="checkbox" name="<?php echo $opt; ?>[ghl_enabled]" value="yes" <?php checked( $s['ghl_enabled'] ?? 'no', 'yes' ); ?>> Enviar cada cotización a GoHighLevel</label></td></tr>
 
 					<tr><th><label>Token de Integración Privada</label></th>
-						<td><input type="password" class="regular-text" name="<?php echo $opt; ?>[ghl_token]" value="<?php echo esc_attr( $s['ghl_token'] ?? '' ); ?>" autocomplete="new-password" placeholder="pit-…">
+						<td><input type="password" class="regular-text" name="<?php echo $opt; ?>[ghl_token]" value="" autocomplete="new-password" placeholder="<?php echo ( $s['ghl_token'] ?? '' ) !== '' ? '•••••••• (sin cambios)' : 'pit-…'; ?>">
 						<p class="description">Se guarda en la base de datos del sitio. Rótalo cada 90 días desde GoHighLevel.</p></td></tr>
 
 					<tr><th><label>Location ID</label></th>

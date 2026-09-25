@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  *  2. POST con `action=preview` → parsea y muestra preview (primeras 20 filas)
  *  3. POST con `action=import` → ejecuta la importación y muestra reporte
  *
- * El archivo subido se guarda temporalmente en uploads/glotracol-import/<token>.csv
+ * El archivo subido se guarda temporalmente en una carpeta privada del directorio temporal del servidor (import_dir)
  * y se elimina al final del flujo (o tras 1 hora vía wp-cron).
  */
 class Glotracol_Quote_Importer_Admin {
@@ -780,15 +780,19 @@ class Glotracol_Quote_Importer_Admin {
 		exit;
 	}
 
+	/**
+	 * Carpeta de los archivos subidos mientras se revisa el cotejo. Fuera de uploads (que
+	 * es publica): la protegia solo un .htaccess, que no sirve en Nginx.
+	 */
+	public static function import_dir() {
+		return trailingslashit( get_temp_dir() ) . 'glotracol-import-' . substr( md5( ABSPATH . wp_salt( 'auth' ) ), 0, 12 );
+	}
+
 	private function get_temp_dir() {
-		$uploads = wp_upload_dir();
-		if ( ! is_array( $uploads ) || ! empty( $uploads['error'] ) ) return null;
-		$dir = $uploads['basedir'] . '/glotracol-import';
+		$dir = self::import_dir();
 		if ( ! file_exists( $dir ) ) {
 			if ( ! wp_mkdir_p( $dir ) ) return null;
-			// Bloquear acceso directo
-			file_put_contents( $dir . '/.htaccess', "Deny from all\n" );
-			file_put_contents( $dir . '/index.php', "<?php // Silence is golden\n" );
+			@chmod( $dir, 0700 );
 		}
 		return $dir;
 	}
@@ -868,10 +872,8 @@ class Glotracol_Quote_Importer_Admin {
 
 // Cleanup hook
 add_action( 'gloq_importer_cleanup', function ( $token, $ext = 'csv' ) {
-	$uploads = wp_upload_dir();
-	if ( empty( $uploads['basedir'] ) ) return;
 	$safe = preg_replace( '/[^a-zA-Z0-9]/', '', (string) $token );
 	$ext  = ( $ext === 'xlsx' ) ? 'xlsx' : 'csv';
-	$file = $uploads['basedir'] . '/glotracol-import/' . $safe . '.' . $ext;
+	$file = Glotracol_Quote_Importer_Admin::import_dir() . '/' . $safe . '.' . $ext;
 	if ( file_exists( $file ) ) @unlink( $file );
 }, 10, 2 );

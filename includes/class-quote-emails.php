@@ -173,7 +173,7 @@ class Glotracol_Quote_Emails {
 
 		// El PDF se regenera al vuelo cada vez; el temporal no debe quedar en disco.
 		foreach ( $attachments as $tmp ) {
-			if ( file_exists( $tmp ) ) @unlink( $tmp );
+			Glotracol_Quote_PDF::cleanup_temp( $tmp );
 		}
 	}
 
@@ -247,7 +247,7 @@ class Glotracol_Quote_Emails {
 
 		$ok = wp_mail( $to, $subject, $body, $headers, $attachments );
 		foreach ( $attachments as $tmp ) {
-			if ( file_exists( $tmp ) ) @unlink( $tmp );
+			Glotracol_Quote_PDF::cleanup_temp( $tmp );
 		}
 
 		( new self() )->log( $quote_id, 'customer-resent', $to, $ok );

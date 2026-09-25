@@ -207,8 +207,22 @@ class Glotracol_Quote_PDF {
 	public static function save_temp( $quote_id ) {
 		$data = self::render( $quote_id );
 		if ( $data === '' ) return false;
-		$dir  = get_temp_dir();
-		$path = trailingslashit( $dir ) . self::filename( $quote_id );
-		return file_put_contents( $path, $data ) === false ? false : $path;
+		// Directorio propio y privado por envio: /tmp es compartido en hosting compartido,
+		// y con un nombre fijo dos envios de la misma cotizacion se pisaban el archivo.
+		$dir = trailingslashit( get_temp_dir() ) . 'gloq-pdf-' . wp_generate_password( 16, false, false );
+		if ( ! wp_mkdir_p( $dir ) ) return false;
+		@chmod( $dir, 0700 );
+		$path = $dir . '/' . self::filename( $quote_id );
+		if ( file_put_contents( $path, $data ) === false ) { @rmdir( $dir ); return false; }
+		@chmod( $path, 0600 );
+		return $path;
+	}
+
+	/** Borra el PDF temporal y su directorio. */
+	public static function cleanup_temp( $path ) {
+		$path = (string) $path;
+		if ( $path === '' || strpos( basename( dirname( $path ) ), 'gloq-pdf-' ) !== 0 ) return;
+		if ( file_exists( $path ) ) @unlink( $path );
+		@rmdir( dirname( $path ) );
 	}
 }
