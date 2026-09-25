@@ -196,6 +196,29 @@
 			} );
 			// Iguales plegados por defecto.
 			$cotejo.find( 'tbody tr[data-status="same"]' ).hide();
+
+			// Las decisiones viajan en un solo campo JSON: con un input por fila, un
+			// catalogo grande pasaba el max_input_vars de PHP y se perdian filas.
+			$( '.gloq-cotejo-form' ).on( 'submit', function () {
+				var $form = $( this );
+				var d = { include: {}, resolve: {}, val: {} };
+				$form.find( '[name^="gloq_include["]' ).each( function () {
+					var line = this.name.slice( 13, -1 );
+					if ( this.checked ) d.include[ line ] = '1';
+				} ).prop( 'disabled', true );
+				$form.find( '[name^="gloq_resolve["]' ).each( function () {
+					var line = this.name.slice( 13, -1 );
+					if ( this.value ) d.resolve[ line ] = this.value;
+				} ).prop( 'disabled', true );
+				$form.find( '[name^="gloq_val["]' ).each( function () {
+					var m = this.name.match( /^gloq_val\[([^\]]+)\]\[([^\]]+)\]$/ );
+					if ( ! m ) return;
+					d.val[ m[1] ] = d.val[ m[1] ] || {};
+					d.val[ m[1] ][ m[2] ] = this.value;
+				} ).prop( 'disabled', true );
+				$form.find( '[name="gloq_rows_seen"]' ).val( $cotejo.find( 'tbody tr' ).length );
+				$form.find( '[name="gloq_decisions"]' ).val( JSON.stringify( d ) );
+			} );
 		}
 	} );
 

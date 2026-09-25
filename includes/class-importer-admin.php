@@ -453,6 +453,9 @@ class Glotracol_Quote_Importer_Admin {
 		echo '<form method="post" action="'.esc_url( admin_url( 'admin-post.php' ) ).'" class="gloq-cotejo-form">';
 		echo '<input type="hidden" name="action" value="gloq_import_run">';
 		echo '<input type="hidden" name="gloq_cotejo" value="1">';
+		echo '<input type="hidden" name="gloq_decisions" value="">';
+		echo '<input type="hidden" name="gloq_rows_total" value="'.(int) count( $diff['rows'] ).'">';
+		echo '<input type="hidden" name="gloq_rows_seen" value="0">';
 		foreach ( [ 'token'=>$ctx['token'], 'ext'=>$ctx['ext'], 'gloq_type'=>$type, 'gloq_mode'=>$ctx['mode'], 'gloq_client_id'=>(int)$ctx['client_id'], 'gloq_sync_stock'=>(int)$ctx['sync_stock'], 'gloq_create_missing'=>(int)$ctx['create_missing'] ] as $k=>$v ) {
 			echo '<input type="hidden" name="'.esc_attr( $k ).'" value="'.esc_attr( $v ).'">';
 		}
@@ -721,7 +724,9 @@ class Glotracol_Quote_Importer_Admin {
 		$type = $read['chosen_type'];
 		$rows = $read['rows'];
 		// Aplicar decisiones del cotejo (incluir/editar/resolver) o, en tipos legados, solo resolver.
-		$rows = self::apply_row_decisions( $rows, wp_unslash( $_POST ) );
+		[ $post, $decisions_error ] = self::expand_decisions( wp_unslash( $_POST ) );
+		if ( $decisions_error !== '' ) { $this->redirect_back( $decisions_error ); }
+		$rows = self::apply_row_decisions( $rows, $post );
 		$opts = [];
 		if ( $type === 'precios_catalogo' ) {
 			$opts = [
@@ -794,6 +799,35 @@ class Glotracol_Quote_Importer_Admin {
 		$safe = preg_replace( '/[^a-zA-Z0-9]/', '', (string) $token ); // token sigue siendo hex puro
 		$ext  = ( $ext === 'xlsx' ) ? 'xlsx' : 'csv';
 		return $dir . '/' . $safe . '.' . $ext;
+	}
+
+	/**
+	 * Decisiones del cotejo. El JS las manda en un solo campo JSON (gloq_decisions):
+	 * con un input por fila y por campo, un catalogo de unas 200 filas pasaba el
+	 * max_input_vars de PHP, el POST llegaba cortado y el resto no se importaba sin aviso.
+	 *
+	 * @return array{0: array, 1: string} [ $post con gloq_include/gloq_val/gloq_resolve, error ]
+	 */
+	public static function expand_decisions( $post ) {
+		if ( ! empty( $post['gloq_decisions'] ) ) {
+			$d = json_decode( (string) $post['gloq_decisions'], true );
+			if ( ! is_array( $d ) ) return [ $post, 'No se pudieron leer las decisiones del cotejo. Vuelve a subir el archivo.' ];
+			$total = (int) ( $post['gloq_rows_total'] ?? 0 );
+			$seen  = (int) ( $post['gloq_rows_seen'] ?? 0 );
+			if ( $total > 0 && $seen !== $total ) {
+				return [ $post, sprintf( 'El cotejo llegó incompleto (%d de %d filas). No se importó nada; vuelve a intentarlo.', $seen, $total ) ];
+			}
+			$post['gloq_include'] = is_array( $d['include'] ?? null ) ? $d['include'] : [];
+			$post['gloq_val']     = is_array( $d['val'] ?? null ) ? $d['val'] : [];
+			$post['gloq_resolve'] = is_array( $d['resolve'] ?? null ) ? $d['resolve'] : [];
+			return [ $post, '' ];
+		}
+		// Sin JS: si el POST llego al tope de variables, PHP lo corto.
+		$max = (int) ini_get( 'max_input_vars' );
+		if ( ! empty( $post['gloq_cotejo'] ) && $max > 0 && count( $post, COUNT_RECURSIVE ) >= $max ) {
+			return [ $post, 'El archivo tiene demasiadas filas para confirmarlo sin JavaScript. No se importó nada; activa JavaScript o divide el archivo.' ];
+		}
+		return [ $post, '' ];
 	}
 
 	/**
