@@ -6,6 +6,12 @@
  * Datos y nonces llegan vía wp_localize_script (objeto GloqAdmin).
  */
 ( function ( $ ) {
+
+	// Mensajes del servidor como texto: el de la prueba SMTP trae la respuesta cruda del
+	// servidor de correo y no debe interpretarse como HTML.
+	function gloqMsg( $el, cls, text ) {
+		$el.empty().append( $( '<span/>', { 'class': 'gloq-msg ' + cls } ).text( String( text ) ) );
+	}
 	'use strict';
 
 	var G = window.GloqAdmin || { ajaxUrl: window.ajaxurl, i18n: {} };
@@ -72,9 +78,9 @@
 		$.post( G.ajaxUrl, { action: 'gloq_smtp_test', _wpnonce: G.smtpNonce, to: to } )
 			.done( function ( resp ) {
 				if ( resp && resp.success ) {
-					$r.html( '<span class="gloq-msg gloq-msg-ok">' + resp.data.message + '</span>' );
+					gloqMsg( $r, 'gloq-msg-ok', resp.data.message );
 				} else {
-					$r.html( '<span class="gloq-msg gloq-msg-err">' + ( ( resp && resp.data && resp.data.message ) || 'Error desconocido' ) + '</span>' );
+					gloqMsg( $r, 'gloq-msg-err', ( resp && resp.data && resp.data.message ) || 'Error desconocido' );
 				}
 			} )
 			.fail( function () {
@@ -134,7 +140,7 @@
 			} )
 				.done( function ( resp ) {
 					if ( resp && resp.success ) {
-						$status.html( '<span class="gloq-msg gloq-msg-ok">' + resp.data.message + '</span>' );
+						gloqMsg( $status, 'gloq-msg-ok', resp.data.message );
 						setTimeout( function () { location.reload(); }, 1200 );
 					} else {
 						window.alert( ( resp && resp.data && resp.data.message ) || 'Error desconocido' );
@@ -165,7 +171,7 @@
 				.done( function ( resp ) {
 					var ok = resp && resp.success;
 					var msg = ( resp && resp.data && resp.data.message ) || 'Respuesta inesperada';
-					$status.html( '<span class="gloq-msg ' + ( ok ? 'gloq-msg-ok' : 'gloq-msg-err' ) + '">' + msg + '</span>' );
+					gloqMsg( $status, ok ? 'gloq-msg-ok' : 'gloq-msg-err', msg );
 					if ( ok ) setTimeout( function () { location.reload(); }, 1500 );
 				} )
 				.fail( function () {

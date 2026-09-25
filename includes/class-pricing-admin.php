@@ -264,7 +264,8 @@ class Glotracol_Quote_Pricing_Admin {
 
 		// Eliminar _glo_price de todos los productos
 		global $wpdb;
-		$wpdb->delete( $wpdb->postmeta, [ 'meta_key' => '_glo_price' ], [ '%s' ] );
+		// Con la API de metas se invalida la cache de objetos (Redis/Memcached).
+		delete_post_meta_by_key( '_glo_price' );
 
 		wp_safe_redirect( add_query_arg( 'gloq_pricing_msg', 'cleared', admin_url( 'edit.php?post_type=glo_quote&page=' . self::PAGE_SLUG ) ) );
 		exit;

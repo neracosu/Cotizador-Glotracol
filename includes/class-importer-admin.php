@@ -559,7 +559,7 @@ class Glotracol_Quote_Importer_Admin {
 	}
 
 	private function render_report() {
-		$report = get_transient( 'gloq_import_last_report' );
+		$report = get_transient( 'gloq_import_last_report_' . get_current_user_id() );
 		if ( ! is_array( $report ) ) {
 			echo '<div class="notice notice-info"><p>No hay reporte reciente.</p></div>';
 			return;
@@ -739,7 +739,7 @@ class Glotracol_Quote_Importer_Admin {
 		$report = Glotracol_Quote_Importer::import( $type, $rows, $opts );
 		$report['type'] = $type;
 		$report['imported_at'] = current_time( 'mysql' );
-		set_transient( 'gloq_import_last_report', $report, HOUR_IN_SECONDS );
+		set_transient( 'gloq_import_last_report_' . get_current_user_id(), $report, HOUR_IN_SECONDS ); // por usuario: dos admins no ven el reporte del otro
 
 		if ( class_exists( 'Glotracol_Quote_Logger' ) ) {
 			$has_errors = ! empty( $report['errors'] );

@@ -98,12 +98,14 @@ if ( file_exists( $csvA ) ) {
 	chk( 'read normalizó precio a int-string', ctype_digit( (string) $r['rows'][0]['precio normal'] ) || $r['rows'][0]['precio normal'] === '', true );
 } else { echo "[SKIP] CSV A real no encontrado\n"; }
 
-// --- Task 7: candidatos ---
+// --- Task 7: candidatos (producto propio: el catalogo real cambio de nombres) ---
+$gloq_cand = wp_insert_post( [ 'post_type' => 'product', 'post_status' => 'publish', 'post_title' => 'MANI CON PIEL 70/80' ] );
 $cands = Glotracol_Quote_Import_Reader::suggest_candidates( 'MANI CON PIEL 70/80 SACO', 'product', 3 );
 chk( 'sugiere al menos 1 candidato', count( $cands ) >= 1, true );
 $labels = array_map( function ( $c ) { return $c['label']; }, $cands );
 $hit = false; foreach ( $labels as $l ) { if ( stripos( $l, 'MANI CON PIEL 70/80' ) !== false ) $hit = true; }
 chk( 'top candidato es MANI CON PIEL 70/80', $hit, true );
+wp_delete_post( $gloq_cand, true );
 chk( 'score entre 0 y 100', ( $cands[0]['score'] >= 0 && $cands[0]['score'] <= 100 ), true );
 
 // --- v2.6.0 Task 1: build_xlsx round-trip ---

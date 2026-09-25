@@ -396,7 +396,8 @@ class Glotracol_Quote_Admin_Dashboard {
 		] );
 
 		// Monto cotizado del mes en curso
-		$month_start = date( 'Y-m-01 00:00:00' );
+		// Mes en la hora del sitio (post_date es local); date() iba en UTC.
+		$month_start = current_time( 'Y-m-01 00:00:00' );
 		$month_quotes = get_posts( [
 			'post_type'   => 'glo_quote',
 			'post_status' => [ 'glo-new', 'glo-pending-prices', 'glo-auto-priced', 'glo-processing', 'glo-responded', 'glo-closed' ],
