@@ -46,7 +46,7 @@ class Glotracol_Quote_Admin_Settings {
 			'weight_threshold_tons_kg', 'auto_respond_enabled' ],
 		'appearance'   => [ 'appearance_inherit_elementor', 'appearance_elementor_slot', 'brand_color', 'brand_logo_id',
 			'mini_cart_enabled', 'mini_cart_position' ],
-		'advanced'     => [ 'rate_limit_per_hour', 'delete_data_on_uninstall' ],
+		'advanced'     => [ 'rate_limit_per_hour', 'rate_limit_global_per_hour', 'delete_data_on_uninstall' ],
 	];
 
 	public function sanitize( $input ) {
@@ -77,6 +77,7 @@ class Glotracol_Quote_Admin_Settings {
 		$out['ghl_stage_id_pending'] = sanitize_text_field( $input['ghl_stage_id_pending'] ?? '' );
 
 		$out['rate_limit_per_hour']      = max( 0, (int) ( $input['rate_limit_per_hour'] ?? 3 ) );
+		$out['rate_limit_global_per_hour'] = max( 0, (int) ( $input['rate_limit_global_per_hour'] ?? 30 ) );
 		$out['delete_data_on_uninstall'] = ! empty( $input['delete_data_on_uninstall'] ) ? 'yes' : 'no';
 
 		// F3 + F4 — reglas de clasificación y alerta de pedidos grandes
@@ -513,9 +514,12 @@ class Glotracol_Quote_Admin_Settings {
 			case 'advanced':
 				?>
 				<table class="form-table">
-					<tr><th><label>Límite de envíos por hora (por IP)</label></th>
+					<tr><th><label>Límite de envíos por hora (por visitante)</label></th>
 						<td><input type="number" min="0" max="100" name="<?php echo $opt; ?>[rate_limit_per_hour]" value="<?php echo esc_attr( $s['rate_limit_per_hour'] ); ?>">
-						<p class="description">0 = sin límite. Recomendado: 3-5.</p></td></tr>
+						<p class="description">Se aplica por IP y por correo del cliente. 0 = sin límite. Recomendado: 3-5.</p></td></tr>
+					<tr><th><label>Límite total de envíos por hora</label></th>
+						<td><input type="number" min="0" max="1000" name="<?php echo $opt; ?>[rate_limit_global_per_hour]" value="<?php echo esc_attr( $s['rate_limit_global_per_hour'] ); ?>">
+						<p class="description">Tope para todo el sitio, contra envíos masivos automatizados. 0 = sin límite. Recomendado: 30.</p></td></tr>
 					<tr><th><label>Borrar datos al desinstalar</label></th>
 						<td><label><input type="checkbox" name="<?php echo $opt; ?>[delete_data_on_uninstall]" value="yes" <?php checked( $s['delete_data_on_uninstall'], 'yes' ); ?>> Eliminar todas las cotizaciones y configuraciones al desinstalar el plugin</label>
 						<p class="description" style="color:#b32d2e"><strong>Peligroso:</strong> si lo activas, al desinstalar el plugin se borrarán <strong>todas</strong> las cotizaciones, los clientes B2B y los ajustes, <strong>sin respaldo y sin posibilidad de recuperarlos</strong>. Déjalo desactivado salvo que quieras una desinstalación que no deje rastro.</p></td></tr>

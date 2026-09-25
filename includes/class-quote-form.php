@@ -313,9 +313,6 @@ class Glotracol_Quote_Form {
 		}
 
 		$ip = glotracol_quote_get_client_ip();
-		if ( ! Glotracol_Quote_Rate_Limit::check( $ip ) ) {
-			$this->redirect_with_error( $form_url, 'Has enviado demasiadas solicitudes recientemente. Intenta más tarde.' );
-		}
 
 		$fields = [
 			'name'    => sanitize_text_field( wp_unslash( $_POST['gloq_name'] ?? '' ) ),
@@ -326,6 +323,13 @@ class Glotracol_Quote_Form {
 			'city'    => sanitize_text_field( wp_unslash( $_POST['gloq_city'] ?? '' ) ),
 			'message' => sanitize_textarea_field( wp_unslash( $_POST['gloq_message'] ?? '' ) ),
 		];
+		// Limites por IP, por correo destino y global. Se cuentan intentos: la IP puede
+		// venir de una cabecera falsificable (el sitio esta detras de un CDN), por eso
+		// no es el unico freno.
+		if ( ! Glotracol_Quote_Rate_Limit::allow_submit( $ip, $fields['email'] ) ) {
+			$this->redirect_with_error( $form_url, 'Has enviado demasiadas solicitudes recientemente. Intenta más tarde.' );
+		}
+
 		$type = isset( $_POST['gloq_type'] ) ? sanitize_key( wp_unslash( $_POST['gloq_type'] ) ) : 'quote';
 		if ( ! in_array( $type, [ 'quote', 'order' ], true ) ) $type = 'quote';
 		$terms = isset( $_POST['gloq_terms'] );
@@ -449,8 +453,6 @@ class Glotracol_Quote_Form {
 		update_post_meta( $post_id, '_glo_pricing_status', $pricing_status );
 		update_post_meta( $post_id, '_glo_total', (int) $total );
 		update_post_meta( $post_id, '_glo_pricing_sources', $pricing_result['sources'] );
-
-		Glotracol_Quote_Rate_Limit::record( $ip );
 
 		if ( class_exists( 'Glotracol_Quote_Logger' ) ) {
 			Glotracol_Quote_Logger::info( 'quote_created', sprintf( '%s #%d creada (status=%s, pricing=%s, total=%d)', glotracol_quote_type_label( $type ), $post_id, $initial_status, $pricing_status, $total ), [

@@ -24,6 +24,7 @@ function glotracol_quote_get_settings() {
 		'ghl_stage_id'              => '',
 		'ghl_stage_id_pending'      => '',
 		'rate_limit_per_hour'       => 3,
+		'rate_limit_global_per_hour' => 30,  // tope de envios del formulario por hora en todo el sitio
 		'delete_data_on_uninstall'  => 'no',
 		// Reglas de clasificación por tamaño (F3 + F4)
 		'size_threshold_medium_units' => 25,   // ≥ 25 unidades → medium
