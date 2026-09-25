@@ -66,6 +66,7 @@
 	<form method="post" action="<?php echo esc_url( $action_url ); ?>" class="glotracol-quote-form" id="gloq-form">
 		<input type="hidden" name="action" value="<?php echo esc_attr( $submit_action ); ?>">
 		<input type="hidden" name="gloq_type" id="gloq-type-input" value="">
+		<input type="hidden" name="gloq_submit_token" value="<?php echo esc_attr( $submit_token ?? '' ); ?>">
 		<?php wp_nonce_field( $nonce_action, $nonce_field ); ?>
 
 		<h3>Tus datos</h3>

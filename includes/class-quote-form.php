@@ -8,6 +8,7 @@ class Glotracol_Quote_Form {
 	const NONCE_FIELD   = 'glotracol_quote_nonce';
 
 	public function __construct() {
+		add_action( Glotracol_Quote_Rate_Limit::PURGE_HOOK, [ __CLASS__, 'purge_submit_tokens' ] );
 		add_shortcode( 'glotracol_quote_form', [ $this, 'render_form_shortcode' ] );
 		add_shortcode( 'glotracol_quote_thanks', [ $this, 'render_thanks_shortcode' ] );
 		add_action( 'admin_post_nopriv_' . self::SUBMIT_ACTION, [ $this, 'handle_submit' ] );
@@ -212,9 +213,14 @@ class Glotracol_Quote_Form {
 			return '<div class="glotracol-quote-empty"><p>Aún no has agregado productos a tu cotización.</p><p><a class="button" href="' . esc_url( $shop ) . '">Ver catálogo</a></p></div>';
 		}
 
-		$error = isset( $_GET['gloq_error'] ) ? sanitize_text_field( wp_unslash( $_GET['gloq_error'] ) ) : '';
-		$old   = isset( $_GET['gloq_old'] ) ? (array) json_decode( base64_decode( wp_unslash( $_GET['gloq_old'] ) ), true ) : [];
-		if ( ! is_array( $old ) ) $old = [];
+		// El error y los datos ya escritos vuelven por la sesion: por la URL quedaban en los
+		// logs del servidor y del CDN, y el texto del error se podia inventar desde un enlace.
+		$state = self::take_form_state();
+		$error = $state['error'];
+		$old   = $state['old'];
+		if ( $error === '' && isset( $_GET['gloq_e'] ) ) {
+			$error = 'No pudimos enviar tu cotización. Revisa los datos e intenta de nuevo.';
+		}
 
 		$raw_items = $this->collect_cart_items();
 		// Precio Lista A (público) al render — client_id = 0
@@ -257,6 +263,7 @@ class Glotracol_Quote_Form {
 			'shop_url'    => function_exists( 'wc_get_page_id' ) && wc_get_page_id( 'shop' ) > 0 ? get_permalink( wc_get_page_id( 'shop' ) ) : home_url( '/' ),
 			'cart_total_fmt' => $total_fmt,
 			'reprice_nonce'  => wp_create_nonce( 'gloq_reprice_by_nit' ),
+			'submit_token'   => self::new_submit_token(),
 			'verify_nonce'   => wp_create_nonce( 'gloq_nit_verify' ),
 			'verify_message' => Glotracol_Quote_NIT_Verify::public_message(),
 		] );
@@ -312,6 +319,15 @@ class Glotracol_Quote_Form {
 		// Nonce
 		if ( ! isset( $_POST[ self::NONCE_FIELD ] ) || ! wp_verify_nonce( wp_unslash( $_POST[ self::NONCE_FIELD ] ), self::NONCE_ACTION ) ) {
 			$this->redirect_with_error( $form_url, 'Tu sesión expiró. Recarga la página e intenta de nuevo.' );
+		}
+
+		// Un mismo formulario enviado dos veces (doble clic, reintento tras un correo lento)
+		// crea una sola cotizacion.
+		$this->submit_token = isset( $_POST['gloq_submit_token'] ) ? preg_replace( '/[^a-zA-Z0-9]/', '', (string) wp_unslash( $_POST['gloq_submit_token'] ) ) : '';
+		$claim = self::claim_submit_token( $this->submit_token );
+		if ( $claim['state'] === 'duplicate' ) {
+			wp_safe_redirect( $claim['qid'] !== '' ? add_query_arg( [ 'qid' => $claim['qid'] ], $thanks_url ) : $thanks_url );
+			exit;
 		}
 
 		$ip = glotracol_quote_get_client_ip();
@@ -489,17 +505,94 @@ class Glotracol_Quote_Form {
 
 		WC()->cart->empty_cart();
 
+		self::finish_submit_token( $this->submit_token, $qid );
+
 		$redirect = add_query_arg( [ 'qid' => $qid ], $thanks_url );
 		wp_safe_redirect( $redirect );
 		exit;
 	}
 
 	private function redirect_with_error( $url, $message, $old = [] ) {
-		$args = [ 'gloq_error' => rawurlencode( $message ) ];
-		if ( ! empty( $old ) ) {
-			$args['gloq_old'] = rawurlencode( base64_encode( wp_json_encode( $old ) ) );
-		}
-		wp_safe_redirect( add_query_arg( $args, $url ) );
+		// El envio no se completo: el mismo formulario se puede volver a enviar.
+		self::release_submit_token( $this->submit_token );
+		self::stash_form_state( $message, $old );
+		wp_safe_redirect( self::error_url( $url ) );
 		exit;
+	}
+
+	/** @var string Token del envio en curso. */
+	private $submit_token = '';
+
+	public static function new_submit_token() {
+		return wp_generate_password( 24, false, false );
+	}
+
+	private static function token_option( $token ) {
+		return 'gloq_sub_' . md5( (string) $token );
+	}
+
+	/**
+	 * Reserva el token de un envio. add_option es atomico (option_name es unico): de dos
+	 * envios simultaneos del mismo formulario solo uno lo consigue.
+	 *
+	 * @return array{state:string, qid:string} state 'new' o 'duplicate'.
+	 */
+	public static function claim_submit_token( $token ) {
+		$token = preg_replace( '/[^a-zA-Z0-9]/', '', (string) $token );
+		if ( $token === '' ) return [ 'state' => 'new', 'qid' => '' ];
+		$name = self::token_option( $token );
+		if ( add_option( $name, 'pending|' . time(), '', 'no' ) ) {
+			return [ 'state' => 'new', 'qid' => '' ];
+		}
+		wp_cache_delete( $name, 'options' );
+		$val = explode( '|', (string) get_option( $name, '' ) );
+		return [ 'state' => 'duplicate', 'qid' => ( $val[0] ?? '' ) !== 'pending' ? (string) $val[0] : '' ];
+	}
+
+	public static function finish_submit_token( $token, $qid ) {
+		$token = preg_replace( '/[^a-zA-Z0-9]/', '', (string) $token );
+		if ( $token === '' ) return;
+		update_option( self::token_option( $token ), preg_replace( '/[^a-zA-Z0-9]/', '', (string) $qid ) . '|' . time(), false );
+	}
+
+	public static function release_submit_token( $token ) {
+		$token = preg_replace( '/[^a-zA-Z0-9]/', '', (string) $token );
+		if ( $token !== '' ) delete_option( self::token_option( $token ) );
+	}
+
+	/** Borra los tokens de envio de mas de un dia (corre con la limpieza diaria). */
+	public static function purge_submit_tokens() {
+		global $wpdb;
+		$rows = $wpdb->get_results( $wpdb->prepare(
+			"SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name LIKE %s",
+			$wpdb->esc_like( 'gloq_sub_' ) . '%'
+		) );
+		foreach ( (array) $rows as $r ) {
+			$parts = explode( '|', (string) $r->option_value );
+			if ( (int) ( $parts[1] ?? 0 ) < time() - DAY_IN_SECONDS ) delete_option( $r->option_name );
+		}
+	}
+
+	public static function stash_form_state( $message, $old = [] ) {
+		if ( function_exists( 'WC' ) && WC()->session ) {
+			WC()->session->set( 'gloq_form_state', [ 'error' => (string) $message, 'old' => is_array( $old ) ? $old : [] ] );
+		}
+	}
+
+	/** Lee y borra el estado guardado del formulario. */
+	public static function take_form_state() {
+		$out = [ 'error' => '', 'old' => [] ];
+		if ( ! function_exists( 'WC' ) || ! WC()->session ) return $out;
+		$st = WC()->session->get( 'gloq_form_state' );
+		if ( is_array( $st ) ) {
+			WC()->session->set( 'gloq_form_state', null );
+			$out['error'] = (string) ( $st['error'] ?? '' );
+			$out['old']   = is_array( $st['old'] ?? null ) ? $st['old'] : [];
+		}
+		return $out;
+	}
+
+	public static function error_url( $url ) {
+		return add_query_arg( [ 'gloq_e' => '1' ], $url );
 	}
 }
