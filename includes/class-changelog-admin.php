@@ -79,6 +79,14 @@ class Glotracol_Quote_Changelog_Admin {
 	public static function entries() {
 		return [
 			[
+				'date' => '2026-09-25', 'version' => '2.17.2', 'type' => 'improvement',
+				'title' => '"Comprobar de nuevo" muestra al instante las versiones nuevas',
+				'summary' => 'En Escritorio → Actualizaciones, el botón "Comprobar de nuevo" ahora consulta en el momento si hay una versión nueva del cotizador. Antes podía tardar hasta 6 horas en aparecer.',
+				'details' => [
+					'Solo lo pueden forzar usuarios con permiso para actualizar plugins.',
+				],
+			],
+			[
 				'date' => '2026-09-25', 'version' => '2.17.1', 'type' => 'fix',
 				'title' => 'En el celular, el botón "Enviar solicitud" ya no queda tapado',
 				'summary' => 'En la página del formulario se ocultan las barras fijas del pie de página (como "Realiza tu cotización aquí"), que ahí sobran y en el celular tapaban el botón de enviar.',

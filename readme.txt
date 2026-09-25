@@ -30,6 +30,10 @@ Plugin propio para Glotracol (Global Trading de Colombia). Reemplaza el flujo de
 
 == Changelog ==
 
+= 2.17.2 =
+* "Comprobar de nuevo" en Escritorio → Actualizaciones consulta GitHub en el momento: una versión recién publicada aparece sin esperar a que venza la caché de 6 horas.
+* README al día con la 2.17: verificación por código, seguridad, capacidades propias, límites de envío, filtros nuevos y bin/tests.sh.
+
 = 2.17.1 =
 * En la página del formulario se ocultan los elementos fijos del pie de página de Elementor (barras tipo "Realiza tu cotización aquí"): ahí sobran y en el celular tapaban el botón "Enviar solicitud". Desactivable con el filtro glotracol_quote_hide_fixed_footer.
 

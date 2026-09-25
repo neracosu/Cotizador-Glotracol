@@ -36,6 +36,8 @@ class Glotracol_Quote_Updater {
 		add_filter( 'upgrader_source_selection', [ $this, 'fix_source_dir' ], 10, 4 );
 		// Limpia la caché tras actualizar para no re-ofrecer la misma versión.
 		add_action( 'upgrader_process_complete', [ $this, 'flush_cache' ], 10, 0 );
+		// "Comprobar de nuevo" en Escritorio -> Actualizaciones consulta GitHub en el momento.
+		add_action( 'load-update-core.php', [ $this, 'flush_on_force_check' ] );
 	}
 
 	/**
@@ -205,6 +207,16 @@ class Glotracol_Quote_Updater {
 			return $desired;
 		}
 		return $source;
+	}
+
+	/**
+	 * WordPress borra su propia cache con force-check, pero no la de este actualizador:
+	 * sin esto, un tag recien publicado no aparecia hasta que vencian las 6 h.
+	 */
+	public function flush_on_force_check() {
+		if ( ! empty( $_GET['force-check'] ) && current_user_can( 'update_plugins' ) ) {
+			$this->flush_cache();
+		}
 	}
 
 	public function flush_cache() {
