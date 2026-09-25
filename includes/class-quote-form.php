@@ -24,12 +24,14 @@ class Glotracol_Quote_Form {
 	}
 
 	public function ajax_update_qty() {
-		check_ajax_referer( 'gloq_update_qty', '_wpnonce' );
+		if ( ! self::verify_cart_request( 'gloq_update_qty' ) ) {
+			wp_send_json_error( [ 'message' => 'Tu sesión venció. Recarga la página.' ], 403 );
+		}
 
 		$this->ensure_wc_cart_loaded();
 
 		$key = isset( $_POST['key'] ) ? sanitize_text_field( wp_unslash( $_POST['key'] ) ) : '';
-		$qty = isset( $_POST['qty'] ) ? max( 0, (int) $_POST['qty'] ) : 0;
+		$qty = isset( $_POST['qty'] ) ? self::clamp_qty( (int) $_POST['qty'] ) : 0;
 
 		if ( ! $key || ! function_exists( 'WC' ) || ! WC()->cart ) {
 			wp_send_json_error( [ 'message' => 'Sesión inválida' ] );
@@ -46,6 +48,31 @@ class Glotracol_Quote_Form {
 			'count' => WC()->cart->get_cart_contents_count(),
 			'empty' => WC()->cart->is_empty(),
 		] );
+	}
+
+	/**
+	 * Acciones del visitante sobre SU carrito. Con cache de pagina el nonce impreso en el
+	 * HTML vence y el carrito flotante dejaba de funcionar. Un anonimo con cookie de sesion
+	 * de WooCommerce solo puede tocar su propio carrito, asi que se acepta sin nonce fresco.
+	 * Con sesion de WordPress se exige el nonce.
+	 */
+	public static function verify_cart_request( $action ) {
+		$nonce = isset( $_REQUEST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) ) : '';
+		if ( $nonce !== '' && wp_verify_nonce( $nonce, $action ) ) return true;
+		if ( is_user_logged_in() ) return false;
+		foreach ( array_keys( (array) $_COOKIE ) as $name ) {
+			if ( strpos( (string) $name, 'wp_woocommerce_session_' ) === 0 ) return true;
+		}
+		return false;
+	}
+
+	/** Cantidad maxima por linea. Filtrable. */
+	public static function max_qty() {
+		return max( 1, (int) apply_filters( 'glotracol_quote_max_qty', 100000 ) );
+	}
+
+	public static function clamp_qty( $qty ) {
+		return min( max( 0, (int) $qty ), self::max_qty() );
 	}
 
 	public function ajax_reprice_by_nit() {
@@ -378,7 +405,7 @@ class Glotracol_Quote_Form {
 				// SKU "efectivo": el de la presentación si existe; si no, el del producto.
 				'sku'                => $pres && ! empty( $pres['sku'] ) ? $pres['sku'] : $product->get_sku(),
 				'sku_producto'       => $product->get_sku(),
-				'quantity'           => (int) $cart_item['quantity'],
+				'quantity'           => self::clamp_qty( (int) $cart_item['quantity'] ),
 				'presentacion_idx'   => isset( $pres['idx'] ) ? (int) $pres['idx'] : null,
 				'presentacion_label' => $pres['label'] ?? '',
 			];
