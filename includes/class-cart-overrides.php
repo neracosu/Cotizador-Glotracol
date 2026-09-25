@@ -71,6 +71,10 @@ class Glotracol_Quote_Cart_Overrides {
 		add_action( 'woocommerce_proceed_to_checkout', [ $this, 'proceed_to_quote_button' ], 25 );
 
 		add_action( 'template_redirect', [ $this, 'block_checkout' ] );
+		// La redireccion anterior solo cubre la pagina de pago. El pedido tambien se puede
+		// crear por wc-ajax=checkout y por la Store API (carrito por bloques): se cierran aqui.
+		add_action( 'woocommerce_checkout_process', [ $this, 'reject_checkout' ], 1 );
+		add_filter( 'rest_pre_dispatch', [ $this, 'reject_store_api_checkout' ], 10, 3 );
 
 		add_filter( 'wc_add_to_cart_message_html', [ $this, 'add_to_cart_message' ], 10, 2 );
 
@@ -92,6 +96,25 @@ class Glotracol_Quote_Cart_Overrides {
 	public function proceed_to_quote_button() {
 		$url = glotracol_quote_get_form_page_url();
 		echo '<a href="' . esc_url( $url ) . '" class="checkout-button button alt wc-forward glotracol-quote-button">Solicitar cotización ahora →</a>';
+	}
+
+	public static function checkout_closed_message() {
+		return 'Esta tienda trabaja por cotización: agrega los productos a tu cotización y envíala desde el formulario.';
+	}
+
+	/** Checkout clasico y wc-ajax=checkout: WooCommerce no crea el pedido si hay un error. */
+	public function reject_checkout() {
+		wc_add_notice( self::checkout_closed_message(), 'error' );
+	}
+
+	/** Store API (carrito y checkout por bloques): no se puede crear ni actualizar un pedido. */
+	public function reject_store_api_checkout( $result, $server, $request ) {
+		if ( null !== $result ) return $result;
+		$route = (string) $request->get_route();
+		if ( preg_match( '#^/wc/store(/v\d+)?/checkout#', $route ) && $request->get_method() !== 'GET' ) {
+			return new WP_Error( 'gloq_checkout_closed', self::checkout_closed_message(), [ 'status' => 403 ] );
+		}
+		return $result;
 	}
 
 	public function block_checkout() {

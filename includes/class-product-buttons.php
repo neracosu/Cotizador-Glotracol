@@ -117,12 +117,17 @@ class Glotracol_Quote_Product_Buttons {
 		return '';
 	}
 
+	/**
+	 * Un producto sin precio se puede agregar a la cotizacion. Solo si esta publicado:
+	 * forzar true a secas saltaba la comprobacion de visibilidad de WooCommerce y dejaba
+	 * cotizar borradores y privados con ?add-to-cart=ID.
+	 */
 	public function force_purchasable( $purchasable, $product ) {
+		if ( ! $product || ! $product->exists() ) return $purchasable;
+		$status = $product->is_type( 'variation' ) ? get_post_status( $product->get_parent_id() ) : $product->get_status();
+		if ( $status !== 'publish' ) return false;
 		if ( $purchasable ) return $purchasable;
-		if ( $product && $product->exists() && $product->is_in_stock() ) {
-			return true;
-		}
-		return $purchasable;
+		return $product->is_in_stock() ? true : $purchasable;
 	}
 
 	private function is_in_cart( $product_id ) {
