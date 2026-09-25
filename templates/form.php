@@ -60,7 +60,7 @@
 		</tfoot>
 	</table>
 	<p class="gloq-total-nota">Los valores pueden variar según volumen y condiciones comerciales.</p>
-	<p class="gloq-valor-nota" id="gloq-valor-nota">Los precios mostrados son de lista pública. Si tu empresa tiene precios negociados, escribe tu <strong>NIT</strong> abajo y se actualizarán automáticamente.</p>
+	<p class="gloq-valor-nota" id="gloq-valor-nota">Los precios mostrados son de lista pública. Si tu empresa tiene precios negociados, escribe tu <strong>NIT</strong> abajo y confirma el código que llega al correo registrado de tu empresa.</p>
 	<p class="gloq-helper-text"><span class="dashicons-info"></span> Las cantidades se guardan automáticamente al cambiarlas. Puedes seguir agregando productos desde el catálogo.</p>
 
 	<form method="post" action="<?php echo esc_url( $action_url ); ?>" class="glotracol-quote-form" id="gloq-form">
@@ -101,6 +101,19 @@
 				<span>Ciudad / País</span>
 				<input type="text" name="gloq_city" value="<?php echo esc_attr( $old['city'] ?? '' ); ?>">
 			</label>
+		</div>
+
+		<div class="gloq-nit-verify" id="gloq-nit-verify" data-nonce="<?php echo esc_attr( $verify_nonce ?? '' ); ?>" hidden>
+			<p class="gloq-nit-verify-intro">¿Tu empresa tiene precios acordados? Para verlos, te enviamos un código al correo registrado de tu empresa.</p>
+			<button type="button" class="button gloq-nit-send" id="gloq-nit-send">Enviar código</button>
+			<div class="gloq-nit-code-row" id="gloq-nit-code-row" hidden>
+				<label>
+					<span>Código de 6 dígitos</span>
+					<input type="text" id="gloq-nit-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}">
+				</label>
+				<button type="button" class="button gloq-nit-check" id="gloq-nit-check">Verificar</button>
+			</div>
+			<p class="gloq-nit-verify-status" id="gloq-nit-verify-status" role="status" aria-live="polite"></p>
 		</div>
 
 		<label class="glotracol-quote-block">

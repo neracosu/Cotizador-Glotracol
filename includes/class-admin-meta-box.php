@@ -150,9 +150,17 @@ class Glotracol_Quote_Admin_Meta_Box {
 					$curl = get_edit_post_link( $client_id );
 				?>
 					<a href="<?php echo esc_url( $curl ); ?>"><?php echo esc_html( $cname ?: '#' . $client_id ); ?></a>
+				<?php else :
+					$suggested = (int) get_post_meta( $post->ID, '_glo_client_suggested', true );
+					if ( $suggested ) :
+						$sname = get_post_meta( $suggested, '_glo_client_name', true );
+				?>
+					<a href="<?php echo esc_url( get_edit_post_link( $suggested ) ); ?>"><?php echo esc_html( $sname ?: '#' . $suggested ); ?></a>
+					<br><span style="display:inline-block;margin-top:4px;background:#fff8e1;color:#665100;padding:2px 10px;border-radius:11px;font-size:11px;font-weight:600">Cliente sin verificar</span>
+					<br><small style="color:#666">El NIT coincide con este cliente, pero no confirmó el código enviado a su correo registrado. Se cotizó con precios públicos: revisa antes de aplicar sus precios negociados.</small>
 				<?php else : ?>
 					<em style="color:#999">— No identificado por NIT</em>
-				<?php endif; ?>
+				<?php endif; endif; ?>
 			</p>
 			<p style="margin:0 0 10px"><strong>Pricing:</strong> <?php
 				$badge_map = [

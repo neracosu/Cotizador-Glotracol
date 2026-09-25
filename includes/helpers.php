@@ -628,6 +628,7 @@ function glotracol_quote_reconstruct_payload( $quote_id ) {
 		],
 		'type'      => get_post_meta( $quote_id, '_glo_type', true ) ?: 'quote',
 		'client_id' => (int) get_post_meta( $quote_id, '_glo_client_id', true ),
+		'deliver_to' => (string) get_post_meta( $quote_id, '_glo_deliver_to', true ),
 		'items'     => get_post_meta( $quote_id, '_glo_items', true ) ?: [],
 		'pricing'   => [
 			'status' => get_post_meta( $quote_id, '_glo_pricing_status', true ),

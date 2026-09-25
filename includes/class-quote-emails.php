@@ -134,7 +134,10 @@ class Glotracol_Quote_Emails {
 		}
 
 		// Customer email — branching según pricing
-		if ( is_email( $customer['email'] ?? '' ) ) {
+		// Con cliente verificado, la cotizacion con precios negociados va al correo
+		// registrado del cliente, nunca al que se escribio en el formulario.
+		$customer_to = is_email( $payload['deliver_to'] ?? '' ) ? $payload['deliver_to'] : ( $customer['email'] ?? '' );
+		if ( is_email( $customer_to ) ) {
 			// El cliente recibe siempre el detalle completo; las filas sin precio
 			// se muestran como "A cotizar" y el total se marca como parcial.
 			if ( $is_auto_priced ) {
@@ -159,11 +162,11 @@ class Glotracol_Quote_Emails {
 				'weight_total' => $weight_total,
 			] );
 			$cust_body = apply_filters( 'glotracol_quote_email_customer_body', $cust_body, $quote_id, $payload );
-			$cust_ok = wp_mail( $customer['email'], $cust_subject, $cust_body, $headers, $attachments );
-			$this->log( $quote_id, $is_auto_priced ? 'customer-priced' : 'customer', $customer['email'], $cust_ok );
+			$cust_ok = wp_mail( $customer_to, $cust_subject, $cust_body, $headers, $attachments );
+			$this->log( $quote_id, $is_auto_priced ? 'customer-priced' : 'customer', $customer_to, $cust_ok );
 			if ( class_exists( 'Glotracol_Quote_Logger' ) ) {
 				Glotracol_Quote_Logger::log( $cust_ok ? 'info' : 'error', 'email', sprintf( 'Email cliente %s #%d %s', $is_auto_priced ? '(auto-priced)' : '(confirmación)', $quote_id, $cust_ok ? 'enviado' : 'FALLÓ' ), [
-					'quote_id' => $quote_id, 'to' => $customer['email'], 'template' => $cust_template, 'success' => $cust_ok,
+					'quote_id' => $quote_id, 'to' => $customer_to, 'template' => $cust_template, 'success' => $cust_ok,
 				] );
 			}
 		}
@@ -188,7 +191,8 @@ class Glotracol_Quote_Emails {
 		}
 		$payload  = glotracol_quote_reconstruct_payload( $quote_id );
 		$customer = $payload['customer'];
-		if ( ! is_email( $customer['email'] ?? '' ) ) {
+		$to = is_email( $payload['deliver_to'] ?? '' ) ? $payload['deliver_to'] : ( $customer['email'] ?? '' );
+		if ( ! is_email( $to ) ) {
 			return new WP_Error( 'gloq_resend', 'La cotización no tiene un correo de cliente válido.' );
 		}
 
@@ -241,14 +245,14 @@ class Glotracol_Quote_Emails {
 			}
 		}
 
-		$ok = wp_mail( $customer['email'], $subject, $body, $headers, $attachments );
+		$ok = wp_mail( $to, $subject, $body, $headers, $attachments );
 		foreach ( $attachments as $tmp ) {
 			if ( file_exists( $tmp ) ) @unlink( $tmp );
 		}
 
-		( new self() )->log( $quote_id, 'customer-resent', $customer['email'], $ok );
+		( new self() )->log( $quote_id, 'customer-resent', $to, $ok );
 		Glotracol_Quote_Logger::log( $ok ? 'info' : 'error', 'email', sprintf( 'Email cliente reenviado #%d %s', $quote_id, $ok ? 'enviado' : 'FALLÓ' ), [
-			'quote_id' => $quote_id, 'to' => $customer['email'], 'template' => 'email-customer.php', 'success' => $ok, 'user' => get_current_user_id(),
+			'quote_id' => $quote_id, 'to' => $to, 'template' => 'email-customer.php', 'success' => $ok, 'user' => get_current_user_id(),
 		] );
 
 		return $ok ? true : new WP_Error( 'gloq_resend', 'El servidor de correo rechazó el envío. Revisa Registros.' );

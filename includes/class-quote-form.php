@@ -52,8 +52,8 @@ class Glotracol_Quote_Form {
 		$this->ensure_wc_cart_loaded();
 
 		$nit = isset( $_POST['nit'] ) ? sanitize_text_field( wp_unslash( $_POST['nit'] ) ) : '';
-		$client_id = ( $nit !== '' && function_exists( 'glotracol_quote_find_client_by_nit' ) )
-			? (int) glotracol_quote_find_client_by_nit( $nit ) : 0;
+		// Solo un cliente verificado por codigo ve precios negociados: el NIT es publico.
+		$client_id = $nit !== '' ? Glotracol_Quote_NIT_Verify::verified_client_id( $nit ) : 0;
 
 		$items = $this->collect_cart_items();
 		$priced = Glotracol_Quote_Pricing::resolve_items( $items, $client_id );
@@ -257,6 +257,8 @@ class Glotracol_Quote_Form {
 			'shop_url'    => function_exists( 'wc_get_page_id' ) && wc_get_page_id( 'shop' ) > 0 ? get_permalink( wc_get_page_id( 'shop' ) ) : home_url( '/' ),
 			'cart_total_fmt' => $total_fmt,
 			'reprice_nonce'  => wp_create_nonce( 'gloq_reprice_by_nit' ),
+			'verify_nonce'   => wp_create_nonce( 'gloq_nit_verify' ),
+			'verify_message' => Glotracol_Quote_NIT_Verify::public_message(),
 		] );
 	}
 
@@ -367,7 +369,14 @@ class Glotracol_Quote_Form {
 		}
 
 		// Resolución de cliente B2B por NIT y precios
-		$client_id = function_exists( 'glotracol_quote_find_client_by_nit' ) ? (int) glotracol_quote_find_client_by_nit( $fields['nit'] ) : 0;
+		// El NIT solo sugiere el cliente; los precios negociados exigen la verificacion por codigo.
+		$client_match = (int) glotracol_quote_find_client_by_nit( $fields['nit'] );
+		$client_id    = Glotracol_Quote_NIT_Verify::verified_client_id( $fields['nit'] );
+		$deliver_to   = '';
+		if ( $client_id ) {
+			$registered = sanitize_email( (string) get_post_meta( $client_id, '_glo_client_email', true ) );
+			if ( is_email( $registered ) ) $deliver_to = $registered;
+		}
 		$pricing_result = class_exists( 'Glotracol_Quote_Pricing' )
 			? Glotracol_Quote_Pricing::resolve_items( $items, $client_id )
 			: [ 'items' => $items, 'all_priced' => false, 'total' => 0, 'sources' => [] ];
@@ -381,6 +390,7 @@ class Glotracol_Quote_Form {
 			'customer'   => $fields,
 			'type'       => $type,
 			'client_id'  => $client_id,
+			'deliver_to' => $deliver_to,
 			'items'      => $items,
 			'pricing'    => [
 				'status' => $pricing_status,
@@ -450,6 +460,13 @@ class Glotracol_Quote_Form {
 		// F6 (Fase D) — tipo, cliente B2B y pricing
 		update_post_meta( $post_id, '_glo_type', $type );
 		update_post_meta( $post_id, '_glo_client_id', (int) $client_id );
+		update_post_meta( $post_id, '_glo_client_verified', $client_id ? 1 : 0 );
+		if ( ! $client_id && $client_match ) {
+			update_post_meta( $post_id, '_glo_client_suggested', $client_match );
+		}
+		if ( $deliver_to !== '' ) {
+			update_post_meta( $post_id, '_glo_deliver_to', $deliver_to );
+		}
 		update_post_meta( $post_id, '_glo_pricing_status', $pricing_status );
 		update_post_meta( $post_id, '_glo_total', (int) $total );
 		update_post_meta( $post_id, '_glo_pricing_sources', $pricing_result['sources'] );

@@ -219,7 +219,7 @@
 			// Sello B2B
 			$('#gloq-b2b-badge').remove();
 			if (d.es_b2b) {
-				$('#gloq-valor-nota').after('<p id="gloq-b2b-badge" class="gloq-b2b-badge">✓ Precio B2B (Lista B) aplicado para tu NIT.</p>');
+				$('#gloq-valor-nota').after('<p id="gloq-b2b-badge" class="gloq-b2b-badge">✓ Precios acordados de tu empresa aplicados.</p>');
 			}
 		}
 
@@ -235,6 +235,70 @@
 		if ($nit.length && $itemsTable.length) {
 			$nit.on('blur change', doReprice);
 			$nit.on('input', function () { clearTimeout(repriceTimer); repriceTimer = setTimeout(doReprice, 700); });
+		}
+
+		// Verificacion por codigo: los precios acordados solo se muestran tras confirmar
+		// el codigo que llega al correo registrado de la empresa.
+		var $verify = $('#gloq-nit-verify');
+		var verifyNonce = $verify.data('nonce');
+		var $verifyStatus = $('#gloq-nit-verify-status');
+		var $codeRow = $('#gloq-nit-code-row');
+		var $code = $('#gloq-nit-code');
+		var verifiedNit = '';
+
+		function normNit(v) { return $.trim(v || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase(); }
+
+		function toggleVerify() {
+			var n = normNit($nit.val());
+			if (n.length >= 5 && n !== verifiedNit) {
+				$verify.removeAttr('hidden');
+			} else {
+				$verify.attr('hidden', 'hidden');
+			}
+		}
+
+		if ($verify.length && $nit.length && verifyNonce) {
+			$nit.on('input change', function () {
+				$codeRow.attr('hidden', 'hidden');
+				$verifyStatus.text('');
+				toggleVerify();
+			});
+			toggleVerify();
+
+			$('#gloq-nit-send').on('click', function () {
+				var $btn = $(this).prop('disabled', true);
+				$.post(repriceUrl, { action: 'gloq_nit_code_request', _wpnonce: verifyNonce, nit: $.trim($nit.val() || '') })
+					.done(function (resp) {
+						$verifyStatus.text((resp && resp.data && resp.data.message) || '');
+						$codeRow.removeAttr('hidden');
+						$code.val('').trigger('focus');
+					})
+					.fail(function () { $verifyStatus.text('No pudimos enviar el código. Intenta de nuevo en un momento.'); })
+					.always(function () { setTimeout(function () { $btn.prop('disabled', false); }, 60000); });
+			});
+
+			function doVerify() {
+				var code = $.trim($code.val() || '').replace(/\D/g, '');
+				if (code.length !== 6) { $verifyStatus.text('Escribe los 6 dígitos del código.'); return; }
+				var $btn = $('#gloq-nit-check').prop('disabled', true);
+				$.post(repriceUrl, { action: 'gloq_nit_code_verify', _wpnonce: verifyNonce, nit: $.trim($nit.val() || ''), code: code })
+					.done(function (resp) {
+						if (resp && resp.success) {
+							verifiedNit = normNit($nit.val());
+							$verifyStatus.text(resp.data.message || '');
+							$codeRow.attr('hidden', 'hidden');
+							$('#gloq-nit-send').attr('hidden', 'hidden');
+							$('.gloq-nit-verify-intro').attr('hidden', 'hidden');
+							doReprice();
+						} else {
+							$verifyStatus.text((resp && resp.data && resp.data.message) || 'El código no es correcto.');
+						}
+					})
+					.fail(function () { $verifyStatus.text('No pudimos verificar el código. Intenta de nuevo.'); })
+					.always(function () { $btn.prop('disabled', false); });
+			}
+			$('#gloq-nit-check').on('click', doVerify);
+			$code.on('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); doVerify(); } });
 		}
 
 		function updateQty(key, qty, $context) {

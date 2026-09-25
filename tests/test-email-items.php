@@ -32,8 +32,11 @@ chk( 'marca pendiente si no hay precio', $r2[0]['es_pendiente'] === true );
 chk( 'muestra "A cotizar"', $r2[0]['precio_unit_fmt'] === 'A cotizar' );
 chk( 'subtotal en raya', $r2[0]['precio_sub_fmt'] === '—' );
 
-// --- 3. empaque vacío cae a raya (hoy 0 productos lo tienen cargado) ---
-chk( 'empaque vacío cae a raya', $r[0]['empaque'] === '—' );
+// --- 3. empaque vacío cae a raya (producto propio sin empaque: el catálogo real ya lo tiene cargado) ---
+$sin_emp = wp_insert_post( [ 'post_type' => 'product', 'post_status' => 'publish', 'post_title' => 'Test sin empaque' ] );
+$r3 = glotracol_quote_enrich_items( [ [ 'product_id' => $sin_emp, 'name' => 'Z', 'quantity' => 1, 'precio_unitario' => null, 'precio_origen' => 'pendiente' ] ] );
+chk( 'empaque vacío cae a raya', $r3[0]['empaque'] === '—' );
+wp_delete_post( $sin_emp, true );
 
 // --- 4. producto inexistente no revienta ---
 $r3 = glotracol_quote_enrich_items( [ [ 'product_id' => 999999999, 'name' => 'Z', 'quantity' => 1 ] ] );

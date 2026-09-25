@@ -388,3 +388,13 @@ a.gloq-fd-stat:hover{border-color:var(--gloq-brand);color:var(--fd-ink)}
 .gloq-fd-lost{font-size:13px;margin-top:10px}
 @media (max-width:900px){.gloq-fd-stats-status{grid-template-columns:repeat(3,1fr)}}
 @media (max-width:560px){.gloq-fd-stats-month,.gloq-fd-stats-status{grid-template-columns:1fr 1fr}.gloq-fd-title{font-size:23px}}
+
+/* Verificacion por codigo del NIT */
+.gloq-nit-verify{margin:4px 0 16px;padding:12px 14px;border:1px solid var(--gloq-brand-line,#e5e5e5);background:var(--gloq-brand-tint,#fafafa);border-radius:8px}
+.gloq-nit-verify[hidden],.gloq-nit-code-row[hidden]{display:none}
+.gloq-nit-verify-intro{margin:0 0 8px;font-size:.92em}
+.gloq-nit-code-row{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin-top:10px}
+.gloq-nit-code-row label{flex:1 1 160px;margin:0}
+.gloq-nit-code-row input{letter-spacing:4px;font-size:1.1em;max-width:180px}
+.gloq-nit-verify-status{margin:8px 0 0;font-size:.9em;color:#444}
+.gloq-nit-verify-status:empty{display:none}
