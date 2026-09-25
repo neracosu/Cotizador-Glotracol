@@ -2,7 +2,7 @@
 
 Convierte una tienda WooCommerce en un sistema de solicitud de cotización (RFQ) para B2B: catálogo sin checkout ni pago, donde el cliente arma su lista de productos y pide que le coticen.
 
-![Versión](https://img.shields.io/badge/versión-2.16.1-f2a649) ![Licencia](https://img.shields.io/badge/licencia-GPL--3.0-blue) ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759b) ![WooCommerce](https://img.shields.io/badge/WooCommerce-8.0%2B-96588a) ![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4)
+![Versión](https://img.shields.io/badge/versión-2.17.0-f2a649) ![Licencia](https://img.shields.io/badge/licencia-GPL--3.0-blue) ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759b) ![WooCommerce](https://img.shields.io/badge/WooCommerce-8.0%2B-96588a) ![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4)
 
 ## Qué resuelve
 
@@ -17,7 +17,7 @@ Cuando todos los productos de una solicitud ya tienen precio registrado, el plug
 | Flujo RFQ | Reemplaza "Añadir al carrito" por "Añadir a mi cotización" y el checkout por un formulario de solicitud. Oculta precios en catálogo, producto, carrito y emails. |
 | CRM de clientes B2B | CPT propio de clientes con NIT, razón social, contacto y precios negociados. Índice por NIT para búsqueda directa. |
 | Precios en niveles (A/B + B2B) | Precio individual negociado por cliente, **Lista B** (mayoreo) y **Lista A** (pública). Cada cliente puede asignarse a la Lista B; si un producto no tiene precio B, ese cliente cae automáticamente a la Lista A. Cascada del resolver: individual → Lista B → Lista A → pendiente. |
-| Precio en vivo por NIT | En el formulario, al escribir el NIT, los clientes de Lista B ven sus precios negociados al instante (sello "Precio B2B aplicado"); el resto ve la lista pública. El cuadro muestra presentación, tipo de empaque, cantidad con botones − / +, valor por línea y total. En móvil cada producto se muestra como tarjeta. |
+| Precio en vivo por NIT | En el formulario, al escribir el NIT, el cliente pide un código que llega al **correo registrado** de su empresa en el CRM; con el código correcto ve al instante sus precios negociados (sello "Precios acordados aplicados"). Sin verificar ve la lista pública y la cotización queda marcada como "Cliente sin verificar". El cuadro muestra presentación, tipo de empaque, cantidad con botones − / +, valor por línea y total. En móvil cada producto se muestra como tarjeta. |
 | Auto-cotización | Distingue entre cotización y pedido. Si todos los productos tienen precio, calcula el total y envía la cotización formal de forma automática. |
 | PDF de la cotización | Se genera al crear la solicitud, va adjunto a los correos y se descarga desde la ficha en el panel. Lleva logo, color de marca y los productos con empaque, presentación, precio unitario y subtotal. |
 | Reenvío al cliente | Botón "Reenviar correo al cliente" en cada cotización: vuelve a mandar el correo con el PDF y los precios actuales, y lo anota en el registro. |
