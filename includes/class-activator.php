@@ -4,6 +4,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 class Glotracol_Quote_Activator {
 
 	public static function activate() {
+		Glotracol_Quote_Upgrade::grant_caps();
 		self::ensure_page( 'glotracol_quote_form_page_id', 'Solicitar cotización', 'solicitar-cotizacion', '[glotracol_quote_form]' );
 		self::ensure_page( 'glotracol_quote_thanks_page_id', 'Cotización enviada', 'cotizacion-enviada', '[glotracol_quote_thanks]' );
 		self::ensure_page( 'glotracol_quote_dashboard_page_id', 'Panel de cotizaciones', 'panel-cotizaciones', '[glotracol_quote_dashboard]' );

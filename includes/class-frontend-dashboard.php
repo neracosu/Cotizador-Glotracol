@@ -39,7 +39,7 @@ class Glotracol_Quote_Frontend_Dashboard {
 
 	/** Editores y administradores. Filtrable por si el cliente quiere otro rol. */
 	public static function can_view( $user_id = null ) {
-		$cap = apply_filters( 'glotracol_quote_dashboard_cap', 'edit_others_posts' );
+		$cap = apply_filters( 'glotracol_quote_dashboard_cap', 'edit_others_glo_quotes' );
 		return $user_id === null ? current_user_can( $cap ) : user_can( $user_id, $cap );
 	}
 

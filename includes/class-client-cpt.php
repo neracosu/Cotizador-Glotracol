@@ -52,7 +52,7 @@ class Glotracol_Quote_Client_CPT {
 			'show_in_nav_menus'   => false,
 			'menu_icon'           => 'dashicons-businessman',
 			'supports'            => [ 'title' ],
-			'capability_type'     => 'post',
+			'capability_type'     => [ 'glo_client', 'glo_clients' ],
 			'map_meta_cap'        => true,
 			'has_archive'         => false,
 			'rewrite'             => false,

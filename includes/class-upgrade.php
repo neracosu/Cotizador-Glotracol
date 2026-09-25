@@ -2,22 +2,50 @@
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 /**
- * Rutinas que corren una vez al actualizar el plugin. Una actualizacion desde el panel
- * no dispara el hook de activacion: lo que tenga que cambiar en la base de datos o en
- * los roles al subir de version va aqui, atado a la version de datos guardada.
+ * Rutinas que corren una sola vez. Una actualizacion desde el panel no dispara el hook
+ * de activacion, asi que lo que tenga que cambiar en la base o en los roles va aqui.
+ * Cada rutina se marca como hecha en la opcion OPTION; no depende del numero de version.
  */
 class Glotracol_Quote_Upgrade {
 
-	const OPTION = 'glotracol_quote_db_version';
+	const OPTION = 'glotracol_quote_migrations';
+
+	/** Roles del equipo comercial: ven y editan cotizaciones y clientes. */
+	const TEAM_ROLES = [ 'administrator', 'shop_manager', 'editor' ];
 
 	public static function maybe_run() {
-		$from = (string) get_option( self::OPTION, '0' );
-		if ( version_compare( $from, GLOTRACOL_QUOTE_VERSION, '>=' ) ) return;
-		if ( version_compare( $from, '2.17.0', '<' ) ) {
-			self::migrate_all_client_pricing();
+		$done = get_option( self::OPTION, [] );
+		if ( ! is_array( $done ) ) $done = [];
+		$tasks = [
+			'caps_2170'         => [ __CLASS__, 'grant_caps' ],
+			'pricing_keys_2170' => [ __CLASS__, 'migrate_all_client_pricing' ],
+		];
+		$changed = false;
+		foreach ( $tasks as $key => $cb ) {
+			if ( ! empty( $done[ $key ] ) ) continue;
+			call_user_func( $cb );
+			$done[ $key ] = time();
+			$changed = true;
 		}
-		do_action( 'glotracol_quote_upgrade', $from, GLOTRACOL_QUOTE_VERSION );
-		update_option( self::OPTION, GLOTRACOL_QUOTE_VERSION, false );
+		if ( $changed ) update_option( self::OPTION, $done, false );
+	}
+
+	/** Capacidades primitivas de un CPT con capability_type [singular, plural]. */
+	public static function caps_for( $plural ) {
+		return [
+			"edit_$plural", "edit_others_$plural", "edit_private_$plural", "edit_published_$plural",
+			"publish_$plural", "read_private_$plural",
+			"delete_$plural", "delete_others_$plural", "delete_private_$plural", "delete_published_$plural",
+		];
+	}
+
+	public static function grant_caps() {
+		$caps = array_merge( self::caps_for( 'glo_quotes' ), self::caps_for( 'glo_clients' ) );
+		foreach ( self::TEAM_ROLES as $role_name ) {
+			$role = get_role( $role_name );
+			if ( ! $role ) continue;
+			foreach ( $caps as $cap ) $role->add_cap( $cap );
+		}
 	}
 
 	/** 2.17.0: precios negociados con clave SKU pasan a product_id o 'sku:<SKU>'. */

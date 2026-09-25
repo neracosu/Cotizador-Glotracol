@@ -39,7 +39,9 @@ class Glotracol_Quote_CPT {
 			'menu_icon'           => 'dashicons-clipboard',
 			'menu_position'       => 56,
 			'supports'            => [ 'title' ],
-			'capability_type'     => 'post',
+			// Capacidades propias: con 'post', autores y colaboradores veian todas las
+			// cotizaciones con los datos de los clientes. Se asignan en Glotracol_Quote_Upgrade.
+			'capability_type'     => [ 'glo_quote', 'glo_quotes' ],
 			'map_meta_cap'        => true,
 			'has_archive'         => false,
 			'rewrite'             => false,
