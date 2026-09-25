@@ -98,6 +98,39 @@ class Glotracol_Quote_Pricing {
 	}
 
 	/**
+	 * Precio de una presentacion. Cascada: negociado del cliente por el SKU de la
+	 * presentacion -> precio publico de la presentacion -> pendiente.
+	 *
+	 * No cae al precio del producto base ni a su Lista B: esos son precios de otra
+	 * presentacion (la unidad base) y aplicarlos cotizaria, por ejemplo, un saco de
+	 * 25 kg al precio de 250 g. Sin precio propio, la linea queda para el equipo.
+	 *
+	 * @return array{ price: int|null, source: string }
+	 */
+	public static function resolve_presentation( $product_id, $idx, $client_id = 0 ) {
+		$pres = glotracol_quote_get_presentacion( (int) $product_id, (int) $idx );
+		if ( ! $pres ) {
+			return [ 'price' => null, 'source' => 'pendiente' ];
+		}
+		$sku = trim( (string) ( $pres['sku'] ?? '' ) );
+		if ( $client_id > 0 && $sku !== '' ) {
+			$pricing = get_post_meta( (int) $client_id, '_glo_client_pricing', true );
+			if ( is_array( $pricing ) ) {
+				foreach ( [ 'sku:' . $sku, $sku ] as $k ) {
+					if ( isset( $pricing[ $k ] ) && (int) $pricing[ $k ] > 0 ) {
+						return [ 'price' => (int) $pricing[ $k ], 'source' => 'b2b' ];
+					}
+				}
+			}
+		}
+		$pub = (int) ( $pres['precio_publico'] ?? 0 );
+		if ( $pub > 0 ) {
+			return [ 'price' => $pub, 'source' => 'publico' ];
+		}
+		return [ 'price' => null, 'source' => 'pendiente' ];
+	}
+
+	/**
 	 * Resuelve precios para todos los items de una cotización.
 	 *
 	 * @param array $items     Lista de items con al menos `sku` y `quantity`.
@@ -112,7 +145,11 @@ class Glotracol_Quote_Pricing {
 		foreach ( (array) $items as $item ) {
 			$pid = isset( $item['product_id'] ) ? (int) $item['product_id'] : 0;
 			$qty = isset( $item['quantity'] ) ? max( 0, (int) $item['quantity'] ) : 0;
-			if ( $pid > 0 ) {
+			$pres_idx = ( isset( $item['presentacion_idx'] ) && $item['presentacion_idx'] !== null && $item['presentacion_idx'] !== '' )
+				? (int) $item['presentacion_idx'] : null;
+			if ( $pid > 0 && $pres_idx !== null ) {
+				$resolved = self::resolve_presentation( $pid, $pres_idx, $client_id );
+			} elseif ( $pid > 0 ) {
 				$resolved = self::resolve_by_product_id( $pid, $client_id );
 			} else {
 				$resolved = self::resolve( isset( $item['sku'] ) ? (string) $item['sku'] : '', $client_id );
