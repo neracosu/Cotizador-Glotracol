@@ -9,6 +9,8 @@ class Glotracol_Quote_Form {
 
 	public function __construct() {
 		add_action( Glotracol_Quote_Rate_Limit::PURGE_HOOK, [ __CLASS__, 'purge_submit_tokens' ] );
+		add_filter( 'body_class', [ __CLASS__, 'body_class' ] );
+		add_action( 'wp_head', [ __CLASS__, 'form_page_css' ], 100 );
 		add_shortcode( 'glotracol_quote_form', [ $this, 'render_form_shortcode' ] );
 		add_shortcode( 'glotracol_quote_thanks', [ $this, 'render_thanks_shortcode' ] );
 		add_action( 'admin_post_nopriv_' . self::SUBMIT_ACTION, [ $this, 'handle_submit' ] );
@@ -545,6 +547,26 @@ class Glotracol_Quote_Form {
 		self::stash_form_state( $message, $old );
 		wp_safe_redirect( self::error_url( $url ) );
 		exit;
+	}
+
+	public static function is_form_page() {
+		$id = (int) get_option( 'glotracol_quote_form_page_id' );
+		return $id && is_page( $id );
+	}
+
+	public static function body_class( $classes ) {
+		if ( self::is_form_page() ) $classes[] = 'gloq-form-page';
+		return $classes;
+	}
+
+	/**
+	 * En la pagina del formulario se ocultan los elementos fijos del footer de Elementor
+	 * (barras tipo "Realiza tu cotizacion aqui"): son redundantes ahi y en el celular tapaban
+	 * el boton de enviar. Desactivable con el filtro glotracol_quote_hide_fixed_footer.
+	 */
+	public static function form_page_css() {
+		if ( ! self::is_form_page() || ! apply_filters( 'glotracol_quote_hide_fixed_footer', true ) ) return;
+		echo "<style id='gloq-form-page'>.gloq-form-page .elementor-location-footer .elementor-fixed{display:none !important}</style>\n";
 	}
 
 	/** @var string Token del envio en curso. */

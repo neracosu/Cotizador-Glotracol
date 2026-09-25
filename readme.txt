@@ -30,6 +30,9 @@ Plugin propio para Glotracol (Global Trading de Colombia). Reemplaza el flujo de
 
 == Changelog ==
 
+= 2.17.1 =
+* En la página del formulario se ocultan los elementos fijos del pie de página de Elementor (barras tipo "Realiza tu cotización aquí"): ahí sobran y en el celular tapaban el botón "Enviar solicitud". Desactivable con el filtro glotracol_quote_hide_fixed_footer.
+
 = 2.17.0 =
 * Precios acordados con código de verificación: al escribir el NIT, el cliente pide un código que llega al correo registrado de su empresa en el CRM; con el código correcto se aplican sus precios. Sin verificar se cotiza con precios públicos y la ficha lo marca como "Cliente sin verificar".
 * La cotización con precios acordados y su PDF se envían al correo registrado del cliente.

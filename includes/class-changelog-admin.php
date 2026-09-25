@@ -79,6 +79,15 @@ class Glotracol_Quote_Changelog_Admin {
 	public static function entries() {
 		return [
 			[
+				'date' => '2026-09-25', 'version' => '2.17.1', 'type' => 'fix',
+				'title' => 'En el celular, el botón "Enviar solicitud" ya no queda tapado',
+				'summary' => 'En la página del formulario se ocultan las barras fijas del pie de página (como "Realiza tu cotización aquí"), que ahí sobran y en el celular tapaban el botón de enviar.',
+				'details' => [
+					'Solo aplica a la página del formulario de cotización; en el resto del sitio la barra se ve igual que antes.',
+					'El botón de WhatsApp no se toca.',
+				],
+			],
+			[
 				'date' => '2026-09-25', 'version' => '2.17.0', 'type' => 'security',
 				'title' => 'Precios acordados con código de verificación y una revisión completa de seguridad',
 				'summary' => 'Los clientes B2B ven sus precios acordados después de confirmar un código que les llega al correo registrado de su empresa. Además se hizo una revisión técnica completa del cotizador y se corrigieron los puntos encontrados.',
