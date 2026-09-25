@@ -182,6 +182,18 @@ class Glotracol_Quote_GHL {
 		return $pos === false ? [ $full, '' ] : [ substr( $full, 0, $pos ), substr( $full, $pos + 1 ) ];
 	}
 
+	/**
+	 * Busca un contacto existente por correo. '' si no hay.
+	 *
+	 * @return string|WP_Error contactId
+	 */
+	public static function find_contact_by_email( $email ) {
+		$q = http_build_query( [ 'locationId' => self::location_id(), 'email' => (string) $email ] );
+		$r = self::request( 'GET', '/contacts/search/duplicate?' . $q );
+		if ( is_wp_error( $r ) ) return $r;
+		return (string) ( $r['contact']['id'] ?? '' );
+	}
+
 	/** @return string|WP_Error contactId */
 	public static function upsert_contact( $customer ) {
 		list( $first, $last ) = self::split_name( $customer['name'] ?? '' );
@@ -290,6 +302,18 @@ class Glotracol_Quote_GHL {
 
 		// --- Paso 1: contacto ---
 		$contact_id = (string) get_post_meta( $quote_id, '_glo_ghl_contact_id', true );
+		// Un contacto que ya existe no se modifica: el formulario es anonimo y cualquiera
+		// puede escribir el correo de un cliente real con otro nombre y telefono. Los datos
+		// del formulario quedan en la nota de la cotizacion.
+		$email = (string) get_post_meta( $quote_id, '_glo_customer_email', true );
+		if ( $contact_id === '' && $email !== '' ) {
+			$found = self::find_contact_by_email( $email );
+			if ( is_wp_error( $found ) ) return $found;
+			if ( $found !== '' ) {
+				$contact_id = $found;
+				update_post_meta( $quote_id, '_glo_ghl_contact_id', $contact_id );
+			}
+		}
 		if ( $contact_id === '' ) {
 			$r = self::upsert_contact( [
 				'name'    => get_post_meta( $quote_id, '_glo_customer_name', true ),
@@ -367,6 +391,22 @@ class Glotracol_Quote_GHL {
 	public function dispatch( $quote_id ) {
 		if ( glotracol_quote_get_setting( 'ghl_enabled' ) !== 'yes' ) return;
 
+		// Lock por cotizacion: dos corridas del cron a la vez leian el id de la oportunidad
+		// vacio y creaban dos. add_option es atomico.
+		$lock = 'gloq_ghl_lock_' . (int) $quote_id;
+		if ( ! add_option( $lock, time(), '', 'no' ) ) {
+			wp_cache_delete( $lock, 'options' );
+			if ( (int) get_option( $lock ) > time() - 5 * MINUTE_IN_SECONDS ) return;
+			update_option( $lock, time(), false ); // lock viejo de una corrida que murio
+		}
+		try {
+			$this->dispatch_locked( (int) $quote_id );
+		} finally {
+			delete_option( $lock );
+		}
+	}
+
+	private function dispatch_locked( $quote_id ) {
 		$r = self::send_quote( (int) $quote_id );
 		if ( $r === true ) {
 			delete_post_meta( $quote_id, '_glo_ghl_attempts' );

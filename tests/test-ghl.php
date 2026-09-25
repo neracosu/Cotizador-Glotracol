@@ -100,18 +100,20 @@ update_post_meta( $qid, '_glo_pricing_status', 'priced' );
 update_post_meta( $qid, '_glo_items', [ [ 'product_id' => 0, 'name' => 'MANÍ', 'sku' => 'M1', 'quantity' => 2, 'precio_unitario' => 125000, 'precio_subtotal' => 250000 ] ] );
 
 // Contacto, oportunidad y nota: un id distinto en cada respuesta.
-$tres_ok = function () {
-	$GLOBALS['ghl_queue'] = [
+$tres_ok = function ( $con_busqueda = false ) {
+	$GLOBALS['ghl_queue'] = array_merge( $con_busqueda ? [ [ 'code' => 200, 'body' => '{"contact":null}' ] ] : [], [
 		[ 'code' => 201, 'body' => '{"contact":{"id":"C1"}}' ],
 		[ 'code' => 201, 'body' => '{"opportunity":{"id":"O1"}}' ],
 		[ 'code' => 201, 'body' => '{"note":{"id":"N1"}}' ],
-	];
+	] );
 	$GLOBALS['ghl_calls'] = [];
 };
 
-$tres_ok();
+$tres_ok( true ); // con correo: primero busca si el contacto ya existe
 $ok = Glotracol_Quote_GHL::send_quote( $qid );
 chk( 'send_quote devuelve true', $ok === true );
+chk( 'con correo busca el contacto antes de crearlo', strpos( $GLOBALS['ghl_calls'][0]['url'] ?? '', '/contacts/search/duplicate' ) !== false );
+array_shift( $GLOBALS['ghl_calls'] ); // los chequeos de abajo miran contacto, oportunidad y nota
 chk( 'hizo exactamente 3 llamadas', count( $GLOBALS['ghl_calls'] ) === 3 );
 chk( 'guardó el contactId', get_post_meta( $qid, '_glo_ghl_contact_id', true ) === 'C1' );
 chk( 'guardó el opportunityId', get_post_meta( $qid, '_glo_ghl_opportunity_id', true ) === 'O1' );
@@ -171,6 +173,22 @@ $GLOBALS['ghl_queue'] = [ [ 'code' => 201, 'body' => '{"note":{"id":"N9"}}' ] ];
 Glotracol_Quote_GHL::send_quote( $qid4 );
 chk( 'al reintentar solo se reenvía la nota', count( $GLOBALS['ghl_calls'] ) === 1 );
 
+// --- contacto que ya existe: no se modifica (el formulario es anonimo) ---
+$qid6 = wp_insert_post( [ 'post_type' => 'glo_quote', 'post_status' => 'glo-new', 'post_title' => 'TEST GHL existente' ], true );
+update_post_meta( $qid6, '_glo_customer_name', 'Otro Nombre' );
+update_post_meta( $qid6, '_glo_customer_email', 'cliente-real@ejemplo.com' );
+update_post_meta( $qid6, '_glo_pricing_status', 'priced' );
+$GLOBALS['ghl_calls'] = [];
+$GLOBALS['ghl_queue'] = [
+	[ 'code' => 200, 'body' => '{"contact":{"id":"CEXIST"}}' ],
+	[ 'code' => 201, 'body' => '{"opportunity":{"id":"O6"}}' ],
+	[ 'code' => 201, 'body' => '{"note":{"id":"N6"}}' ],
+];
+Glotracol_Quote_GHL::send_quote( $qid6 );
+$urls = array_map( function ( $c ) { return $c['url']; }, $GLOBALS['ghl_calls'] );
+chk( 'con contacto existente no llama a upsert', ! array_filter( $urls, function ( $u ) { return strpos( $u, '/contacts/upsert' ) !== false; } ) );
+chk( 'usa el id del contacto existente', get_post_meta( $qid6, '_glo_ghl_contact_id', true ) === 'CEXIST' );
+
 // --- un fallo al crear el contacto no deja basura ---
 $qid5 = wp_insert_post( [ 'post_type' => 'glo_quote', 'post_status' => 'glo-new', 'post_title' => 'TEST GHL fallo' ], true );
 update_post_meta( $qid5, '_glo_customer_name', 'Luis' );
@@ -191,7 +209,7 @@ chk( 'sin token no hace llamadas', count( $GLOBALS['ghl_calls'] ) === 0 );
 chk( 'sin token devuelve WP_Error', is_wp_error( $r ) );
 chk( 'sin token el error es de configuración', is_wp_error( $r ) && $r->get_error_code() === 'ghl_config' );
 
-foreach ( [ $qid, $qid2, $qid3, $qid4, $qid5 ] as $borrar ) {
+foreach ( [ $qid, $qid2, $qid3, $qid4, $qid5, $qid6 ] as $borrar ) {
 	if ( ! is_wp_error( $borrar ) && $borrar ) {
 		// Los envíos simulados dejan cron programado; sin esto quedan reintentos huérfanos
 		// que luego fallan de verdad y ensucian el registro del sitio.
