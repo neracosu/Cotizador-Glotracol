@@ -79,6 +79,16 @@ class Glotracol_Quote_Changelog_Admin {
 	public static function entries() {
 		return [
 			[
+				'date' => '2026-10-30', 'version' => '2.17.3', 'type' => 'fix',
+				'title' => 'El aviso de copias duplicadas ya dice cuál es la vieja de verdad',
+				'summary' => 'Cuando hay dos copias del plugin activas (pasa al subir el ZIP a mano), WordPress carga la que va primero por nombre de carpeta, no la más nueva. El aviso daba por hecho que la que corría era la buena y podía mandar a borrar la versión recién subida. Ahora compara las versiones y señala la vieja.',
+				'details' => [
+					'Si la copia más nueva es la que no carga, el aviso lo dice, nombra la carpeta vieja (la que corre) y explica que al borrarla la nueva pasa a correr sola.',
+					'Cada carpeta sobrante sale con su versión.',
+					'Si "Borrar datos al desinstalar" está marcado, el aviso pide desmarcarlo antes de borrar ninguna copia: con eso activo, borrar cualquiera elimina todas las cotizaciones, los clientes y los ajustes.',
+				],
+			],
+			[
 				'date' => '2026-09-25', 'version' => '2.17.2', 'type' => 'improvement',
 				'title' => '"Comprobar de nuevo" muestra al instante las versiones nuevas',
 				'summary' => 'En Escritorio → Actualizaciones, el botón "Comprobar de nuevo" ahora consulta en el momento si hay una versión nueva del cotizador. Antes podía tardar hasta 6 horas en aparecer.',

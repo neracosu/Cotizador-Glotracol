@@ -30,6 +30,10 @@ Plugin propio para Glotracol (Global Trading de Colombia). Reemplaza el flujo de
 
 == Changelog ==
 
+= 2.17.3 =
+* Aviso de copias duplicadas: ahora compara las versiones de las carpetas activas y señala la vieja. Antes daba por hecho que la copia que cargaba era la buena y podía mandar a borrar la recién subida (WordPress carga la primera por nombre de carpeta, no la más nueva).
+* El aviso muestra la versión de cada carpeta sobrante y, si "Borrar datos al desinstalar" está marcado, pide desmarcarlo antes de borrar ninguna copia.
+
 = 2.17.2 =
 * "Comprobar de nuevo" en Escritorio → Actualizaciones consulta GitHub en el momento: una versión recién publicada aparece sin esperar a que venza la caché de 6 horas.
 * README al día con la 2.17: verificación por código, seguridad, capacidades propias, límites de envío, filtros nuevos y bin/tests.sh.

@@ -65,16 +65,80 @@ class Glotracol_Quote_Plugin {
 		return $out;
 	}
 
+	/**
+	 * Version que declara la cabecera de otra copia del plugin. Esa copia no carga
+	 * (la primera se queda con las constantes), asi que hay que leer su archivo.
+	 *
+	 * @return string '' si no se puede leer.
+	 */
+	public static function copy_version( $basename ) {
+		$file = WP_PLUGIN_DIR . '/' . ltrim( (string) $basename, '/' );
+		if ( ! is_readable( $file ) ) return '';
+		$data = get_file_data( $file, [ 'Version' => 'Version' ] );
+		return trim( (string) ( $data['Version'] ?? '' ) );
+	}
+
+	/**
+	 * Aviso rojo con la copia que sobra. WordPress carga primero la que va antes en
+	 * active_plugins (orden alfabetico de carpeta), NO la mas nueva: en glotracol.com
+	 * corria la 2.16.0 y la 2.17.1 subida a mano quedaba inerte. Por eso se comparan
+	 * versiones: si otra copia es mas nueva, la que sobra es esta, la que corre.
+	 */
 	public static function duplicate_notice() {
 		if ( ! current_user_can( 'manage_options' ) ) return;
 		$dups = self::duplicate_copies();
 		if ( ! $dups ) return;
-		$sobran = array_map( function ( $b ) { return '<code>' . esc_html( dirname( $b ) ) . '</code>'; }, $dups );
-		echo '<div class="notice notice-error"><p><strong>Hay ' . ( count( $dups ) + 1 ) . ' copias del Cotizador Glotracol activas.</strong> '
-			. 'La que funciona es la de la carpeta <code>' . esc_html( dirname( GLOTRACOL_QUOTE_BASENAME ) ) . '</code> (v' . esc_html( GLOTRACOL_QUOTE_VERSION ) . '). '
-			. 'Sobra' . ( count( $dups ) > 1 ? 'n' : '' ) . ' ' . implode( ' y ', $sobran ) . ': no hace' . ( count( $dups ) > 1 ? 'n' : '' ) . ' nada, pero muestra' . ( count( $dups ) > 1 ? 'n' : '' ) . ' una versión vieja. '
-			. '<a href="' . esc_url( admin_url( 'plugins.php' ) ) . '">Desactívala y bórrala desde Plugins</a>. '
-			. 'Para actualizar no hace falta subir ningún ZIP: el plugin se actualiza solo desde GitHub.</p></div>';
+
+		$code      = function ( $s ) { return '<code>' . esc_html( $s ) . '</code>'; };
+		$plugins   = '<a href="' . esc_url( admin_url( 'plugins.php' ) ) . '">';
+		$corre_dir = dirname( GLOTRACOL_QUOTE_BASENAME );
+		$corre_ver = GLOTRACOL_QUOTE_VERSION;
+
+		// Versiones de las otras copias y la mas nueva de todas ellas, si supera a la que corre.
+		$versiones = [];
+		$nueva     = null;
+		foreach ( $dups as $b ) {
+			$v = self::copy_version( $b );
+			$versiones[ $b ] = $v;
+			if ( $v !== '' && version_compare( $v, $corre_ver, '>' ) && ( ! $nueva || version_compare( $v, $nueva['ver'], '>' ) ) ) {
+				$nueva = [ 'basename' => $b, 'dir' => dirname( $b ), 'ver' => $v ];
+			}
+		}
+
+		$html = '<strong>Hay ' . ( count( $dups ) + 1 ) . ' copias del Cotizador Glotracol activas.</strong> '
+			. 'La que funciona es la de la carpeta ' . $code( $corre_dir ) . ' (v' . esc_html( $corre_ver ) . '). ';
+
+		if ( $nueva ) {
+			$html .= 'Pero la versión más nueva, v' . esc_html( $nueva['ver'] ) . ', está en la carpeta ' . $code( $nueva['dir'] ) . ' y no carga. '
+				. 'Sobra ' . $code( $corre_dir ) . ', que es la vieja: ' . $plugins . 'desactívala y bórrala desde Plugins</a> y la nueva pasa a correr sola. ';
+			$otras = [];
+			foreach ( $dups as $b ) {
+				if ( $b === $nueva['basename'] ) continue;
+				$otras[] = $code( dirname( $b ) ) . ( $versiones[ $b ] !== '' ? ' (v' . esc_html( $versiones[ $b ] ) . ')' : '' );
+			}
+			if ( $otras ) {
+				$html .= 'También sobra' . ( count( $otras ) > 1 ? 'n' : '' ) . ' ' . implode( ' y ', $otras ) . '. ';
+			}
+		} else {
+			$sobran = [];
+			foreach ( $dups as $b ) {
+				$sobran[] = $code( dirname( $b ) ) . ( $versiones[ $b ] !== '' ? ' (v' . esc_html( $versiones[ $b ] ) . ')' : '' );
+			}
+			$n = count( $sobran ) > 1 ? 'n' : '';
+			$html .= 'Sobra' . $n . ' ' . implode( ' y ', $sobran ) . ': no hace' . $n . ' nada. '
+				. $plugins . 'Desactívala y bórrala desde Plugins</a>. ';
+		}
+
+		$settings = get_option( 'glotracol_quote_settings', [] );
+		if ( is_array( $settings ) && ( $settings['delete_data_on_uninstall'] ?? '' ) === 'yes' ) {
+			$ajustes = admin_url( 'edit.php?post_type=glo_quote&page=glotracol-quote-settings&tab=advanced' );
+			$html   .= '<strong>Antes de borrar ninguna copia, desmarca «Borrar datos al desinstalar» en '
+				. '<a href="' . esc_url( $ajustes ) . '">Configuración › Avanzado</a>:</strong> '
+				. 'con eso marcado, borrar cualquiera de las copias elimina todas las cotizaciones, los clientes y los ajustes. ';
+		}
+
+		$html .= 'Para actualizar no hace falta subir ningún ZIP: el plugin se actualiza solo desde GitHub.';
+		echo '<div class="notice notice-error"><p>' . $html . '</p></div>';
 	}
 
 	/**
