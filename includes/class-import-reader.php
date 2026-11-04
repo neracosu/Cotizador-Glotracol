@@ -506,10 +506,15 @@ class Glotracol_Quote_Import_Reader {
 		$map = [];
 		$used = [];
 		foreach ( $cols as $canonical ) {
-			$syn = self::synonyms_of( $canonical );
-			foreach ( $raw_headers_lower as $h ) {
-				if ( in_array( $h, $used, true ) ) continue;
-				if ( in_array( $h, $syn, true ) ) { $map[ $canonical ] = $h; $used[] = $h; break; }
+			// Primero los sinonimos propios; despues los alias del schema (p. ej. "ID" como
+			// referencia de la Lista A rapida), asi una columna SKU explicita sigue mandando.
+			$passes = [ self::synonyms_of( $canonical ), (array) ( $schema['aliases'][ $canonical ] ?? [] ) ];
+			foreach ( $passes as $syn ) {
+				if ( isset( $map[ $canonical ] ) ) break;
+				foreach ( $raw_headers_lower as $h ) {
+					if ( in_array( $h, $used, true ) ) continue;
+					if ( in_array( $h, $syn, true ) ) { $map[ $canonical ] = $h; $used[] = $h; break; }
+				}
 			}
 		}
 		$unmapped = array_values( array_diff( $raw_headers_lower, $used ) );

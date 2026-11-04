@@ -79,6 +79,16 @@ class Glotracol_Quote_Changelog_Admin {
 	public static function entries() {
 		return [
 			[
+				'date' => '2026-11-04', 'version' => '2.17.4', 'type' => 'fix',
+				'title' => 'La Lista A rápida reconoce la columna "ID"',
+				'summary' => 'Al cargar la Lista A (rápida) con un archivo cuya columna de referencia se llama "ID", todas las filas salían "Sin coincidencia" y no se actualizaba ningún precio. Ahora el ID de producto se toma como referencia, igual que el SKU.',
+				'details' => [
+					'Sirven como referencia los encabezados ID, Código, ID producto, ID WC y SKU WC, además de SKU, Referencia y Ref.',
+					'Si el archivo trae a la vez una columna SKU y una ID, manda la SKU.',
+					'La detección automática no cambia: un archivo "ID, Precio" se sigue reconociendo como catálogo.',
+				],
+			],
+			[
 				'date' => '2026-10-30', 'version' => '2.17.3', 'type' => 'fix',
 				'title' => 'El aviso de copias duplicadas ya dice cuál es la vieja de verdad',
 				'summary' => 'Cuando hay dos copias del plugin activas (pasa al subir el ZIP a mano), WordPress carga la que va primero por nombre de carpeta, no la más nueva. El aviso daba por hecho que la que corría era la buena y podía mandar a borrar la versión recién subida. Ahora compara las versiones y señala la vieja.',

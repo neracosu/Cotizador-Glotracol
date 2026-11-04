@@ -30,6 +30,9 @@ Plugin propio para Glotracol (Global Trading de Colombia). Reemplaza el flujo de
 
 == Changelog ==
 
+= 2.17.4 =
+* Lista A (rápida): un archivo con la columna "ID" (o Código, ID producto) ya no sale entero "Sin coincidencia"; el ID se toma como referencia igual que el SKU. Si vienen las dos columnas, manda la SKU.
+
 = 2.17.3 =
 * Aviso de copias duplicadas: ahora compara las versiones de las carpetas activas y señala la vieja. Antes daba por hecho que la copia que cargaba era la buena y podía mandar a borrar la recién subida (WordPress carga la primera por nombre de carpeta, no la más nueva).
 * El aviso muestra la versión de cada carpeta sobrante y, si "Borrar datos al desinstalar" está marcado, pide desmarcarlo antes de borrar ninguna copia.

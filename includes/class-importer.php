@@ -42,6 +42,8 @@ class Glotracol_Quote_Importer {
 				'required'  => [ 'sku', 'precio' ],
 				'optional'  => [],
 				'plantilla' => [ 'sku', 'precio' ],
+				// La referencia acepta ID de producto: un encabezado "ID" tambien vale como `sku`.
+				'aliases'   => [ 'sku' => [ 'id', 'codigo', 'código', 'id producto', 'id wc', 'sku wc' ] ],
 			],
 			'precios_b2b' => [
 				'required'  => [ 'nit', 'sku', 'precio' ],
